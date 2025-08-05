@@ -1,0 +1,211 @@
+/* Navigation Panel Styles */
+
+.navigation {
+    width: var(--nav-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-primary);
+    margin-top: var(--header-height);
+    padding-bottom: 50px;
+    overflow-y: auto;
+    height: calc(100vh - var(--header-height));
+}
+
+/* Navigation Header */
+.nav-header {
+    padding: var(--spacing-lg);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.project-header h3 {
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.project-header small {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* Navigation Controls */
+.nav-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.nav-controls .btn {
+    font-size: var(--font-size-sm);
+    padding: 6px 12px;
+}
+
+/* Search Box */
+.search-box {
+    margin-top: var(--spacing-md);
+}
+
+.search-box input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* Navigation Content */
+.nav-content {
+    padding: 0;
+}
+
+/* Sequence Items */
+.sequence-item {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sequence-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: background-color var(--transition-fast);
+    font-weight: 500;
+}
+
+.sequence-header:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.sequence-header.active {
+    background-color: #e3f2fd;
+    color: var(--primary-color);
+}
+
+.toggle-icon {
+    font-size: var(--font-size-sm);
+    transition: transform var(--transition-fast);
+    color: var(--text-secondary);
+}
+
+.toggle-icon.expanded {
+    transform: rotate(90deg);
+}
+
+/* Status Indicator */
+.status-indicator {
+    position: relative;
+    cursor: help;
+}
+
+.status-indicator:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    z-index: var(--z-tooltip);
+}
+
+/* Scene Styles */
+.scenes-container {
+    background-color: #fafafa;
+    border-top: 1px solid var(--border-primary);
+}
+
+.scenes-container.collapsed {
+    display: none;
+}
+
+.scene-item {
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.scene-header {
+    padding: var(--spacing-md) 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: background-color var(--transition-fast);
+    font-size: var(--font-size-base);
+}
+
+.scene-header:hover {
+    background-color: #f0f0f0;
+}
+
+.scene-header.active {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+/* Shot Styles */
+.shots-container {
+    background-color: var(--bg-primary);
+}
+
+.shots-container.collapsed {
+    display: none;
+}
+
+.shot-item {
+    padding: var(--spacing-sm) 60px;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    font-size: var(--font-size-base);
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.shot-item:hover {
+    background-color: #eeeeee;
+}
+
+.shot-item.active {
+    background-color: #fff3e0;
+    color: #f57c00;
+    font-weight: 500;
+}
+
+.shot-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.shot-item:hover .shot-actions {
+    opacity: 1;
+}
+
+/* Responsive Navigation */
+@media (max-width: 768px) {
+    .navigation {
+        width: 100%;
+        max-width: 300px;
+        position: fixed;
+        left: -300px;
+        transition: left var(--transition-base);
+        z-index: 999;
+    }
+    
+    .navigation.open {
+        left: 0;
+    }
+    
+    .sequence-header,
+    .scene-header,
+    .shot-item {
+        font-size: var(--font-size-sm);
+    }
+}

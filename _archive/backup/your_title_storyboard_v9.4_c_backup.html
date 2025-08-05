@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>컨셉아트 프롬프트 라이브러리</title>
+    
+    <!-- CSS 파일 링크 -->
+    <link rel="stylesheet" href="concept-art-styles.css">
+    
+    <!-- SEO -->
+    <meta name="description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템">
+    <meta name="keywords" content="컨셉아트, AI 이미지생성, 프롬프트, 캐릭터 디자인, 배경, 소품, Midjourney, DALL-E">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aifiwb.netlify.app/your_title_storyboard_v9.4_c.html">
+    <meta property="og:title" content="컨셉아트 프롬프트 라이브러리">
+    <meta property="og:description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템. 다중 AI 도구 프롬프트 지원">
+    <meta property="og:image" content="https://aifiwb.netlify.app/og-image-concept.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:site_name" content="AIFI 프로젝트">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://aifiwb.netlify.app/your_title_storyboard_v9.4_c.html">
+    <meta property="twitter:title" content="컨셉아트 프롬프트 라이브러리">
+    <meta property="twitter:description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템">
+    <meta property="twitter:image" content="https://aifiwb.netlify.app/og-image-concept.jpg">
+
+    <!-- 카카오톡 -->
+    <meta property="kakao:title" content="컨셉아트 프롬프트 라이브러리">
+    <meta property="kakao:description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템">
+    <meta property="kakao:image" content="https://aifiwb.netlify.app/og-image-concept.jpg">
+
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="index.html" class="home-btn">🏠 홈</a>
+            <h1 class="header-title">컨셉아트 프롬프트 라이브러리</h1>
+        </div>
+    </div>
+    <div class="container">
+        <header>
+            <h1>🎨 컨셉아트 프롬프트 라이브러리</h1>
+            <p>스테이지 4: 컨셉아트 프롬프트 엔지니어링 결과물 (스키마 v1.2 호환)</p>
+            <div id="project-info-display" class="project-info-bar">
+                <span>프로젝트 ID: 데이터 없음</span>
+                <span>총 컨셉아트: 데이터 없음</span>
+                <span>데이터 버전: 데이터 없음</span>
+                <span>마지막 업데이트: 데이터 없음</span>
+            </div>
+            <div class="user-guide">
+                <p><strong>사용 안내:</strong> 생성된 이미지 URL을 추가하고, 작업이 완료되면 "JSON으로 내보내기" 버튼을 클릭하여 모든 데이터를 저장하세요. 저장된 JSON 파일을 이 HTML 파일과 같은 폴더에 'concept_art_data.json' (또는 사용자가 지정한 파일명)으로 저장한 후, "JSON 가져오기"를 통해 다시 로드할 수 있습니다.</p>
+            </div>
+            <div class="button-group">
+                <button id="export-json-btn" class="btn btn-primary">JSON으로 내보내기</button>
+                <input type="file" id="import-json-input" accept=".json" style="display: none;">
+                <button id="import-json-btn" class="btn btn-secondary">JSON 가져오기</button>
+                <button id="reset-data-btn" class="btn btn-danger">데이터 초기화</button>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="category">
+                    <div class="category-title">캐릭터</div>
+                    <ul class="concept-list" id="character-list"></ul>
+                </div>
+                <div class="category">
+                    <div class="category-title">장소</div>
+                    <ul class="concept-list" id="location-list"></ul>
+                </div>
+                <div class="category">
+                    <div class="category-title">소품</div>
+                    <ul class="concept-list" id="prop-list"></ul>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div id="concept-detail">
+                    <h2 id="concept-title">컨셉아트를 선택하세요</h2>
+                    
+                    <div class="tabs">
+                        <button class="tab-button active" onclick="openTab(event, 'csv-tab')">CSV 데이터</button>
+                        <button class="tab-button" onclick="openTab(event, 'prompts-tab')">기본 프롬프트</button>
+                        <button class="tab-button" onclick="openTab(event, 'variants-tab')">캐릭터 변형</button>
+                        <button class="tab-button" onclick="openTab(event, 'image-gallery-tab')">이미지 갤러리</button>
+                    </div>
+                    
+                    <div id="csv-tab" class="tab-content active">
+                        <h3>CSV 데이터</h3>
+                        <table class="csv-table" id="csv-data-table">
+                            <thead><tr><th>ID</th><th>값</th></tr></thead>
+                            <tbody><tr><td colspan="2">컨셉아트를 선택하면 CSV 데이터가 표시됩니다.</td></tr></tbody>
+                        </table>
+                        <button class="btn btn-primary" onclick="copyCSV()">CSV 복사</button>
+                    </div>
+                    
+                    <div id="prompts-tab" class="tab-content">
+                        <h3>기본 프롬프트</h3>
+                        <div class="tabs ai-tabs" id="base-prompt-ai-tabs">
+                            {/* AI 탭 버튼은 JavaScript로 동적 생성 */}
+                        </div>
+                        <div id="base-prompt-ai-content-area">
+                            {/* AI 탭 콘텐츠는 JavaScript로 동적 생성 */}
+                        </div>
+                    </div>
+                    
+                    <div id="variants-tab" class="tab-content">
+                        <h3>캐릭터 변형 프롬프트</h3>
+                         <div id="variants-placeholder" class="no-image-message" style="display: none;">캐릭터 타입의 컨셉아트를 선택해주세요. 장소 및 소품은 변형 프롬프트를 지원하지 않습니다.</div>
+                        <div id="variants-main-content">
+                            <div class="tabs ai-tabs" id="variant-prompt-ai-tabs">
+                                {/* 변형 AI 탭 버튼은 JavaScript로 동적 생성 */}
+                            </div>
+                            <div id="variant-prompt-ai-content-area">
+                                {/* 변형 AI 탭 콘텐츠는 JavaScript로 동적 생성 */}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="image-gallery-tab" class="tab-content">
+                        <h3>이미지 갤러리</h3>
+                        <div class="image-gallery" id="image-gallery-content">
+                            <div class="no-image-message">컨셉아트를 선택하고 이미지를 추가하면 갤러리가 표시됩니다.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast-message" class="toast"></div>
+	<!-- 이미지 모달 -->
+	<div id="imageModal" class="image-modal" onclick="closeImageModal(event)">
+		<span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
+		<img class="image-modal-content" id="modalImage">
+	</div>
+
+    <!-- JavaScript 모듈 -->
+    <script type="module" src="concept-art-app.js"></script>
+</body>
+</html>
+        let currentVariantsAITab = null;
+        let currentVariantTypeTab = { midjourney: 'face_views_4', leonardo: 'face_views_4', ideogram: 'face_views_4', imagefx: 'face_views_4' };
+
+        const AI_TOOLS = ['midjourney', 'leonardo', 'ideogram', 'imagefx', 'openart'];
+        const VARIATION_TYPES_MAP = { // HTML 탭 ID -> 스키마 필드명 (Midjourney는 permutation 접미사 고려)
+            'face_views_4': { name_kr: "얼굴 4면", schema_key_base: 'face_views_4' },
+            'expressions_5': { name_kr: "주요 표정 5종", schema_key_base: 'expressions_5' },
+            'body_views_4': { name_kr: "전신 4면", schema_key_base: 'body_views_4' }
+        };
+
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('export-json-btn').addEventListener('click', exportToJSON);
+            document.getElementById('import-json-btn').addEventListener('click', () => document.getElementById('import-json-input').click());
+            document.getElementById('import-json-input').addEventListener('change', importFromJSON);
+			
+            document.getElementById('reset-data-btn').addEventListener('click', function() {
+                if (confirm('모든 데이터가 삭제됩니다. 계속하시겠습니까?')) {
+                    localStorage.removeItem('conceptArtManagerData_v1.2');
+                    showToast('모든 데이터가 초기화되었습니다.');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            });
+            
+            buildAITabs();
+            
+            // URL 파라미터 체크 및 자동 JSON 처리
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Stage 4에서 임시 저장된 JSON 파일 자동 로드
+            if (urlParams.get('loadStage4Json') === 'true') {
+                console.log('🔄 Stage 4 임시 저장된 JSON 파일 자동 로드 실행...');
+                setTimeout(() => {
+                    const tempJson = localStorage.getItem('stage4TempJson');
+                    const tempFileName = localStorage.getItem('stage4TempFileName');
+                    
+                    if (tempJson && tempFileName) {
+                        try {
+                            console.log(`📁 Stage 4 임시 JSON 파일 로드: ${tempFileName}`);
+                            
+                            const data = JSON.parse(tempJson);
+                            processLoadedJSON(data);
+                            showToast(`${tempFileName} 파일을 성공적으로 로드했습니다.`);
+                            
+                            // 임시 데이터 정리
+                            localStorage.removeItem('stage4TempJson');
+                            localStorage.removeItem('stage4TempFileName');
+                            
+                        } catch (error) {
+                            console.error('Stage 4 임시 JSON 로드 오류:', error);
+                            showToast('임시 저장된 JSON 파일을 로드할 수 없습니다.');
+                            localStorage.removeItem('stage4TempJson');
+                            localStorage.removeItem('stage4TempFileName');
+                        }
+                    } else {
+                        console.log('임시 저장된 Stage 4 JSON 데이터를 찾을 수 없습니다.');
+                        showToast('임시 저장된 파일을 찾을 수 없습니다.');
+                    }
+                }, 1000);
+            } else {
+                // localStorage에서 Stage 4 데이터 확인
+                const tempJson = localStorage.getItem('stage4TempJson');
+                const tempFileName = localStorage.getItem('stage4TempFileName');
+                
+                if (tempJson && tempFileName) {
+                    console.log('🔄 localStorage에서 Stage 4 데이터 발견, 자동 로드 실행...');
+                    setTimeout(() => {
+                        try {
+                            console.log(`📁 Stage 4 임시 JSON 파일 로드: ${tempFileName}`);
+                            
+                            const data = JSON.parse(tempJson);
+                            processLoadedJSON(data);
+                            showToast(`${tempFileName} 파일을 성공적으로 로드했습니다.`);
+                            
+                            // 임시 데이터 정리
+                            localStorage.removeItem('stage4TempJson');
+                            localStorage.removeItem('stage4TempFileName');
+                            
+                        } catch (error) {
+                            console.error('Stage 4 임시 JSON 로드 오류:', error);
+                            showToast('임시 저장된 JSON 파일을 로드할 수 없습니다.');
+                            localStorage.removeItem('stage4TempJson');
+                            localStorage.removeItem('stage4TempFileName');
+                        }
+                    }, 1000);
+                } else {
+                    loadLocalJsonFile(); // Attempt to load default JSON first
+                }
+            }
+        });
+
+        // --- Toast Message Utility ---
+        function showToast(message) {
+            const toast = document.getElementById('toast-message');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // --- Data Loading and Saving ---
+        function loadLocalJsonFile() {
+            fetch('./' + window.location.pathname.split('/').pop().replace('.html', '.json')) // Default file to load
+                .then(response => {
+                    if (!response.ok) throw new Error('Default JSON file not found. Trying local storage.');
+                    return response.json();
+                })
+                .then(data => processLoadedJSON(data))
+                .catch(error => {
+                    console.warn(error.message);
+                    loadDataFromLocalStorage();
+                });
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    processLoadedJSON(data);
+                } catch (error) {
+                    console.error('JSON 파싱 오류:', error);
+                    showToast('유효하지 않은 JSON 파일입니다.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+        
+        function processLoadedJSON(data) {
+            if (data && data.concept_art_collection && data.project_info) { // Valid Stage 4 Schema v1.2
+                projectInfo = data.project_info;
+                dataVersion = data.version || "N/A";
+                dataTimestamp = data.timestamp || "N/A";
+                
+				// 부분 업데이트: 기존 데이터에 새 데이터 병합
+				Object.keys(data.concept_art_collection).forEach(type => {
+					if (!conceptArtData[type]) conceptArtData[type] = {};
+					Object.assign(conceptArtData[type], data.concept_art_collection[type]);
+				});
+                
+                updateProjectInfoDisplay();
+                updateAllUILists();
+                selectFirstConcept(); 
+                saveDataToLocalStorage(); // Save valid imported data to local storage
+                showToast('JSON 데이터를 성공적으로 가져왔습니다.');
+                console.log('성공: Stage 4 Schema v1.2 형식으로 JSON 로드/가져오기 완료.');
+            } else {
+                showToast('유효한 Stage 4 JSON 데이터 형식이 아닙니다.');
+                console.error('로드된 JSON이 Stage 4 Schema v1.2 형식이 아님:', data);
+                 // 형식이 안맞으면, 기존 로컬 스토리지 데이터라도 불러오도록 시도
+                loadDataFromLocalStorage(false); // silent = false, to avoid re-selecting first concept if already done
+            }
+        }
+
+        function exportToJSON() {
+            const fullExportData = {
+                stage: 4,
+                version: dataVersion === "N/A" ? "1.2" : dataVersion, // Use loaded version or default
+                timestamp: new Date().toISOString(),
+                project_info: projectInfo,
+                concept_art_collection: conceptArtData
+            };
+            const jsonString = JSON.stringify(fullExportData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = window.location.pathname.split('/').pop().replace('.html', '.json');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('JSON 파일이 다운로드되었습니다.');
+        }
+
+        function saveDataToLocalStorage() {
+            try {
+                const dataToStore = { projectInfo, dataVersion, dataTimestamp, conceptArtData };
+                localStorage.setItem('conceptArtManagerData_v1.2', JSON.stringify(dataToStore));
+                console.log("데이터가 로컬 스토리지에 저장되었습니다.");
+            } catch (e) {
+                console.error("로컬 스토리지 저장 실패:", e);
+                showToast("로컬 스토리지 저장 실패. 브라우저 용량 문제일 수 있습니다.");
+            }
+        }
+
+        function loadDataFromLocalStorage(selectFirst = true) {
+            const storedDataString = localStorage.getItem('conceptArtManagerData_v1.2');
+            if (storedDataString) {
+                try {
+                    const storedData = JSON.parse(storedDataString);
+                    projectInfo = storedData.projectInfo || { project_id: "N/A", total_concept_arts: 0 };
+                    dataVersion = storedData.dataVersion || "N/A";
+                    dataTimestamp = storedData.dataTimestamp || "N/A";
+                    conceptArtData = storedData.conceptArtData || { characters: {}, locations: {}, props: {} };
+                    
+                    updateProjectInfoDisplay();
+                    updateAllUILists();
+                    if(selectFirst) selectFirstConcept();
+                    console.log("로컬 스토리지에서 데이터 로드 완료.");
+                } catch (error) {
+                    console.error('로컬 스토리지 데이터 파싱 오류:', error);
+                }
+            } else {
+                console.log("로컬 스토리지에 저장된 데이터 없음.");
+                 if(selectFirst) updateNoDataState(); // 최초 로드 시 데이터 없으면 초기화면
+            }
+        }
+        
+        function updateNoDataState() {
+            updateProjectInfoDisplay(); // 기본값으로 표시
+            ['character-list', 'location-list', 'prop-list'].forEach(listId => populateConceptList(listId, {}, ''));
+            document.getElementById('concept-title').textContent = '컨셉아트를 선택하세요';
+            document.getElementById('csv-data-table').querySelector('tbody').innerHTML = '<tr><td colspan="2">컨셉아트를 선택하면 CSV 데이터가 표시됩니다.</td></tr>';
+            clearPromptDisplay('base-prompt-ai-content-area');
+            clearPromptDisplay('variant-prompt-ai-content-area');
+            document.getElementById('image-gallery-content').innerHTML = '<div class="no-image-message">컨셉아트를 선택하고 이미지를 추가하면 갤러리가 표시됩니다.</div>';
+        }
+
+        // --- UI Update Functions ---
+        function updateProjectInfoDisplay() {
+            document.getElementById('project-info-display').innerHTML = `
+                <span>프로젝트 ID: ${projectInfo.project_id}</span>
+                <span>총 컨셉아트: ${projectInfo.total_concept_arts}</span>
+                <span>데이터 버전: ${dataVersion}</span>
+                <span>마지막 업데이트: ${dataTimestamp ? new Date(dataTimestamp).toLocaleString() : 'N/A'}</span>
+            `;
+        }
+
+        function updateAllUILists() {
+            populateConceptList('character-list', conceptArtData.characters, 'characters');
+            populateConceptList('location-list', conceptArtData.locations, 'locations');
+            populateConceptList('prop-list', conceptArtData.props, 'props');
+        }
+
+        function populateConceptList(listId, dataObject, type) {
+            const listElement = document.getElementById(listId);
+            listElement.innerHTML = '';
+            if (!dataObject || Object.keys(dataObject).length === 0) {
+                listElement.innerHTML = '<li class="concept-item disabled" style="cursor:default; color:#6c757d;">항목 없음</li>';
+                return;
+            }
+            Object.keys(dataObject).forEach(id => { // id is target_name here
+                const item = dataObject[id];
+                const li = document.createElement('li');
+                li.className = 'concept-item';
+                li.textContent = item.name; 
+                li.dataset.id = item.name; // Use name as id for selection
+                li.dataset.type = type;
+                li.onclick = () => {
+                    document.querySelectorAll('.concept-item.active').forEach(activeItem => activeItem.classList.remove('active'));
+                    li.classList.add('active');
+                    showConceptDetails(item.name, type);
+                };
+                listElement.appendChild(li);
+            });
+        }
+        
+        function selectFirstConcept() {
+            const categories = ['characters', 'locations', 'props'];
+            for (const type of categories) {
+                if (conceptArtData[type] && Object.keys(conceptArtData[type]).length > 0) {
+                    const firstId = Object.keys(conceptArtData[type])[0]; // This is target_name
+                    const firstConceptElement = document.querySelector(`.concept-item[data-id="${firstId}"][data-type="${type}"]`);
+                    if (firstConceptElement) {
+                         firstConceptElement.click(); // Trigger click to select and show details
+                         return;
+                    }
+                }
+            }
+            // If no concepts exist at all
+            updateNoDataState();
+        }
+
+        function showConceptDetails(id, type) { // id is target_name
+            currentConceptId = id;
+            currentConceptType = type;
+            const concept = conceptArtData[type]?.[id];
+
+            if (!concept) {
+                console.error(`Concept ${id} of type ${type} not found.`);
+                updateNoDataState(); // Or some error state
+                return;
+            }
+
+            document.getElementById('concept-title').textContent = concept.name;
+            updateCSVTable(concept.csv_data || {});
+            displayBasePrompts(concept.prompts || {});
+            displayVariantPrompts(concept.variations || {}, concept.type);
+            updateImageGallery(concept);
+
+            // Activate the first main tab (CSV)
+            openTab(null, 'csv-tab');
+        }
+
+        function updateCSVTable(csvData) {
+            const tbody = document.getElementById('csv-data-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            if (!csvData || Object.keys(csvData).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2">CSV 데이터가 없습니다.</td></tr>';
+                return;
+            }
+            const sortedIds = Object.keys(csvData).sort((a, b) => parseInt(a) - parseInt(b));
+            sortedIds.forEach(id => {
+                const tr = tbody.insertRow();
+                tr.insertCell().textContent = id;
+                tr.insertCell().textContent = csvData[id];
+            });
+        }
+        
+        function copyCSV() {
+            if (!currentConceptId || !currentConceptType) {
+                showToast('선택된 컨셉아트가 없습니다.');
+                return;
+            }
+            const concept = conceptArtData[currentConceptType][currentConceptId];
+            const csvData = concept.csv_data || {};
+            if (Object.keys(csvData).length === 0) {
+                showToast('복사할 CSV 데이터가 없습니다.');
+                return;
+            }
+            let csvText = Object.keys(csvData)
+                              .sort((a,b) => parseInt(a) - parseInt(b))
+                              .map(id => `${id},"${(csvData[id] || '').replace(/"/g, '""')}"`)
+                              .join('\n');
+            copyToClipboard(csvText, "CSV 데이터가");
+        }
+
+        function buildAITabs() {
+            const basePromptAITabsContainer = document.getElementById('base-prompt-ai-tabs');
+            const basePromptAIContentArea = document.getElementById('base-prompt-ai-content-area');
+            const variantPromptAITabsContainer = document.getElementById('variant-prompt-ai-tabs');
+            const variantPromptAIContentArea = document.getElementById('variant-prompt-ai-content-area');
+
+            basePromptAITabsContainer.innerHTML = '';
+            basePromptAIContentArea.innerHTML = '';
+            variantPromptAITabsContainer.innerHTML = '';
+            variantPromptAIContentArea.innerHTML = '';
+
+            AI_TOOLS.forEach((tool, index) => {
+                const toolNamePretty = tool.charAt(0).toUpperCase() + tool.slice(1);
+
+                // Base Prompts Tabs
+                let button = document.createElement('button');
+                button.className = 'tab-button' + (index === 0 ? ' active' : '');
+                button.textContent = toolNamePretty;
+                button.onclick = (event) => openAITab(event, tool, 'base-prompt-ai-tabs', 'base-prompt-ai-content-area');
+                basePromptAITabsContainer.appendChild(button);
+
+                let contentDiv = document.createElement('div');
+                contentDiv.id = `base-prompt-${tool}-content`;
+                contentDiv.className = 'ai-tab-content' + (index === 0 ? ' active' : '');
+                contentDiv.innerHTML = `
+                    <div class="prompt-container">
+                        <h4>영어 원본 프롬프트</h4>
+                        <div class="prompt-box" id="${tool}-prompt-english">프롬프트 정보 없음</div>
+                        <div class="prompt-actions"><button class="btn btn-secondary" onclick="copyIndividualPrompt('${tool}', 'prompt_english')">영어 원본 복사</button></div>
+                    </div>
+                    <div class="prompt-container">
+                        <h4>번역본 프롬프트</h4>
+                        <div class="prompt-box" id="${tool}-prompt-translated">번역본 정보 없음</div>
+                        <div class="prompt-actions"><button class="btn btn-secondary" onclick="copyIndividualPrompt('${tool}', 'prompt_translated')">번역본 복사</button></div>
+                    </div>
+                    ${ (tool === 'midjourney' || tool === 'leonardo' || tool === 'imagefx' || tool === 'openart') ? `
+                    <div class="prompt-container">
+                        <h4>${tool === 'midjourney' ? '파라미터' : '네거티브 프롬프트'}</h4>
+                        <div class="prompt-box" id="${tool}-${tool === 'midjourney' ? 'parameters' : 'negative-prompt'}">정보 없음</div>
+                        <div class="prompt-actions"><button class="btn btn-secondary" onclick="copyIndividualPrompt('${tool}', '${tool === 'midjourney' ? 'parameters' : 'negative_prompt'}')">복사</button></div>
+                    </div>` : ''}
+                    <div class="image-preview-container">
+                        <h4>생성된 이미지</h4>
+                        <div class="image-display-area" id="${tool}-base-image-display">
+                            <div class="no-image-message">이미지 없음</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <button class="btn btn-secondary" onclick="addImageUrl('${tool}', 'base')">🔗 URL 입력</button>
+                            <button class="btn btn-secondary" onclick="uploadImageFile('${tool}', 'base')">📁 파일 업로드</button>
+                        </div>
+                    </div>`;
+                basePromptAIContentArea.appendChild(contentDiv);
+                
+                // Variant Prompts Tabs
+                button = document.createElement('button');
+                button.className = 'tab-button' + (index === 0 ? ' active' : '');
+                button.textContent = toolNamePretty;
+                button.onclick = (event) => openAITab(event, tool, 'variant-prompt-ai-tabs', 'variant-prompt-ai-content-area');
+                variantPromptAITabsContainer.appendChild(button);
+
+                contentDiv = document.createElement('div');
+                contentDiv.id = `variant-prompt-${tool}-content`;
+                contentDiv.className = 'variant-ai-content' + (index === 0 ? ' active' : '');
+                
+                let nestedTabsHTML = '<div class="nested-tabs">';
+                Object.keys(VARIATION_TYPES_MAP).forEach((typeKey, typeIdx) => {
+                    nestedTabsHTML += `<button class="nested-tab-button ${typeIdx === 0 ? 'active' : ''}" onclick="openNestedTab(event, '${tool}', '${typeKey}')">${VARIATION_TYPES_MAP[typeKey].name_kr}</button>`;
+                });
+                nestedTabsHTML += '</div>';
+                contentDiv.innerHTML = nestedTabsHTML;
+
+                Object.keys(VARIATION_TYPES_MAP).forEach((typeKey, typeIdx) => {
+                    const nestedContentDiv = document.createElement('div');
+                    nestedContentDiv.id = `${tool}-${typeKey}-variant-details`;
+                    nestedContentDiv.className = 'nested-tab-content' + (typeIdx === 0 ? ' active' : '');
+                    contentDiv.appendChild(nestedContentDiv);
+                });
+                variantPromptAIContentArea.appendChild(contentDiv);
+            });
+             if (AI_TOOLS.length > 0) {
+                currentPromptsAITab = AI_TOOLS[0];
+                currentVariantsAITab = AI_TOOLS[0];
+            }
+        }
+
+        function displayBasePrompts(promptsByAI) {
+            AI_TOOLS.forEach(tool => {
+                const toolData = promptsByAI?.[tool];
+                document.getElementById(`${tool}-prompt-english`).textContent = toolData?.prompt_english || '영어 원본 정보 없음';
+                document.getElementById(`${tool}-prompt-translated`).textContent = toolData?.prompt_translated || '번역본 정보 없음';
+                
+                const specialParamBox = document.getElementById(`${tool}-${tool === 'midjourney' ? 'parameters' : 'negative-prompt'}`);
+                if (specialParamBox) {
+                    if (tool === 'midjourney') {
+                        specialParamBox.textContent = toolData?.parameters || '파라미터 정보 없음';
+                    } else if (tool === 'leonardo' || tool === 'imagefx' || tool === 'openart') {
+                        specialParamBox.textContent = toolData?.negative_prompt || '네거티브 프롬프트 정보 없음';
+                    }
+                }
+                displayImage(tool, 'base', conceptArtData[currentConceptType]?.[currentConceptId]?.generated_images?.base_prompts?.[tool]);
+            });
+            if (AI_TOOLS.length > 0) openAITab(null, currentPromptsAITab || AI_TOOLS[0], 'base-prompt-ai-tabs', 'base-prompt-ai-content-area');
+        }
+        
+        function clearPromptDisplay(areaId) {
+            const contentArea = document.getElementById(areaId);
+            if (!contentArea) return;
+            AI_TOOLS.forEach(tool => {
+                const englishBox = contentArea.querySelector(`#${tool}-prompt-english`);
+                if(englishBox) englishBox.textContent = '프롬프트 정보 없음';
+                const translatedBox = contentArea.querySelector(`#${tool}-prompt-translated`);
+                if(translatedBox) translatedBox.textContent = '번역본 정보 없음';
+
+                const specialParamBoxId = tool === 'midjourney' ? `${tool}-parameters` : `${tool}-negative-prompt`;
+                const specialParamBox = contentArea.querySelector(`#${specialParamBoxId}`);
+                if(specialParamBox) specialParamBox.textContent = '정보 없음';
+                
+                const imageDisplay = contentArea.querySelector(`#${tool}-base-image-display`);
+                if(imageDisplay) imageDisplay.innerHTML = '<div class="no-image-message">이미지 없음</div>';
+
+                Object.keys(VARIATION_TYPES_MAP).forEach(typeKey => {
+                    const variantDetailArea = contentArea.querySelector(`#${tool}-${typeKey}-variant-details`);
+                    if(variantDetailArea) variantDetailArea.innerHTML = '<div class="no-image-message">데이터 없음</div>';
+                });
+            });
+        }
+
+
+        function copyIndividualPrompt(aiTool, fieldKey) {
+            if (!currentConceptId || !currentConceptType) { showToast('선택된 컨셉아트가 없습니다.'); return; }
+            const concept = conceptArtData[currentConceptType][currentConceptId];
+            const textToCopy = concept?.prompts?.[aiTool]?.[fieldKey] || '';
+            if (!textToCopy) { showToast(`${aiTool} ${fieldKey} 정보가 없습니다.`); return; }
+            copyToClipboard(textToCopy, `${aiTool} ${fieldKey} 프롬프트가`);
+        }
+
+        function displayVariantPrompts(variationsByAI, conceptType) {
+            const variantsMainContent = document.getElementById('variants-main-content');
+            const variantsPlaceholder = document.getElementById('variants-placeholder');
+
+            if (conceptType !== 'character') {
+                variantsMainContent.style.display = 'none';
+                variantsPlaceholder.style.display = 'block';
+                return;
+            }
+            variantsMainContent.style.display = 'block';
+            variantsPlaceholder.style.display = 'none';
+
+            AI_TOOLS.forEach(tool => {
+                const toolVariations = variationsByAI?.[tool];
+                Object.keys(VARIATION_TYPES_MAP).forEach(typeKey => {
+                    const container = document.getElementById(`${tool}-${typeKey}-variant-details`);
+                    if (!container) return;
+                    container.innerHTML = '';
+
+                    const schemaKeyBase = VARIATION_TYPES_MAP[typeKey].schema_key_base;
+                    let variationPrompts;
+
+                    if (tool === 'midjourney') {
+                        const englishPrompt = toolVariations?.[`${schemaKeyBase}_permutation_english`];
+                        const translatedPrompt = toolVariations?.[`${schemaKeyBase}_permutation_translated`];
+                        if (englishPrompt || translatedPrompt) {
+                            variationPrompts = [{ english: englishPrompt, translated: translatedPrompt }]; // Treat as a single item array for consistent handling
+                        }
+                    } else {
+                        variationPrompts = toolVariations?.[schemaKeyBase]; // This is an array of promptPair objects
+                    }
+
+                    if (!variationPrompts || variationPrompts.length === 0) {
+                        container.innerHTML = `<div class="no-image-message">${VARIATION_TYPES_MAP[typeKey].name_kr} 변형 프롬프트가 없습니다.</div>`;
+                        return;
+                    }
+                    
+                    variationPrompts.forEach((promptData, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'variant-item';
+                        itemDiv.innerHTML = `
+                            <h4>${VARIATION_TYPES_MAP[typeKey].name_kr} #${tool === 'midjourney' ? '순열' : index + 1}</h4>
+                            <div class="variant-prompt-pair">
+                                <span class="label">영어:</span>
+                                <div class="prompt-box">${promptData.english || '내용 없음'}</div>
+                                <button class="button btn-sm" onclick="copyToClipboard('${(promptData.english || '').replace(/'/g, "\\'")}', '영어 프롬프트가')">영어 복사</button>
+                            </div>
+                            <div class="variant-prompt-pair">
+                                <span class="label">번역:</span>
+                                <div class="prompt-box">${promptData.translated || '내용 없음'}</div>
+                                <button class="button btn-sm" onclick="copyToClipboard('${(promptData.translated || '').replace(/'/g, "\\'")}', '번역 프롬프트가')">번역 복사</button>
+                            </div>
+                            <div class="image-preview-container">
+                                <h5>생성된 이미지</h5>
+                                <div class="image-display-area" id="${tool}-${typeKey}-${index}-variant-image-display">
+                                    <div class="no-image-message">이미지 없음</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                                    <button class="button secondary btn-sm" onclick="addImageUrl('${tool}', '${typeKey}', ${index})">🔗 URL</button>
+                                    <button class="button secondary btn-sm" onclick="uploadImageFile('${tool}', '${typeKey}', ${index})">📁 업로드</button>
+                                </div>
+                            </div>`;
+                        container.appendChild(itemDiv);
+                        displayImage(tool, `${typeKey}_${index}`, conceptArtData[currentConceptType]?.[currentConceptId]?.generated_images?.variations?.[tool]?.[`${schemaKeyBase}_${index}`]);
+                    });
+                });
+            });
+            if (AI_TOOLS.length > 0) openAITab(null, currentVariantsAITab || AI_TOOLS[0], 'variant-prompt-ai-tabs', 'variant-prompt-ai-content-area');
+        }
+        
+        function displayImage(aiTool, typeOrSubtype, imageUrl, index = null) {
+            let imageDisplayAreaId;
+            if (typeOrSubtype === 'base') { // Base prompt image
+                imageDisplayAreaId = `${aiTool}-base-image-display`;
+            } else { // Variant prompt image (typeOrSubtype is like 'face_views_4_0', 'expressions_5_1')
+                 // index here is part of typeOrSubtype for variants already
+                const [variationKey, itemIndex] = typeOrSubtype.split(/_(?=\d+$)/); // split on last underscore before number
+                imageDisplayAreaId = `${aiTool}-${variationKey}-${itemIndex}-variant-image-display`;
+            }
+
+            const displayArea = document.getElementById(imageDisplayAreaId);
+            if (!displayArea) {
+                // console.warn(`Image display area not found: ${imageDisplayAreaId}`);
+                return;
+            }
+
+            displayArea.innerHTML = ''; // Clear previous content
+            if (imageUrl) {
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = `${aiTool} ${typeOrSubtype} 이미지`;
+                img.style.cursor = 'pointer';
+                img.onclick = function() { openImageModal(imageUrl); };
+                img.onerror = function() {
+                    this.parentElement.innerHTML = '<div class="no-image-message">이미지 로드 실패. URL을 확인하세요.</div>';
+                };
+                img.style.cursor = 'pointer';
+                img.onclick = function() { openImageModal(imageUrl); };
+                displayArea.appendChild(img);
+            } else {
+                displayArea.innerHTML = '<div class="no-image-message">이미지 없음</div>';
+            }
+        }
+
+        function addImageUrl(aiTool, type, index = null) { // URL 입력 전용 함수
+            if (!currentConceptId || !currentConceptType) { showToast('선택된 컨셉아트가 없습니다.'); return; }
+
+            const concept = conceptArtData[currentConceptType][currentConceptId];
+            if (!concept.generated_images) concept.generated_images = { base_prompts: {}, variations: {} };
+            if (type === 'base' && !concept.generated_images.base_prompts) concept.generated_images.base_prompts = {};
+            if (type !== 'base' && !concept.generated_images.variations) concept.generated_images.variations = {};
+            if (type !== 'base' && !concept.generated_images.variations[aiTool]) concept.generated_images.variations[aiTool] = {};
+
+            const currentUrl = (type === 'base')
+                ? (concept.generated_images.base_prompts?.[aiTool] || '')
+                : (concept.generated_images.variations?.[aiTool]?.[`${VARIATION_TYPES_MAP[type].schema_key_base}_${index}`] || '');
+            
+            const newUrl = prompt(`[${aiTool.toUpperCase()}] ${type === 'base' ? '기본' : VARIATION_TYPES_MAP[type].name_kr + ' #' + (index+1)} 이미지 URL을 입력하세요:`, currentUrl);
+            if (newUrl === null) return;
+            
+            setImageUrl(aiTool, type, index, newUrl.trim(), concept);
+        }
+
+        function uploadImageFile(aiTool, type, index = null) { // 파일 업로드 전용 함수
+            if (!currentConceptId || !currentConceptType) { showToast('선택된 컨셉아트가 없습니다.'); return; }
+
+            const concept = conceptArtData[currentConceptType][currentConceptId];
+            if (!concept.generated_images) concept.generated_images = { base_prompts: {}, variations: {} };
+            if (type === 'base' && !concept.generated_images.base_prompts) concept.generated_images.base_prompts = {};
+            if (type !== 'base' && !concept.generated_images.variations) concept.generated_images.variations = {};
+            if (type !== 'base' && !concept.generated_images.variations[aiTool]) concept.generated_images.variations[aiTool] = {};
+
+            selectLocalImageFile(aiTool, type, index, concept);
+        }
+
+        function setImageUrl(aiTool, type, index, imageUrl, concept) {
+            if (type === 'base') {
+                concept.generated_images.base_prompts[aiTool] = imageUrl;
+                displayImage(aiTool, 'base', imageUrl);
+            } else {
+                const variationKey = `${VARIATION_TYPES_MAP[type].schema_key_base}_${index}`;
+                concept.generated_images.variations[aiTool][variationKey] = imageUrl;
+                displayImage(aiTool, `${type}_${index}`, imageUrl);
+            }
+            saveDataToLocalStorage();
+            updateImageGallery(concept);
+            showToast('이미지가 업데이트되었습니다.');
+        }
+
+        function selectLocalImageFile(aiTool, type, index, concept) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.style.display = 'none';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // 이미지 파일을 Data URL로 변환
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const dataUrl = event.target.result;
+                    setImageUrl(aiTool, type, index, dataUrl, concept);
+                };
+                reader.readAsDataURL(file);
+                
+                // input 요소 정리
+                document.body.removeChild(input);
+            };
+            
+            input.oncancel = function() {
+                document.body.removeChild(input);
+            };
+            
+            document.body.appendChild(input);
+            input.click();
+        }
+
+        function updateImageGallery(concept) {
+            const galleryContent = document.getElementById('image-gallery-content');
+            galleryContent.innerHTML = '';
+            if (!concept || !concept.name) {
+                 galleryContent.innerHTML = '<div class="no-image-message">컨셉아트를 선택해주세요.</div>';
+                return;
+            }
+
+            const imagesForGallery = [];
+            // Base prompt images
+            if (concept.generated_images?.base_prompts) {
+                AI_TOOLS.forEach(tool => {
+                    if (concept.generated_images.base_prompts[tool]) {
+                        imagesForGallery.push({
+                            name: `${concept.name} - ${tool.charAt(0).toUpperCase() + tool.slice(1)} 기본`,
+                            imageUrl: concept.generated_images.base_prompts[tool],
+                            prompt: concept.prompts?.[tool]?.prompt_english || ''
+                        });
+                    }
+                });
+            }
+            // Variant prompt images
+            if (concept.type === 'character' && concept.generated_images?.variations) {
+                AI_TOOLS.forEach(tool => {
+                    if (concept.generated_images.variations[tool]) {
+                        Object.keys(concept.generated_images.variations[tool]).forEach(variationKey => { // e.g., face_views_4_0
+                            const imageUrl = concept.generated_images.variations[tool][variationKey];
+                            if (imageUrl) {
+                                const [typeBase, itemIndexStr] = variationKey.split(/_(?=\d+$)/); // face_views_4, 0
+                                const itemIndex = parseInt(itemIndexStr);
+                                let promptData;
+                                if(tool === 'midjourney') {
+                                    promptData = concept.variations?.[tool]?.[`${typeBase}_permutation_english`]; // single string
+                                } else {
+                                     promptData = concept.variations?.[tool]?.[typeBase]?.[itemIndex]?.english;
+                                }
+                                
+                                let variationDisplayName = typeBase;
+                                for(const htmlKey in VARIATION_TYPES_MAP) {
+                                    if(VARIATION_TYPES_MAP[htmlKey].schema_key_base === typeBase) {
+                                        variationDisplayName = VARIATION_TYPES_MAP[htmlKey].name_kr;
+                                        break;
+                                    }
+                                }
+
+                                imagesForGallery.push({
+                                    name: `${concept.name} - ${tool.charAt(0).toUpperCase() + tool.slice(1)} ${variationDisplayName} #${tool === 'midjourney' ? '순열' :itemIndex + 1}`,
+                                    imageUrl: imageUrl,
+                                    prompt: promptData || ''
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            if (imagesForGallery.length === 0) {
+                galleryContent.innerHTML = '<div class="no-image-message">이 컨셉아트에 추가된 이미지가 없습니다.</div>';
+                return;
+            }
+            imagesForGallery.forEach(imgData => galleryContent.appendChild(createImageCard(imgData)));
+        }
+
+        function createImageCard(imageData) {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            const img = document.createElement('img');
+            img.src = imageData.imageUrl;
+            img.alt = imageData.name;
+			img.style.cursor = 'pointer';
+            img.onclick = function() { openImageModal(imageData.imageUrl); };
+            img.onerror = function() { /* basic error handling */ this.parentElement.innerHTML = `<div class="no-image-message" style="height:180px; display:flex; align-items:center; justify-content:center;">${imageData.name}<br/>(이미지 로드 실패)</div>`; };
+            const info = document.createElement('div');
+            info.className = 'image-card-info';
+            const title = document.createElement('h4');
+            title.textContent = imageData.name;
+            const promptPreview = document.createElement('p');
+            const pText = imageData.prompt || '프롬프트 정보 없음';
+            promptPreview.textContent = pText.length > 40 ? pText.substring(0, 40) + '...' : pText;
+            promptPreview.title = pText; // Full prompt on hover
+            info.appendChild(title);
+            info.appendChild(promptPreview);
+            card.appendChild(img);
+            card.appendChild(info);
+            return card;
+        }
+        
+        // --- Tab Control ---
+        function openTab(event, tabId) {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tabs > .tab-button').forEach(tb => tb.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (event) event.currentTarget.classList.add('active');
+            else document.querySelector(`.tabs > .tab-button[onclick*="'${tabId}'"]`).classList.add('active');
+        }
+
+        function openAITab(event, aiTool, tabsContainerId, contentAreaId) {
+            currentPromptsAITab = (tabsContainerId === 'base-prompt-ai-tabs') ? aiTool : currentPromptsAITab;
+            currentVariantsAITab = (tabsContainerId === 'variant-prompt-ai-tabs') ? aiTool : currentVariantsAITab;
+
+            document.querySelectorAll(`#${tabsContainerId} .tab-button`).forEach(btn => btn.classList.remove('active'));
+            if (event) event.currentTarget.classList.add('active');
+            else document.querySelector(`#${tabsContainerId} .tab-button[onclick*="'${aiTool}'"]`)?.classList.add('active');
+
+
+            document.querySelectorAll(`#${contentAreaId} > div`).forEach(content => content.classList.remove('active'));
+            const activeContentId = (tabsContainerId === 'base-prompt-ai-tabs') ? `base-prompt-${aiTool}-content` : `variant-prompt-${aiTool}-content`;
+            document.getElementById(activeContentId)?.classList.add('active');
+            
+            // If opening variant AI tab, ensure its current nested tab is also opened
+            if (tabsContainerId === 'variant-prompt-ai-tabs' && currentConceptType === 'character') {
+                 openNestedTab(null, aiTool, currentVariantTypeTab[aiTool] || 'face_views_4');
+            }
+        }
+
+        function openNestedTab(event, aiTool, variantTypeKey) { // variantTypeKey is 'face_views_4', 'expressions_5', etc.
+            currentVariantTypeTab[aiTool] = variantTypeKey;
+            document.querySelectorAll(`#variant-prompt-${aiTool}-content .nested-tabs .nested-tab-button`).forEach(btn => btn.classList.remove('active'));
+             if (event) event.currentTarget.classList.add('active');
+             else document.querySelector(`#variant-prompt-${aiTool}-content .nested-tabs .nested-tab-button[onclick*="'${variantTypeKey}'"]`)?.classList.add('active');
+
+
+            document.querySelectorAll(`#variant-prompt-${aiTool}-content .nested-tab-content`).forEach(content => content.classList.remove('active'));
+            document.getElementById(`${aiTool}-${variantTypeKey}-variant-details`)?.classList.add('active');
+        }
+        
+        // --- Clipboard Utility ---
+        function copyToClipboard(text, type = "텍스트가") {
+            if (!text) {
+                showToast(`${type} 복사할 내용이 없습니다.`);
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(`${type} 클립보드에 복사되었습니다!`);
+                }).catch(err => {
+                    console.warn('클립보드 복사 실패 (navigator.clipboard):', err);
+                    fallbackCopyToClipboard(text, type); 
+                });
+            } else {
+                fallbackCopyToClipboard(text, type);
+            }
+        }
+        // 이미지 모달 함수들
+			function openImageModal(imageUrl) {
+				const modal = document.getElementById('imageModal');
+				const modalImg = document.getElementById('modalImage');
+				if (modal && modalImg && imageUrl) {
+					modal.style.display = 'flex';
+					modalImg.src = imageUrl;
+				}
+			}
+
+			function closeImageModal(event) {
+				const modal = document.getElementById('imageModal');
+				if (modal && (event.target === modal || event.target.classList.contains('image-modal-close'))) {
+					modal.style.display = 'none';
+					document.getElementById('modalImage').src = '';
+				}
+			}
+
+        function fallbackCopyToClipboard(text, type) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; 
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                if (document.execCommand('copy')) {
+                    showToast(`${type} 클립보드에 복사되었습니다!`);
+                } else {
+                    showToast('클립보드 복사에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error('클립보드 복사 실패 (execCommand):', err);
+                showToast('클립보드 복사에 실패했습니다.');
+            }
+            document.body.removeChild(textarea);
+        }
+
+    </script>
+</body>
+</html>

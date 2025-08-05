@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIFI 영상 프레임워크 스토리보드 - Dark Theme</title>
+    
+    <!-- Content Security Policy for Google Drive iframe -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-src 'self' https://drive.google.com https://*.googleusercontent.com https://docs.google.com; img-src 'self' data: blob: https: http:; media-src 'self' data: blob: https: http:;">
+    
+    <!-- SEO -->
+    <meta name="description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템. 시퀀스, 씬, 샷 단위로 체계적 관리">
+    <meta name="keywords" content="AI 영상제작, 스토리보드, Luma, Kling, Veo2, Runway, 영상 프레임워크">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aifiwb.netlify.app/your_title_storyboard_v9.4.html">
+    <meta property="og:title" content="AIFI 영상 프레임워크 스토리보드">
+    <meta property="og:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템. 시퀀스, 씬, 샷 단위로 체계적으로 관리하며 다양한 AI 도구와 연동됩니다.">
+    <meta property="og:image" content="https://aifiwb.netlify.app/og-image-storyboard.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:site_name" content="AIFI 프로젝트">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://aifiwb.netlify.app/your_title_storyboard_v9.4.html">
+    <meta property="twitter:title" content="AIFI 영상 프레임워크 스토리보드">
+    <meta property="twitter:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템. 시퀀스, 씬, 샷 단위로 체계적 관리">
+    <meta property="twitter:image" content="https://aifiwb.netlify.app/og-image-storyboard.jpg">
+
+    <!-- 카카오톡 -->
+    <meta property="kakao:title" content="AIFI 영상 프레임워크 스토리보드">
+    <meta property="kakao:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템">
+    <meta property="kakao:image" content="https://aifiwb.netlify.app/og-image-storyboard.jpg">
+
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    
+    <!-- 외부 CSS 파일 -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="../index.html" class="home-btn">🏠 홈</a>
+            <div class="header-title">Film Storyboard</div>
+         <!-- <div class="project-info">
+                <div id="project-title">새 프로젝트</div>
+                <div id="project-file" style="font-size: 0.8rem; opacity: 0.8;">파일: 없음</div>
+            </div> -->
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="concept-art-btn">컨셉아트 보기</button>
+            <button class="btn btn-primary" id="import-btn">JSON 가져오기</button>
+            <div class="dropdown" style="display: inline-block;">
+                <button class="btn btn-primary dropdown-toggle" id="export-btn" onclick="toggleExportDropdown(event)">
+                    JSON 내보내기 ▼
+                </button>
+                <div id="export-dropdown" class="dropdown-menu" style="display: none; position: absolute; background: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1000; min-width: 180px;">
+                    <button class="dropdown-item" onclick="exportFullData(); hideExportDropdown();" style="display: block; width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                        📦 전체 프로젝트 백업
+                    </button>
+                    <button class="dropdown-item" onclick="exportData(); hideExportDropdown();" style="display: block; width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                        🔗 URL만 백업
+                    </button>
+                </div>
+            </div>
+			<button class="btn btn-secondary" id="scenario-export-btn" style="display:none;">전체 시나리오 다운로드</button>
+			<button class="btn btn-danger" id="reset-btn" style="margin-left: 20px;">데이터 초기화</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="navigation">
+            <div class="nav-header">
+                <div class="project-header">
+                    <h3 id="nav-project-title">프로젝트 로딩 중...</h3>
+                    <small id="nav-project-description" style="color: #666;">프로젝트 설명이 여기에 표시됩니다</small>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn btn-secondary" id="expand-all-btn">전체 펼치기</button>
+                    <button class="btn btn-secondary" id="collapse-all-btn">전체 접기</button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="시퀀스, 씬, 샷 검색..." />
+                </div>
+            </div>
+            <div class="nav-content" id="navigation-content">
+                <div class="empty-state" id="nav-empty">
+                    <div class="empty-state-icon">📁</div>
+                    <div>데이터가 없습니다</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px;">JSON 가져오기를 사용해 데이터를 로드해주세요</div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="content-header">
+                <div>
+                    <h1 class="content-title" id="content-title">프로젝트 선택</h1>
+                    <p class="content-subtitle" id="content-subtitle">좌측에서 시퀀스, 씬, 또는 샷을 선택하세요</p>
+                </div>
+                <div class="content-actions" id="content-actions" style="display: none;">
+                </div>
+            </div>
+
+            <div id="content-area">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🎬</div>
+                    <div>시퀀스, 씬, 또는 샷을 선택하여 상세 정보를 확인하세요</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="message-container" class="message-container"></div>
+	<footer style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 10px; background: rgba(255,255,255,0.9); border-top: 1px solid #e0e0e0; font-size: 0.85rem; color: #666;">
+    © 2025 AiFi. All rights reserved.
+    </footer>
+
+    <input type="file" id="file-input" class="hidden-file-input" accept=".json">
+	<!-- 이미지 크게 보기 모달 -->
+		<div id="imageDisplayModal" class="image-modal" onclick="closeImageModal(event)">
+			<span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
+			<img class="image-modal-content" id="modalImageContent">
+		</div>
+
+    <!-- 외부 JavaScript 파일 -->
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+/* Message Component Styles */
+
+/* Message Container */
+.message-container {
+    position: fixed;
+    top: calc(var(--header-height) + 20px);
+    right: var(--spacing-lg);
+    z-index: var(--z-modal);
+    max-width: 400px;
+}
+
+/* Message Base */
+.message {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid var(--info-color);
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Message Types */
+.message.success-message {
+    border-left-color: var(--success-color);
+}
+
+.message.error-message {
+    border-left-color: var(--danger-color);
+}
+
+.message.warning-message {
+    border-left-color: var(--warning-color);
+}
+
+.message.info-message {
+    border-left-color: var(--info-color);
+}
+
+/* Message Content */
+.message-title {
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.message-text {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-md);
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+}
+
+.close-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+/* Toast Messages */
+.toast {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    background: #333;
+    color: white;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-modal);
+    animation: toastSlideUp 0.3s ease-out;
+    max-width: 350px;
+}
+
+@keyframes toastSlideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.toast.success {
+    background: var(--success-color);
+}
+
+.toast.error {
+    background: var(--danger-color);
+}
+
+.toast.warning {
+    background: var(--warning-color);
+}
+
+/* Notification Badge */
+.notification-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    color: white;
+    background: var(--danger-color);
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Responsive Messages */
+@media (max-width: 768px) {
+    .message-container {
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        max-width: none;
+    }
+    
+    .toast {
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        max-width: none;
+    }
+}

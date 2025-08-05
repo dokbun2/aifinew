@@ -1,0 +1,115 @@
+/* Main Content Area Styles */
+
+.main-content {
+    flex: 1;
+    margin-top: var(--header-height);
+    padding: var(--spacing-xl);
+    padding-bottom: 70px; /* Footer height + extra space */
+    overflow-y: auto;
+    height: calc(100vh - var(--header-height));
+}
+
+/* Content Header */
+.content-header {
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content-title {
+    font-size: var(--font-size-xxl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.content-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+}
+
+.content-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+/* Info Section */
+.info-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 25px;
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.info-section h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.info-section h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #444;
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Info Table */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.info-table th {
+    text-align: left;
+    padding: var(--spacing-md) var(--spacing-md);
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    font-weight: 600;
+    color: #555;
+    width: 150px;
+}
+
+.info-table td {
+    padding: var(--spacing-md) var(--spacing-md);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+}
+
+/* Responsive Content */
+@media (max-width: 768px) {
+    .main-content {
+        padding: var(--spacing-lg);
+        margin-left: 0;
+    }
+    
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+    
+    .content-title {
+        font-size: var(--font-size-xl);
+    }
+    
+    .content-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .info-table th {
+        width: auto;
+        font-size: var(--font-size-sm);
+    }
+    
+    .info-table td {
+        font-size: var(--font-size-sm);
+    }
+}
