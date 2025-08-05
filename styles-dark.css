@@ -109,7 +109,7 @@ body.dark-theme {
     background: rgba(15, 15, 15, 0.9);
     backdrop-filter: blur(20px);
     color: var(--text-primary);
-    padding: 0 var(--space-xl) 0.8rem;
+    padding: 1rem var(--space-xl) 0.8rem;
     text-align: center;
     border-radius: var(--radius-xl);
     margin-bottom: var(--space-sm);
@@ -146,6 +146,7 @@ body.dark-theme {
     color: var(--text-secondary);
     opacity: 1;
     margin: 0;
+    margin-bottom: 1rem;
 }
 
 .clear-temp-data-btn {
