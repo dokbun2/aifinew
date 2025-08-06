@@ -502,6 +502,68 @@ body.dark-theme {
     left: 100%;
 }
 
+/* Stage 업로드 완료 상태 스타일 */
+.stage-card.stage-completed {
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+    border-color: rgba(74, 222, 128, 0.5);
+    position: relative;
+}
+
+.stage-card.stage-completed::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border-radius: var(--radius-md);
+    pointer-events: none;
+}
+
+.stage-card.stage-completed .stage-number {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    position: relative;
+}
+
+.stage-check-icon {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background: #22c55e;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.5);
+    animation: checkBounce 0.5s ease-out;
+}
+
+@keyframes checkBounce {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.stage-card.stage-completed:hover {
+    transform: translateY(-4px);
+    border-color: rgba(74, 222, 128, 0.8);
+    box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3);
+}
+
 .stage-number {
     width: 45px;
     height: 45px;

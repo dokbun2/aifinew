@@ -5473,7 +5473,7 @@ try {
                                             
                                             if (mergedCount > 0) {
                                                 console.log(`✅ ${mergedCount}개의 샷에 Stage 6 이미지 프롬프트를 병합했습니다.`);
-                                                showMessage(`Stage 6 이미지 프롬프트가 ${mergedCount}개의 샷에 성공적으로 적용되었습니다.`, 'success');
+                                                // showMessage(`Stage 6 이미지 프롬프트가 ${mergedCount}개의 샷에 성공적으로 적용되었습니다.`, 'success');
                                                 
                                                 // 데이터 저장
                                                 saveDataToLocalStorage();
@@ -5631,7 +5631,7 @@ try {
                                     
                                     if (mergedCount > 0) {
                                         console.log(`✅ ${mergedCount}개의 샷에 Stage 6 이미지 프롬프트를 병합했습니다.`);
-                                        showMessage(`Stage 6 이미지 프롬프트가 ${mergedCount}개의 샷에 성공적으로 적용되었습니다.`, 'success');
+                                        // showMessage(`Stage 6 이미지 프롬프트가 ${mergedCount}개의 샷에 성공적으로 적용되었습니다.`, 'success');
                                         
                                         // 데이터 저장
                                         saveDataToLocalStorage();

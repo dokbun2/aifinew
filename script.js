@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupCardClickHandlers();
     setupVideoImport();
     updateProjectCardStatus(); // 페이지 로드 시 카드 상태 초기화
+    restoreCompletedStages(); // 완료된 Stage 카드 표시 복원
     
     // Stage 2 파일 입력 이벤트 리스너 추가
     const stage2FileInput = document.getElementById('stage2-json-input');
@@ -374,9 +375,25 @@ function clearAllTempData() {
         }
     });
     
+    // 완료된 스테이지 목록 삭제
+    if (localStorage.getItem('completedStages')) {
+        localStorage.removeItem('completedStages');
+        deletedCount++;
+    }
+    
     // 업로드 상태 초기화
     Object.keys(uploadStatus).forEach(key => {
         uploadStatus[key] = false;
+    });
+    
+    // Stage 카드의 완료 표시 제거
+    const stageCards = document.querySelectorAll('.stage-card');
+    stageCards.forEach(card => {
+        card.classList.remove('stage-completed');
+        const checkIcon = card.querySelector('.stage-check-icon');
+        if (checkIcon) {
+            checkIcon.remove();
+        }
     });
     
     // 프로젝트 카드 상태 업데이트
@@ -1645,6 +1662,9 @@ function showStageUploadComplete(stageNumber) {
     const message = `Stage ${stageNumber}번의 업로드가 완료되었습니다.`;
     addUploadStatusItem(stageNumber, message, 'success');
     
+    // 메인 페이지의 Stage 카드에 완료 표시 추가
+    markStageCardAsCompleted(stageNumber);
+    
     // 프로젝트 카드 상태 업데이트
     updateProjectCardStatus();
     
@@ -1860,6 +1880,9 @@ function completeStageUpload(stageNumber) {
     setStageStatus(stageNumber, 'completed');
     completedStages.push(stageNumber);
     
+    // 메인 페이지의 Stage 카드에도 완료 표시 추가
+    markStageCardAsCompleted(stageNumber);
+    
     // 진행률 업데이트
     updateOverallProgress();
     
@@ -1989,5 +2012,44 @@ window.handleModalAction = function() {
     setTimeout(() => {
         window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';
     }, 300);
+}
+
+// 메인 페이지의 Stage 카드에 완료 표시 추가
+function markStageCardAsCompleted(stageNumber) {
+    // Stage 카드 찾기
+    const stageCards = document.querySelectorAll('.stage-card');
+    stageCards.forEach(card => {
+        const stageNumberElement = card.querySelector('.stage-number');
+        if (stageNumberElement && stageNumberElement.textContent === String(stageNumber)) {
+            // 카드에 완료 클래스 추가
+            card.classList.add('stage-completed');
+            
+            // 기존 onclick 이벤트 유지하면서 시각적 표시만 추가
+            if (!card.querySelector('.stage-check-icon')) {
+                const checkIcon = document.createElement('span');
+                checkIcon.className = 'stage-check-icon';
+                checkIcon.textContent = '✓';
+                stageNumberElement.appendChild(checkIcon);
+            }
+        }
+    });
+    
+    // localStorage에도 완료 상태 저장
+    const completedStagesKey = 'completedStages';
+    let savedCompletedStages = JSON.parse(localStorage.getItem(completedStagesKey) || '[]');
+    if (!savedCompletedStages.includes(stageNumber)) {
+        savedCompletedStages.push(stageNumber);
+        localStorage.setItem(completedStagesKey, JSON.stringify(savedCompletedStages));
+    }
+}
+
+// 페이지 로드 시 완료된 Stage 카드 표시 복원
+function restoreCompletedStages() {
+    const completedStagesKey = 'completedStages';
+    const savedCompletedStages = JSON.parse(localStorage.getItem(completedStagesKey) || '[]');
+    
+    savedCompletedStages.forEach(stageNumber => {
+        markStageCardAsCompleted(stageNumber);
+    });
 }
 
