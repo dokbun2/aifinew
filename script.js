@@ -1757,62 +1757,11 @@ function closeUploadNotification() {
 let currentUploadStage = 0;
 let completedStages = [];
 
-// 순차적 업로드 시작
-window.startSequentialUpload = function() {
-    console.log('startSequentialUpload 함수 호출됨');
-    const modal = document.getElementById('sequential-upload-modal');
-    if (modal) {
-        console.log('모달 요소를 찾았습니다');
-        modal.classList.add('show');
-        currentUploadStage = 0;
-        completedStages = [];
-        
-        // 모든 Stage 상태 초기화
-        [2, 4, 5, 6, 7, 8].forEach(stage => {
-            setStageStatus(stage, 'waiting');
-            disableStageButton(stage);
-        });
-        
-        // Stage 2 버튼 활성화
-        enableStageButton(2);
-        
-        // 진행률 초기화
-        updateOverallProgress();
-        
-        // 메시지 초기화
-        const message = document.getElementById('upload-message');
-        if (message) {
-            message.className = 'upload-message';
-            message.textContent = '';
-        }
-        
-        // 액션 버튼 숨기기
-        const actionBtn = document.getElementById('modal-action-btn');
-        if (actionBtn) {
-            actionBtn.style.display = 'none';
-        }
-    } else {
-        console.error('sequential-upload-modal 요소를 찾을 수 없습니다');
-    }
-}
+// (이 위치의 중복된 startSequentialUpload 함수 정의 제거됨)
 
-// 모달 닫기
-window.closeSequentialUploadModal = function() {
-    const modal = document.getElementById('sequential-upload-modal');
-    if (modal) {
-        modal.classList.remove('show');
-    }
-}
+// (중복된 closeSequentialUploadModal 함수 정의 제거됨)
 
-// Stage 업로드
-window.uploadStage = function(stageNumber) {
-    const fileInput = document.getElementById(`stage${stageNumber}-json-input`);
-    if (fileInput) {
-        // 파일 선택 이벤트 리스너 추가
-        fileInput.onchange = (event) => handleSequentialStageUpload(event, stageNumber);
-        fileInput.click();
-    }
-}
+// (중복된 uploadStage 함수 정의 제거됨)
 
 // 순차적 Stage 업로드 처리
 function handleSequentialStageUpload(event, stageNumber) {
@@ -2015,7 +1964,7 @@ function startSequentialUpload() {
         modal.style.display = 'flex';
         
         // Stage 2부터 활성화
-        updateStageStatus(2, 'waiting');
+        setStageStatus(2, 'waiting');
         enableStageButton(2);
         currentStage = 2;
     }
@@ -2044,7 +1993,7 @@ function resetUploadState() {
     
     // 모든 스테이지 상태를 waiting으로 설정
     [2, 4, 5, 6, 7, 8].forEach(stage => {
-        updateStageStatus(stage, 'waiting');
+        setStageStatus(stage, 'waiting');
         disableStageButton(stage);
     });
     
@@ -2074,7 +2023,7 @@ function handleStageFileUpload(stageNumber, files) {
     if (!files || files.length === 0) return;
     
     // 로딩 상태로 변경
-    updateStageStatus(stageNumber, 'loading');
+    setStageStatus(stageNumber, 'loading');
     showUploadMessage(`Stage ${stageNumber} 파일 처리 중...`);
     
     // 파일 읽기 및 처리
@@ -2365,4 +2314,13 @@ async function processStage8Files(files) {
     showUploadMessage('유효한 Stage 8 파일이 없습니다.', 'error');
     return false;
 }
+
+// Window 객체에 함수 할당 (onclick 이벤트에서 사용하기 위함)
+window.clearAllTempData = clearAllTempData;
+window.closeUploadNotification = closeUploadNotification;
+window.startSequentialUpload = startSequentialUpload;
+window.uploadStage = uploadStage;
+window.handleStageFileUpload = handleStageFileUpload;
+window.closeSequentialUploadModal = closeSequentialUploadModal;
+window.handleModalAction = handleModalAction;
 
