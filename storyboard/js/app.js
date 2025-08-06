@@ -3893,35 +3893,48 @@ try {
 			const newTranslation = document.getElementById(`edit-translation-${shotId}-${aiTool}-${imageId}`)?.value || '';
 			const newParameters = document.getElementById(`edit-parameters-${shotId}-${aiTool}-${imageId}`)?.value || '';
 
-			// Stage 6 데이터 업데이트
+			// Stage 6 데이터 초기화 (기존 데이터 보존하면서)
 			if (!window.stage6ImagePrompts) window.stage6ImagePrompts = {};
 			if (!window.stage6ImagePrompts[shotId]) window.stage6ImagePrompts[shotId] = {};
 			if (!window.stage6ImagePrompts[shotId][imageId]) {
 				window.stage6ImagePrompts[shotId][imageId] = { prompts: {} };
 			}
+			if (!window.stage6ImagePrompts[shotId][imageId].prompts) {
+				window.stage6ImagePrompts[shotId][imageId].prompts = {};
+			}
 			if (!window.stage6ImagePrompts[shotId][imageId].prompts[aiTool]) {
 				window.stage6ImagePrompts[shotId][imageId].prompts[aiTool] = {};
 			}
 
-			// 프롬프트 데이터 업데이트
-			window.stage6ImagePrompts[shotId][imageId].prompts[aiTool].prompt = newPrompt;
-			window.stage6ImagePrompts[shotId][imageId].prompts[aiTool].prompt_translated = newTranslation;
+			// 기존 데이터를 보존하면서 수정된 부분만 업데이트
+			const existingPromptData = window.stage6ImagePrompts[shotId][imageId].prompts[aiTool];
+			
+			// 수정된 필드만 업데이트
+			window.stage6ImagePrompts[shotId][imageId].prompts[aiTool] = {
+				...existingPromptData,  // 기존 데이터 보존
+				prompt: newPrompt,
+				prompt_translated: newTranslation
+			};
 			
 			if (aiTool === 'midjourney') {
 				window.stage6ImagePrompts[shotId][imageId].prompts[aiTool].parameters = newParameters;
 			}
 
-			// shot.image_prompts 업데이트
+			// shot.image_prompts 업데이트 (기존 데이터 보존)
 			if (!shot.image_prompts) shot.image_prompts = {};
 			if (!shot.image_prompts[aiTool]) shot.image_prompts[aiTool] = {};
 
-			shot.image_prompts[aiTool].main_prompt = newPrompt;
-			shot.image_prompts[aiTool].main_prompt_translated = newTranslation;
+			// 기존 데이터를 보존하면서 업데이트
+			shot.image_prompts[aiTool] = {
+				...shot.image_prompts[aiTool],  // 기존 데이터 보존
+				main_prompt: newPrompt,
+				main_prompt_translated: newTranslation
+			};
 			
 			if (aiTool === 'midjourney') {
 				shot.image_prompts[aiTool].parameters = newParameters;
 			} else {
-				// 다른 AI 도구의 경우 기본 parameters 설정
+				// 다른 AI 도구의 경우 parameters는 Stage 6 데이터에서 생성
 				let parameters = '';
 				const promptData = window.stage6ImagePrompts[shotId][imageId].prompts[aiTool];
 				if (promptData.negative_prompt) {
@@ -3933,7 +3946,10 @@ try {
 				if (promptData.aspect_ratio) {
 					parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
 				}
-				shot.image_prompts[aiTool].parameters = parameters;
+				// parameters가 있을 때만 업데이트
+				if (parameters) {
+					shot.image_prompts[aiTool].parameters = parameters;
+				}
 			}
 
 			// localStorage 저장
