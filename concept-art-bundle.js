@@ -1314,8 +1314,8 @@ async function loadLocalJsonFile() {
 
 function initialize() {
     // 이벤트 리스너 설정 - 헤더 버튼과 기존 버튼 모두 지원
-    const exportBtns = ['export-json-btn', 'header-import-json-btn'];
-    const importBtns = ['import-json-btn', 'header-export-json-btn'];
+    const exportBtns = ['export-json-btn', 'header-export-json-btn'];
+    const importBtns = ['import-json-btn', 'header-import-json-btn'];
     const resetBtns = ['reset-data-btn', 'header-clear-btn'];
     
     // Export 버튼들
