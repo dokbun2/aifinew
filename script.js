@@ -1787,16 +1787,42 @@ window.startSequentialUpload = function() {
         currentUploadStage = 0;
         completedStages = [];
         
+        // localStorage에서 완료된 Stage 목록 가져오기
+        const savedCompletedStages = JSON.parse(localStorage.getItem('completedStages') || '[]');
+        
         // 모든 Stage 상태 초기화
         [2, 4, 5, 6, 7, 8].forEach(stage => {
-            setStageStatus(stage, 'waiting');
-            disableStageButton(stage);
+            if (savedCompletedStages.includes(stage)) {
+                // 이미 완료된 Stage는 완료 상태로 표시
+                setStageStatus(stage, 'completed');
+                completedStages.push(stage);
+                disableStageButton(stage);
+            } else {
+                setStageStatus(stage, 'waiting');
+                disableStageButton(stage);
+            }
         });
         
-        // Stage 2 버튼 활성화
-        enableStageButton(2);
+        // 다음으로 업로드할 Stage 찾기
+        const stages = [2, 4, 5, 6, 7, 8];
+        let nextStageToEnable = null;
+        for (const stage of stages) {
+            if (!savedCompletedStages.includes(stage)) {
+                nextStageToEnable = stage;
+                break;
+            }
+        }
         
-        // 진행률 초기화
+        // 다음 Stage 버튼 활성화
+        if (nextStageToEnable) {
+            enableStageButton(nextStageToEnable);
+        } else {
+            // 모든 Stage가 완료된 경우
+            showUploadMessage('모든 Stage 업로드가 이미 완료되었습니다!', 'success');
+            showModalActionButton();
+        }
+        
+        // 진행률 업데이트
         updateOverallProgress();
         
         // 메시지 초기화
@@ -1806,9 +1832,9 @@ window.startSequentialUpload = function() {
             message.textContent = '';
         }
         
-        // 액션 버튼 숨기기
+        // 액션 버튼 숨기기 (모든 Stage가 완료된 경우 제외)
         const actionBtn = document.getElementById('modal-action-btn');
-        if (actionBtn) {
+        if (actionBtn && nextStageToEnable) {
             actionBtn.style.display = 'none';
         }
     } else {
@@ -1826,6 +1852,13 @@ window.closeSequentialUploadModal = function() {
 
 // Stage 업로드
 window.uploadStage = function(stageNumber) {
+    // 이미 완료된 Stage인지 확인
+    const stageItem = document.querySelector(`[data-stage="${stageNumber}"]`);
+    if (stageItem && stageItem.classList.contains('completed')) {
+        showUploadMessage(`Stage ${stageNumber}는 이미 업로드가 완료되었습니다.`, 'info');
+        return;
+    }
+    
     const fileInput = document.getElementById(`stage${stageNumber}-json-input`);
     if (fileInput) {
         // 파일 선택 이벤트 리스너 추가
@@ -1931,6 +1964,13 @@ function setStageStatus(stageNumber, status) {
                     statusIcon.classList.add('completed');
                     statusIcon.textContent = '✅';
                     stageItem.classList.add('completed');
+                    // 버튼 텍스트도 변경
+                    const button = stageItem.querySelector('.stage-upload-btn');
+                    if (button) {
+                        button.textContent = '완료됨';
+                        button.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+                        button.style.color = 'white';
+                    }
                     break;
                 case 'error':
                     statusIcon.classList.add('error');
@@ -1960,6 +2000,10 @@ function disableStageButton(stageNumber) {
         const button = stageItem.querySelector('.stage-upload-btn');
         if (button) {
             button.disabled = true;
+        }
+        // completed 상태가 아닌 경우에만 active 클래스 제거
+        if (!stageItem.classList.contains('completed')) {
+            stageItem.classList.remove('active');
         }
     }
 }
