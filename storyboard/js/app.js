@@ -18,9 +18,13 @@ const IMAGE_AI_TOOLS = ['midjourney', 'ideogram', 'leonardo', 'imagefx', 'openar
 // 동적 파일명 관리
 function getProjectFileName() {
     try {
-        const htmlFileName = window.location.pathname.split('/').pop();
-        const baseName = htmlFileName.replace('.html', '');
-        return baseName + '.json';
+        // 프로젝트 데이터가 있고 파일명이 있으면 사용
+        if (currentData && currentData.project_info && currentData.project_info.name) {
+            return currentData.project_info.name;
+        }
+        
+        // 기본값: 고정된 파일명 사용 (페이지 이동 시에도 일관성 유지)
+        return 'Film_Production_Manager.json';
     } catch (error) {
         return 'Film_Production_Manager.json';
     }
