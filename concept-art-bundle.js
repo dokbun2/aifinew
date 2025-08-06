@@ -129,6 +129,43 @@ const dataManager = {
 
     exportToJSON: function() {
         const totalConcepts = this.countTotalConcepts();
+        
+        // 수정된 프롬프트 가져오기
+        const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+        
+        // 데이터 복사 (원본 수정 방지)
+        const exportDataCopy = JSON.parse(JSON.stringify(state.conceptArtData));
+        
+        // 수정된 프롬프트 병합
+        if (Object.keys(editedPrompts).length > 0) {
+            Object.entries(editedPrompts).forEach(([key, editedData]) => {
+                const [conceptId, aiTool, ...promptParts] = key.split('_');
+                const promptType = promptParts.join('_');
+                
+                // 해당 컨셉 찾기
+                let concept = null;
+                for (const [type, concepts] of Object.entries(exportDataCopy)) {
+                    if (concepts[conceptId]) {
+                        concept = concepts[conceptId];
+                        break;
+                    }
+                }
+                
+                if (concept) {
+                    if (promptType === 'base') {
+                        // 기본 프롬프트 수정
+                        if (!concept.base_prompts) concept.base_prompts = {};
+                        concept.base_prompts[aiTool] = editedData.prompt;
+                    } else {
+                        // 변형 프롬프트 수정
+                        if (!concept.character_variations) concept.character_variations = {};
+                        if (!concept.character_variations[aiTool]) concept.character_variations[aiTool] = {};
+                        concept.character_variations[aiTool][promptType] = editedData.prompt;
+                    }
+                }
+            });
+        }
+        
         const exportData = {
             metadata: {
                 version: "1.2",
@@ -139,7 +176,7 @@ const dataManager = {
                 ...state.projectInfo,
                 total_concept_arts: totalConcepts
             },
-            concept_art_collection: state.conceptArtData
+            concept_art_collection: exportDataCopy
         };
         
         const dataStr = JSON.stringify(exportData, null, 2);
@@ -410,10 +447,18 @@ const uiRenderer = {
                 promptDiv.id = `base-${aiTool}-content`;
                 promptDiv.style.display = 'none';
                 
+                // 수정된 프롬프트 확인
+                const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+                const promptKey = `${concept.id}_${aiTool}_base`;
+                const displayPrompt = editedPrompts[promptKey]?.prompt || prompt;
+                const isEdited = editedPrompts[promptKey] ? true : false;
+                
                 promptDiv.innerHTML = `
                     <div class="prompt-container">
-                        <div class="prompt-text">${prompt}</div>
+                        <div class="prompt-text">${displayPrompt}</div>
+                        ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                         <button class="btn btn-primary" onclick="promptManager.copyPrompt('${aiTool}', 'base')">프롬프트 복사</button>
+                        <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', 'base')" style="margin-left: 8px;">프롬프트 수정</button>
                     </div>
                     <div class="image-container" id="image-base-${aiTool}">
                         <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
@@ -481,11 +526,19 @@ const uiRenderer = {
                         typeVariations.forEach((variation, index) => {
                             const variantDiv = document.createElement('div');
                             variantDiv.className = 'variant-item';
+                            // 수정된 프롬프트 확인
+                            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+                            const promptKey = `${concept.id}_${aiTool}_${variation.key}`;
+                            const displayPrompt = editedPrompts[promptKey]?.prompt || variation.prompt;
+                            const isEdited = editedPrompts[promptKey] ? true : false;
+                            
                             variantDiv.innerHTML = `
                                 <h4>${typeInfo.name_kr} ${index + 1}</h4>
                                 <div class="prompt-container">
-                                    <div class="prompt-text">${variation.prompt}</div>
+                                    <div class="prompt-text">${displayPrompt}</div>
+                                    ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                                     <button class="btn btn-primary" onclick="promptManager.copyVariantPrompt('${aiTool}', '${typeKey}', ${index})">프롬프트 복사</button>
+                                    <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', '${typeKey}', ${index})" style="margin-left: 8px;">프롬프트 수정</button>
                                 </div>
                                 <div class="image-container" id="image-${typeKey}_${index}-${aiTool}">
                                     <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
@@ -502,11 +555,19 @@ const uiRenderer = {
                         if (variations[permutationKey]) {
                             const permDiv = document.createElement('div');
                             permDiv.className = 'variant-item permutation';
+                            // 수정된 프롬프트 확인
+                            const editedPromptsP = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+                            const promptKeyP = `${concept.id}_${aiTool}_${permutationKey}`;
+                            const displayPromptP = editedPromptsP[promptKeyP]?.prompt || variations[permutationKey];
+                            const isEditedP = editedPromptsP[promptKeyP] ? true : false;
+                            
                             permDiv.innerHTML = `
                                 <h4>${typeInfo.name_kr} - Permutation 프롬프트</h4>
                                 <div class="prompt-container">
-                                    <div class="prompt-text">${variations[permutationKey]}</div>
+                                    <div class="prompt-text">${displayPromptP}</div>
+                                    ${isEditedP ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                                     <button class="btn btn-primary" onclick="promptManager.copyVariantPrompt('${aiTool}', '${permutationKey}')">프롬프트 복사</button>
+                                    <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', '${permutationKey}')" style="margin-left: 8px;">프롬프트 수정</button>
                                 </div>
                             `;
                             typeContent.appendChild(permDiv);
@@ -684,7 +745,12 @@ const promptManager = {
         }
         
         if (type === 'base' && concept.base_prompts && concept.base_prompts[aiTool]) {
-            utils.copyToClipboard(concept.base_prompts[aiTool]);
+            // 수정된 프롬프트 확인
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            const promptKey = `${concept.id}_${aiTool}_base`;
+            const promptToCopy = editedPrompts[promptKey]?.prompt || concept.base_prompts[aiTool];
+            
+            utils.copyToClipboard(promptToCopy);
         } else {
             utils.showToast('복사할 프롬프트가 없습니다.');
         }
@@ -719,9 +785,217 @@ const promptManager = {
         
         const prompt = concept.character_variations[aiTool][promptKey];
         if (prompt) {
-            utils.copyToClipboard(prompt);
+            // 수정된 프롬프트 확인
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            const editKey = `${concept.id}_${aiTool}_${promptKey}`;
+            const promptToCopy = editedPrompts[editKey]?.prompt || prompt;
+            
+            utils.copyToClipboard(promptToCopy);
         } else {
             utils.showToast('복사할 프롬프트가 없습니다.');
+        }
+    },
+
+    editPrompt: function(aiTool, type, index = null) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        let originalPrompt = '';
+        let promptKey = '';
+        
+        if (type === 'base') {
+            originalPrompt = concept.base_prompts?.[aiTool] || '';
+            promptKey = `${concept.id}_${aiTool}_base`;
+        } else if (type.includes('_permutation')) {
+            originalPrompt = concept.character_variations?.[aiTool]?.[type] || '';
+            promptKey = `${concept.id}_${aiTool}_${type}`;
+        } else if (index !== null) {
+            const baseKey = VARIATION_TYPES_MAP[type]?.schema_key_base;
+            if (!baseKey) {
+                utils.showToast('올바르지 않은 변형 타입입니다.');
+                return;
+            }
+            const variationKey = `${baseKey}_${index}`;
+            originalPrompt = concept.character_variations?.[aiTool]?.[variationKey] || '';
+            promptKey = `${concept.id}_${aiTool}_${variationKey}`;
+        }
+        
+        if (!originalPrompt) {
+            utils.showToast('수정할 프롬프트가 없습니다.');
+            return;
+        }
+        
+        // 수정된 프롬프트 가져오기
+        const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+        const editedPrompt = editedPrompts[promptKey]?.prompt || originalPrompt;
+        
+        // 수정 모달 생성
+        const modalHtml = `
+            <div id="prompt-edit-modal" class="modal-overlay" onclick="promptManager.closeEditModal(event)">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>프롬프트 수정 - ${AI_TOOLS[aiTool].name}</h3>
+                        <button class="modal-close-btn" onclick="promptManager.closeEditModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>프롬프트:</label>
+                            <textarea id="edit-prompt-text" class="prompt-textarea" rows="6">${editedPrompt}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="promptManager.closeEditModal()">취소</button>
+                        <button class="btn btn-primary" onclick="promptManager.saveEditedPrompt('${promptKey}', '${aiTool}', '${type}', ${index})">저장</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // 모달 스타일 추가 (없으면)
+        this.addPromptEditModalStyles();
+    },
+    
+    saveEditedPrompt: function(promptKey, aiTool, type, index) {
+        const editedText = document.getElementById('edit-prompt-text').value;
+        const concept = dataManager.getCurrentConcept();
+        
+        // localStorage에서 수정된 프롬프트 가져오기
+        const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+        
+        // 수정된 프롬프트 저장
+        editedPrompts[promptKey] = {
+            conceptId: concept.id,
+            aiTool,
+            type,
+            index,
+            prompt: editedText,
+            editedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('editedConceptPrompts', JSON.stringify(editedPrompts));
+        
+        // 모달 닫기
+        this.closeEditModal();
+        
+        // UI 업데이트
+        uiRenderer.displayConceptDetail();
+        
+        utils.showToast('프롬프트가 수정되었습니다.');
+    },
+    
+    closeEditModal: function(event) {
+        if (event && event.target !== event.currentTarget) return;
+        const modal = document.getElementById('prompt-edit-modal');
+        if (modal) {
+            modal.remove();
+        }
+    },
+    
+    addPromptEditModalStyles: function() {
+        if (!document.getElementById('prompt-edit-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'prompt-edit-modal-styles';
+            style.textContent = `
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                }
+                
+                .modal-content {
+                    background: var(--bg-secondary, #2a2a2a);
+                    border-radius: 8px;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+                }
+                
+                .modal-header {
+                    padding: 20px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .modal-header h3 {
+                    margin: 0;
+                    color: var(--text-primary, #fff);
+                }
+                
+                .modal-close-btn {
+                    background: none;
+                    border: none;
+                    color: var(--text-secondary, #999);
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .modal-close-btn:hover {
+                    color: var(--text-primary, #fff);
+                }
+                
+                .modal-body {
+                    padding: 20px;
+                }
+                
+                .form-group {
+                    margin-bottom: 20px;
+                }
+                
+                .form-group label {
+                    display: block;
+                    margin-bottom: 8px;
+                    color: var(--text-primary, #fff);
+                    font-weight: 500;
+                }
+                
+                .prompt-textarea {
+                    width: 100%;
+                    background: var(--bg-tertiary, #1a1a1a);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: var(--text-primary, #fff);
+                    padding: 10px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    resize: vertical;
+                    font-family: 'Consolas', 'Monaco', monospace;
+                }
+                
+                .prompt-textarea:focus {
+                    outline: none;
+                    border-color: var(--accent-purple, #a855f7);
+                }
+                
+                .modal-footer {
+                    padding: 20px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 };
