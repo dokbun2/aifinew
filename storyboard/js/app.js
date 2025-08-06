@@ -5090,7 +5090,8 @@ document.body.removeChild(input);
 								   key.includes('filmProduction') ||
 								   key.includes('stage6ImagePrompts') ||  // 추가
 								   key.includes('stage7VideoPrompts') ||  // 추가
-								   key.includes('audioFiles_'))) {  // 오디오 파일 추가
+								   key.includes('audioFiles_') ||  // 오디오 파일 추가
+								   key.includes('editedImagePrompts'))) {  // 수정된 이미지 프롬프트 추가
 							keysToRemove.push(key);
 						}
 					}
