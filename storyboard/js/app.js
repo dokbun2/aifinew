@@ -5171,25 +5171,6 @@ document.body.removeChild(input);
 			}
 		}
 
-    // 내보내기 드롭다운 토글
-    function toggleExportDropdown(event) {
-event.stopPropagation();
-const dropdown = document.getElementById('export-dropdown');
-dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-
-// 다른 곳 클릭 시 드롭다운 닫기
-document.addEventListener('click', function closeDropdown(e) {
-    if (!e.target.closest('.dropdown')) {
-        dropdown.style.display = 'none';
-        document.removeEventListener('click', closeDropdown);
-    }
-});
-    }
-    
-    // 내보내기 드롭다운 숨기기
-    function hideExportDropdown() {
-document.getElementById('export-dropdown').style.display = 'none';
-    }
 
     // 컨셉아트 보기
     // 컨셉아트 페이지 열기

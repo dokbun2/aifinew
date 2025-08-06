@@ -54,16 +54,7 @@
         <div class="header-actions">
             <button class="btn btn-secondary" id="concept-art-btn">컨셉아트 보기</button>
             <button class="btn btn-primary" id="import-btn">JSON 가져오기</button>
-            <div class="dropdown" style="display: inline-block;">
-                <button class="btn btn-primary dropdown-toggle" id="export-btn" onclick="toggleExportDropdown(event)">
-                    JSON 내보내기 ▼
-                </button>
-                <div id="export-dropdown" class="dropdown-menu" style="display: none; position: absolute; background: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1000; min-width: 180px;">
-                    <button class="dropdown-item" onclick="exportFullData(); hideExportDropdown();" style="display: block; width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
-                        📦 전체 프로젝트 백업
-                    </button>
-                </div>
-            </div>
+            <button class="btn btn-primary" id="export-btn" onclick="exportFullData()">JSON 내보내기</button>
 			<button class="btn btn-secondary" id="scenario-export-btn" style="display:none;">전체 시나리오 다운로드</button>
 			<button class="btn btn-danger" id="reset-btn" style="margin-left: 20px;">데이터 초기화</button>
         </div>
