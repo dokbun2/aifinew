@@ -1143,11 +1143,15 @@ function createTestData() {
                    if (newData.additional_stage_data.stage6ImagePrompts) {
                        localStorage.setItem(`stage6ImagePrompts_${jsonFileName}`, 
                            JSON.stringify(newData.additional_stage_data.stage6ImagePrompts));
+                       // 전역 변수에도 로드
+                       window.stage6ImagePrompts = newData.additional_stage_data.stage6ImagePrompts;
                    }
                    
                    if (newData.additional_stage_data.stage7VideoPrompts) {
                        localStorage.setItem(`stage7VideoPrompts_${jsonFileName}`, 
                            JSON.stringify(newData.additional_stage_data.stage7VideoPrompts));
+                       // 전역 변수에도 로드
+                       window.stage7VideoPrompts = newData.additional_stage_data.stage7VideoPrompts;
                    }
                    
                    if (newData.additional_stage_data.stage8AudioPrompts) {
