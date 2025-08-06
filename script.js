@@ -1991,3 +1991,378 @@ window.handleModalAction = function() {
     }, 300);
 }
 
+// 업로드 상태 추적을 위한 전역 변수
+let uploadStatus = {
+    stage2: false,
+    stage4: false,
+    stage5: false,
+    stage6: false,
+    stage7: false,
+    stage8: false
+};
+
+let completedStages = [];
+let currentStage = null;
+
+// 단계별 업로드 시작
+function startSequentialUpload() {
+    // 업로드 상태 초기화
+    resetUploadState();
+    
+    // 팝업 모달 표시
+    const modal = document.getElementById('sequential-upload-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Stage 2부터 활성화
+        updateStageStatus(2, 'waiting');
+        enableStageButton(2);
+        currentStage = 2;
+    }
+}
+
+// 팝업 닫기
+function closeSequentialUploadModal() {
+    const modal = document.getElementById('sequential-upload-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 업로드 상태 초기화
+function resetUploadState() {
+    uploadStatus = {
+        stage2: false,
+        stage4: false,
+        stage5: false,
+        stage6: false,
+        stage7: false,
+        stage8: false
+    };
+    completedStages = [];
+    currentStage = null;
+    
+    // 모든 스테이지 상태를 waiting으로 설정
+    [2, 4, 5, 6, 7, 8].forEach(stage => {
+        updateStageStatus(stage, 'waiting');
+        disableStageButton(stage);
+    });
+    
+    // 전체 진행률 초기화
+    updateOverallProgress();
+}
+
+// 스테이지 파일 업로드
+function uploadStage(stageNumber) {
+    const fileInput = document.getElementById(`stage${stageNumber}-json-input`);
+    if (!fileInput) return;
+    
+    // 파일 입력 초기화
+    fileInput.value = '';
+    
+    // 파일 선택 이벤트 리스너 추가
+    fileInput.onchange = function(event) {
+        handleStageFileUpload(stageNumber, event.target.files);
+    };
+    
+    // 파일 선택 다이얼로그 열기
+    fileInput.click();
+}
+
+// 스테이지 파일 업로드 처리
+function handleStageFileUpload(stageNumber, files) {
+    if (!files || files.length === 0) return;
+    
+    // 로딩 상태로 변경
+    updateStageStatus(stageNumber, 'loading');
+    showUploadMessage(`Stage ${stageNumber} 파일 처리 중...`);
+    
+    // 파일 읽기 및 처리
+    processStageFiles(stageNumber, files).then(success => {
+        if (success) {
+            // 업로드 성공
+            uploadStatus[`stage${stageNumber}`] = true;
+            completedStages.push(stageNumber);
+            updateStageStatus(stageNumber, 'completed');
+            updateOverallProgress();
+            
+            // 카드 색상 변경
+            updateStageCardColor(stageNumber, true);
+            
+            showUploadMessage(`Stage ${stageNumber} 업로드 완료!`, 'success');
+            
+            // 다음 스테이지 활성화
+            activateNextStage(stageNumber);
+        } else {
+            // 업로드 실패
+            updateStageStatus(stageNumber, 'error');
+            showUploadMessage(`Stage ${stageNumber} 업로드 실패`, 'error');
+        }
+    });
+}
+
+// 스테이지 파일 처리
+async function processStageFiles(stageNumber, files) {
+    try {
+        switch(stageNumber) {
+            case 2:
+                // Stage 2는 단일 파일
+                return await processStage2File(files[0]);
+            case 4:
+                // Stage 4는 단일 파일
+                return await processStage4File(files[0]);
+            case 5:
+                // Stage 5는 여러 파일 가능
+                return await processStage5Files(files);
+            case 6:
+                // Stage 6는 여러 파일 가능
+                return await processStage6Files(files);
+            case 7:
+                // Stage 7는 여러 파일 가능
+                return await processStage7Files(files);
+            case 8:
+                // Stage 8는 여러 파일 가능
+                return await processStage8Files(files);
+            default:
+                return false;
+        }
+    } catch (error) {
+        console.error(`Stage ${stageNumber} 처리 오류:`, error);
+        return false;
+    }
+}
+
+// 다음 스테이지 활성화
+function activateNextStage(currentStageNumber) {
+    const stageOrder = [2, 4, 5, 6, 7, 8];
+    const currentIndex = stageOrder.indexOf(currentStageNumber);
+    
+    if (currentIndex < stageOrder.length - 1) {
+        const nextStage = stageOrder[currentIndex + 1];
+        updateStageStatus(nextStage, 'waiting');
+        enableStageButton(nextStage);
+        currentStage = nextStage;
+    } else {
+        // 모든 스테이지 완료
+        showUploadMessage('모든 스테이지 업로드 완료!', 'success');
+        showModalActionButton();
+    }
+}
+
+// 메인 페이지의 스테이지 카드 색상 업데이트
+function updateStageCardColor(stageNumber, isCompleted) {
+    const stageCards = document.querySelectorAll('.stage-card');
+    stageCards.forEach(card => {
+        const stageNum = card.querySelector('.stage-number');
+        if (stageNum && stageNum.textContent == stageNumber) {
+            if (isCompleted) {
+                card.classList.add('uploaded');
+            } else {
+                card.classList.remove('uploaded');
+            }
+        }
+    });
+}
+
+// Stage 2 파일 처리
+async function processStage2File(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                // Stage 2 데이터 검증
+                if (data.current_stage_name === 'narrative_development' && data.narrative_data) {
+                    localStorage.setItem('stage2TempJson', e.target.result);
+                    localStorage.setItem('stage2TempFileName', file.name);
+                    resolve(true);
+                } else {
+                    showUploadMessage('Stage 2 형식이 올바르지 않습니다.', 'error');
+                    resolve(false);
+                }
+            } catch (error) {
+                console.error('Stage 2 파일 파싱 오류:', error);
+                resolve(false);
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+// Stage 4 파일 처리
+async function processStage4File(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                // Stage 4 데이터 검증
+                if (data.stage === 4 && data.prompt_data) {
+                    localStorage.setItem('stage4TempJson', e.target.result);
+                    localStorage.setItem('stage4TempFileName', file.name);
+                    resolve(true);
+                } else {
+                    showUploadMessage('Stage 4 형식이 올바르지 않습니다.', 'error');
+                    resolve(false);
+                }
+            } catch (error) {
+                console.error('Stage 4 파일 파싱 오류:', error);
+                resolve(false);
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+// Stage 5 파일들 처리
+async function processStage5Files(files) {
+    const jsonFiles = [];
+    const fileNames = [];
+    
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    // Stage 5 데이터 검증
+                    if (data.film_metadata && data.breakdown_data) {
+                        jsonFiles.push(e.target.result);
+                        fileNames.push(file.name);
+                    }
+                    resolve();
+                } catch (error) {
+                    console.error(`Stage 5 파일 파싱 오류 (${file.name}):`, error);
+                    resolve();
+                }
+            };
+            reader.readAsText(file);
+        });
+    });
+    
+    await Promise.all(promises);
+    
+    if (jsonFiles.length > 0) {
+        localStorage.setItem('stage5TempJsonFiles', JSON.stringify(jsonFiles));
+        localStorage.setItem('stage5TempFileNames', JSON.stringify(fileNames));
+        return true;
+    }
+    
+    showUploadMessage('유효한 Stage 5 파일이 없습니다.', 'error');
+    return false;
+}
+
+// Stage 6 파일들 처리
+async function processStage6Files(files) {
+    const jsonFiles = [];
+    const fileNames = [];
+    
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    // Stage 6 데이터 검증
+                    if (data.stage === 6 && data.shots) {
+                        jsonFiles.push(e.target.result);
+                        fileNames.push(file.name);
+                    }
+                    resolve();
+                } catch (error) {
+                    console.error(`Stage 6 파일 파싱 오류 (${file.name}):`, error);
+                    resolve();
+                }
+            };
+            reader.readAsText(file);
+        });
+    });
+    
+    await Promise.all(promises);
+    
+    if (jsonFiles.length > 0) {
+        localStorage.setItem('stage6TempJsonFiles', JSON.stringify(jsonFiles));
+        localStorage.setItem('stage6TempFileNames', JSON.stringify(fileNames));
+        return true;
+    }
+    
+    showUploadMessage('유효한 Stage 6 파일이 없습니다.', 'error');
+    return false;
+}
+
+// Stage 7 파일들 처리
+async function processStage7Files(files) {
+    const jsonFiles = [];
+    const fileNames = [];
+    
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    // Stage 7 데이터 검증
+                    if (data.stage === 7 && data.video_prompts) {
+                        jsonFiles.push(e.target.result);
+                        fileNames.push(file.name);
+                    }
+                    resolve();
+                } catch (error) {
+                    console.error(`Stage 7 파일 파싱 오류 (${file.name}):`, error);
+                    resolve();
+                }
+            };
+            reader.readAsText(file);
+        });
+    });
+    
+    await Promise.all(promises);
+    
+    if (jsonFiles.length > 0) {
+        localStorage.setItem('stage7TempJsonFiles', JSON.stringify(jsonFiles));
+        localStorage.setItem('stage7TempFileNames', JSON.stringify(fileNames));
+        return true;
+    }
+    
+    showUploadMessage('유효한 Stage 7 파일이 없습니다.', 'error');
+    return false;
+}
+
+// Stage 8 파일들 처리
+async function processStage8Files(files) {
+    const jsonFiles = [];
+    const fileNames = [];
+    
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    // Stage 8 데이터 검증
+                    if (data.stage === 8 && data.audio_data) {
+                        jsonFiles.push(e.target.result);
+                        fileNames.push(file.name);
+                    }
+                    resolve();
+                } catch (error) {
+                    console.error(`Stage 8 파일 파싱 오류 (${file.name}):`, error);
+                    resolve();
+                }
+            };
+            reader.readAsText(file);
+        });
+    });
+    
+    await Promise.all(promises);
+    
+    if (jsonFiles.length > 0) {
+        localStorage.setItem('stage8TempJsonFiles', JSON.stringify(jsonFiles));
+        localStorage.setItem('stage8TempFileNames', JSON.stringify(fileNames));
+        return true;
+    }
+    
+    showUploadMessage('유효한 Stage 8 파일이 없습니다.', 'error');
+    return false;
+}
+
