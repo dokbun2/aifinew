@@ -3338,9 +3338,14 @@ let aiSectionsHtml = '';
 										</div>
 									` : ''}
 									${parameters ? `<div style="margin-top: 5px; font-size: 0.9em; color: #666;">Parameters: ${parameters}</div>` : ''}
-									<button class="copy-btn" onclick="copyImagePrompt('${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${ai.name}', '${imageId}')">
-										프롬프트 복사
-									</button>
+									<div id="prompt-container-${shot.id}-${ai.id}-${imageId}">
+										<button class="copy-btn" onclick="copyImagePrompt('${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${ai.name}', '${imageId}')">
+											프롬프트 복사
+										</button>
+										<button class="copy-btn" style="margin-left: 8px;" onclick="editImagePrompt('${shot.id}', '${ai.id}', '${imageId}')">
+											프롬프트 수정
+										</button>
+									</div>
 								</div>
 
 								<div style="margin-top: 15px;">
@@ -3788,6 +3793,193 @@ try {
 		copyToClipboard(prompt).then(ok => {
 			if (ok) showMessage(`${aiName} 프롬프트 (${imageId})가 복사되었습니다.`, 'success');
 		});
+	}
+
+	// 이미지 프롬프트 편집 모드 활성화
+	function editImagePrompt(shotId, aiTool, imageId) {
+		try {
+			const shot = currentData.breakdown_data.shots.find(s => s.id === shotId);
+			if (!shot) return showMessage('샷 데이터를 찾을 수 없습니다.', 'error');
+
+			// Stage 6 데이터 가져오기
+			const stage6Data = window.stage6ImagePrompts?.[shotId] || {};
+			const imagePrompts = stage6Data[imageId]?.prompts?.[aiTool] || {};
+			
+			// 현재 프롬프트 값
+			const currentPrompt = imagePrompts.prompt || '';
+			const currentTranslation = imagePrompts.prompt_translated || '';
+			const currentParameters = imagePrompts.parameters || '';
+
+			// 컨테이너 찾기
+			const container = document.getElementById(`prompt-container-${shotId}-${aiTool}-${imageId}`);
+			if (!container) return;
+
+			// 원본 프롬프트 섹션 찾기
+			const promptDetails = container.parentElement;
+			const originalPromptDiv = promptDetails.querySelector('.prompt-original');
+			const translatedPromptDiv = promptDetails.querySelector('.prompt-translated');
+			const parametersDiv = promptDetails.querySelector('div[style*="Parameters"]');
+
+			// 편집 UI로 교체
+			let editHtml = `
+				<div class="prompt-edit-mode" style="margin-top: 10px;">
+					<div class="form-group">
+						<label class="form-label">프롬프트:</label>
+						<textarea id="edit-prompt-${shotId}-${aiTool}-${imageId}" 
+								  class="form-textarea" 
+								  style="min-height: 100px; font-family: 'Courier New', monospace; font-size: 0.85rem;"
+								  placeholder="프롬프트를 입력하세요...">${currentPrompt}</textarea>
+					</div>
+					<div class="form-group">
+						<label class="form-label">번역:</label>
+						<textarea id="edit-translation-${shotId}-${aiTool}-${imageId}" 
+								  class="form-textarea" 
+								  style="min-height: 80px;"
+								  placeholder="번역된 프롬프트를 입력하세요...">${currentTranslation}</textarea>
+					</div>`;
+
+			// Midjourney의 경우 parameters 편집 추가
+			if (aiTool === 'midjourney') {
+				editHtml += `
+					<div class="form-group">
+						<label class="form-label">Parameters:</label>
+						<input type="text" 
+							   id="edit-parameters-${shotId}-${aiTool}-${imageId}" 
+							   class="form-input" 
+							   value="${currentParameters}"
+							   placeholder="예: --ar 16:9 --v 6">
+					</div>`;
+			}
+
+			editHtml += `
+					<div style="margin-top: 10px;">
+						<button class="btn btn-primary btn-small" 
+								onclick="saveImagePrompt('${shotId}', '${aiTool}', '${imageId}')">
+							저장
+						</button>
+						<button class="btn btn-secondary btn-small" 
+								style="margin-left: 8px;"
+								onclick="cancelEditPrompt('prompt-container-${shotId}-${aiTool}-${imageId}')">
+							취소
+						</button>
+					</div>
+				</div>`;
+
+			// 기존 내용 숨기고 편집 모드 표시
+			if (originalPromptDiv) originalPromptDiv.style.display = 'none';
+			if (translatedPromptDiv) translatedPromptDiv.style.display = 'none';
+			if (parametersDiv) parametersDiv.style.display = 'none';
+			container.style.display = 'none';
+
+			// 편집 UI 삽입
+			const editDiv = document.createElement('div');
+			editDiv.innerHTML = editHtml;
+			promptDetails.appendChild(editDiv);
+
+		} catch (error) {
+			console.error('프롬프트 편집 오류:', error);
+			showMessage('프롬프트 편집 모드 활성화 중 오류가 발생했습니다.', 'error');
+		}
+	}
+
+	// 이미지 프롬프트 저장
+	function saveImagePrompt(shotId, aiTool, imageId) {
+		try {
+			const shot = currentData.breakdown_data.shots.find(s => s.id === shotId);
+			if (!shot) return showMessage('샷 데이터를 찾을 수 없습니다.', 'error');
+
+			// 편집된 값 가져오기
+			const newPrompt = document.getElementById(`edit-prompt-${shotId}-${aiTool}-${imageId}`)?.value || '';
+			const newTranslation = document.getElementById(`edit-translation-${shotId}-${aiTool}-${imageId}`)?.value || '';
+			const newParameters = document.getElementById(`edit-parameters-${shotId}-${aiTool}-${imageId}`)?.value || '';
+
+			// Stage 6 데이터 업데이트
+			if (!window.stage6ImagePrompts) window.stage6ImagePrompts = {};
+			if (!window.stage6ImagePrompts[shotId]) window.stage6ImagePrompts[shotId] = {};
+			if (!window.stage6ImagePrompts[shotId][imageId]) {
+				window.stage6ImagePrompts[shotId][imageId] = { prompts: {} };
+			}
+			if (!window.stage6ImagePrompts[shotId][imageId].prompts[aiTool]) {
+				window.stage6ImagePrompts[shotId][imageId].prompts[aiTool] = {};
+			}
+
+			// 프롬프트 데이터 업데이트
+			window.stage6ImagePrompts[shotId][imageId].prompts[aiTool].prompt = newPrompt;
+			window.stage6ImagePrompts[shotId][imageId].prompts[aiTool].prompt_translated = newTranslation;
+			
+			if (aiTool === 'midjourney') {
+				window.stage6ImagePrompts[shotId][imageId].prompts[aiTool].parameters = newParameters;
+			}
+
+			// shot.image_prompts 업데이트
+			if (!shot.image_prompts) shot.image_prompts = {};
+			if (!shot.image_prompts[aiTool]) shot.image_prompts[aiTool] = {};
+
+			shot.image_prompts[aiTool].main_prompt = newPrompt;
+			shot.image_prompts[aiTool].main_prompt_translated = newTranslation;
+			
+			if (aiTool === 'midjourney') {
+				shot.image_prompts[aiTool].parameters = newParameters;
+			} else {
+				// 다른 AI 도구의 경우 기본 parameters 설정
+				let parameters = '';
+				const promptData = window.stage6ImagePrompts[shotId][imageId].prompts[aiTool];
+				if (promptData.negative_prompt) {
+					parameters = `Negative: ${promptData.negative_prompt}`;
+				}
+				if (promptData.style) {
+					parameters += parameters ? `; Style: ${promptData.style}` : `Style: ${promptData.style}`;
+				}
+				if (promptData.aspect_ratio) {
+					parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
+				}
+				shot.image_prompts[aiTool].parameters = parameters;
+			}
+
+			// localStorage 저장
+			saveDataToLocalStorage();
+			const jsonFileName = getProjectFileName();
+			localStorage.setItem(`stage6ImagePrompts_${jsonFileName}`, JSON.stringify(window.stage6ImagePrompts));
+
+			// UI 재렌더링
+			showShotContent(shotId);
+			setTimeout(() => switchTab('image', shotId), 0);
+
+			showMessage('프롬프트가 성공적으로 저장되었습니다.', 'success');
+
+		} catch (error) {
+			console.error('프롬프트 저장 오류:', error);
+			showMessage('프롬프트 저장 중 오류가 발생했습니다.', 'error');
+		}
+	}
+
+	// 프롬프트 편집 취소
+	function cancelEditPrompt(containerId) {
+		try {
+			const container = document.getElementById(containerId);
+			if (!container) return;
+
+			// 편집 모드 제거
+			const editMode = container.parentElement.querySelector('.prompt-edit-mode');
+			if (editMode && editMode.parentElement) {
+				editMode.parentElement.removeChild(editMode);
+			}
+
+			// 원본 요소들 다시 표시
+			const promptDetails = container.parentElement;
+			const originalPromptDiv = promptDetails.querySelector('.prompt-original');
+			const translatedPromptDiv = promptDetails.querySelector('.prompt-translated');
+			const parametersDiv = promptDetails.querySelector('div[style*="Parameters"]');
+
+			if (originalPromptDiv) originalPromptDiv.style.display = '';
+			if (translatedPromptDiv) translatedPromptDiv.style.display = '';
+			if (parametersDiv) parametersDiv.style.display = '';
+			container.style.display = '';
+
+		} catch (error) {
+			console.error('편집 취소 오류:', error);
+			showMessage('편집 취소 중 오류가 발생했습니다.', 'error');
+		}
 	}
 
     // 참조 이미지 업데이트
