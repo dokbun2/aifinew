@@ -127,6 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
     updateProjectCardStatus(); // 페이지 로드 시 카드 상태 초기화
     restoreCompletedStages(); // 완료된 Stage 카드 표시 복원
     
+    // 초기화 시 Stage 2 버튼 활성화
+    enableStageButton(2);
+    
     // Stage 2 파일 입력 이벤트 리스너 추가
     const stage2FileInput = document.getElementById('stage2-json-input');
     if (stage2FileInput) {
