@@ -866,6 +866,44 @@ function createTestData() {
            }
        }
        
+       // 수정된 이미지 프롬프트 데이터 병합
+       const editedPrompts = JSON.parse(localStorage.getItem('editedImagePrompts') || '{}');
+       if (Object.keys(editedPrompts).length > 0) {
+           // 수정된 프롬프트를 원본 데이터에 병합
+           fullBackup.data.breakdown_data.shots.forEach(shot => {
+               if (shot.image_prompts && shot.image_prompts.ai_tools) {
+                   shot.image_prompts.ai_tools.forEach(ai => {
+                       const aiName = ai.name;
+                       if (ai.images && Array.isArray(ai.images)) {
+                           ai.images.forEach(image => {
+                               const editKey = `${shot.id}_${aiName}_${image.id}`;
+                               const editedData = editedPrompts[editKey];
+                               if (editedData) {
+                                   // 수정된 프롬프트로 덮어쓰기
+                                   if (editedData.originalPrompt) {
+                                       image.prompt = editedData.originalPrompt;
+                                       image.main_prompt = editedData.originalPrompt;
+                                   }
+                                   if (editedData.translatedPrompt) {
+                                       image.prompt_translated = editedData.translatedPrompt;
+                                       image.main_prompt_translated = editedData.translatedPrompt;
+                                   }
+                                   if (editedData.parameters) {
+                                       image.parameters = editedData.parameters;
+                                   }
+                                   // 수정 시간 기록
+                                   image.edited_at = editedData.editedAt;
+                               }
+                           });
+                       }
+                   });
+               }
+           });
+           
+           // 수정된 프롬프트 정보도 백업에 포함
+           fullBackup.additional_stage_data.editedImagePrompts = editedPrompts;
+       }
+       
        // 파일 다운로드
        const backupFileName = getProjectFileName().replace('.json', '_full_backup.json');
        const blob = new Blob([JSON.stringify(fullBackup, null, 2)], { type: 'application/json' });
@@ -3250,16 +3288,24 @@ let aiSectionsHtml = '';
 						//if (!hasPrompt) return;
 
 						aiHasContent = true;
-						const mainPrompt = imagePrompts.prompt || imagePrompts.main_prompt || '';
-						const translatedPrompt = imagePrompts.prompt_translated || imagePrompts.main_prompt_translated || '';
-						const parameters = imagePrompts.parameters || '';
+						let mainPrompt = imagePrompts.prompt || imagePrompts.main_prompt || '';
+						let translatedPrompt = imagePrompts.prompt_translated || imagePrompts.main_prompt_translated || '';
+						let parameters = imagePrompts.parameters || '';
+						
+						// 수정된 프롬프트가 있는지 확인
+						const editedPrompt = getEditedPrompt(shot.id, ai.name, imageId);
+						if (editedPrompt) {
+							mainPrompt = editedPrompt.originalPrompt || mainPrompt;
+							translatedPrompt = editedPrompt.translatedPrompt || translatedPrompt;
+							parameters = editedPrompt.parameters || parameters;
+						}
 
 						// AI별 생성된 이미지 데이터
 						const imageData = aiGeneratedImages[ai.id]?.[imageId] || { url: '', description: '' };
 
 						aiContentHtml += `
 							<div style="margin-bottom: 30px; padding: 15px; background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px;">
-								<h5 style="color: #ccc; margin-bottom: 10px;">📸 ${imageId}: ${planImage.description || '설명 없음'}</h5>
+								<h5 style="color: #ccc; margin-bottom: 10px;">📸 ${imageId}: ${planImage.description || '설명 없음'} ${editedPrompt ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}</h5>
 								<div class="ai-image-prompt-details">
 									<div class="prompt-original">
 										<label class="prompt-text-label">프롬프트:</label>
@@ -3274,6 +3320,9 @@ let aiSectionsHtml = '';
 									${parameters ? `<div style="margin-top: 5px; font-size: 0.9em; color: #666;">Parameters: ${parameters}</div>` : ''}
 									<button class="copy-btn" onclick="copyImagePrompt('${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${ai.name}', '${imageId}')">
 										프롬프트 복사
+									</button>
+									<button class="edit-btn" onclick="editImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${(translatedPrompt || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${(parameters || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" style="margin-left: 8px;">
+										프롬프트 수정
 									</button>
 								</div>
 
@@ -5894,3 +5943,227 @@ try {
     });
     
     console.log('✅ JavaScript 로딩 완료');
+
+// 프롬프트 수정 기능 관련 코드
+let editedPrompts = JSON.parse(localStorage.getItem('editedImagePrompts') || '{}');
+
+// 프롬프트 수정 버튼 클릭 시 호출되는 함수
+function editImagePrompt(shotId, aiName, imageId, originalPrompt, translatedPrompt, parameters) {
+    // 수정 모달 HTML 생성
+    const modalHtml = `
+        <div id="prompt-edit-modal" class="modal-overlay" onclick="closePromptEditModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>프롬프트 수정 - ${aiName} ${imageId}</h3>
+                    <button class="modal-close-btn" onclick="closePromptEditModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>원본 프롬프트:</label>
+                        <textarea id="edit-original-prompt" class="prompt-textarea" rows="4">${originalPrompt}</textarea>
+                    </div>
+                    ${translatedPrompt ? `
+                    <div class="form-group">
+                        <label>번역된 프롬프트:</label>
+                        <textarea id="edit-translated-prompt" class="prompt-textarea" rows="4">${translatedPrompt}</textarea>
+                    </div>
+                    ` : ''}
+                    ${parameters ? `
+                    <div class="form-group">
+                        <label>파라미터:</label>
+                        <input type="text" id="edit-parameters" class="prompt-input" value="${parameters}">
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closePromptEditModal()">취소</button>
+                    <button class="btn btn-primary" onclick="saveEditedPrompt('${shotId}', '${aiName}', '${imageId}')">저장</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 모달을 body에 추가
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 모달 스타일 추가 (없으면)
+    addPromptEditModalStyles();
+}
+
+// 수정된 프롬프트 저장
+function saveEditedPrompt(shotId, aiName, imageId) {
+    const originalPrompt = document.getElementById('edit-original-prompt').value;
+    const translatedPromptEl = document.getElementById('edit-translated-prompt');
+    const parametersEl = document.getElementById('edit-parameters');
+    
+    const editKey = `${shotId}_${aiName}_${imageId}`;
+    
+    // 수정된 프롬프트 데이터 구성
+    const editedData = {
+        shotId,
+        aiName,
+        imageId,
+        originalPrompt,
+        translatedPrompt: translatedPromptEl ? translatedPromptEl.value : null,
+        parameters: parametersEl ? parametersEl.value : null,
+        editedAt: new Date().toISOString()
+    };
+    
+    // localStorage에 저장
+    editedPrompts[editKey] = editedData;
+    localStorage.setItem('editedImagePrompts', JSON.stringify(editedPrompts));
+    
+    // 모달 닫기
+    closePromptEditModal();
+    
+    // UI 업데이트
+    updateUI();
+    
+    showMessage('프롬프트가 수정되었습니다.', 'success');
+}
+
+// 프롬프트 수정 모달 닫기
+function closePromptEditModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('prompt-edit-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// 프롬프트 수정 모달 스타일 추가
+function addPromptEditModalStyles() {
+    if (!document.getElementById('prompt-edit-modal-styles')) {
+        const style = document.createElement('style');
+        style.id = 'prompt-edit-modal-styles';
+        style.textContent = `
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            }
+            
+            .modal-content {
+                background: var(--bg-secondary, #2a2a2a);
+                border-radius: 8px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+            
+            .modal-header {
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .modal-header h3 {
+                margin: 0;
+                color: var(--text-primary, #fff);
+            }
+            
+            .modal-close-btn {
+                background: none;
+                border: none;
+                color: var(--text-secondary, #999);
+                font-size: 24px;
+                cursor: pointer;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .modal-close-btn:hover {
+                color: var(--text-primary, #fff);
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                color: var(--text-primary, #fff);
+                font-weight: 500;
+            }
+            
+            .prompt-textarea, .prompt-input {
+                width: 100%;
+                background: var(--bg-tertiary, #1a1a1a);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: var(--text-primary, #fff);
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 14px;
+                resize: vertical;
+            }
+            
+            .prompt-textarea:focus, .prompt-input:focus {
+                outline: none;
+                border-color: var(--accent-purple, #a855f7);
+            }
+            
+            .modal-footer {
+                padding: 20px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                border-radius: 4px;
+                border: none;
+                cursor: pointer;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+            
+            .btn-primary {
+                background: var(--accent-purple, #a855f7);
+                color: white;
+            }
+            
+            .btn-primary:hover {
+                background: var(--accent-purple-hover, #9333ea);
+            }
+            
+            .btn-secondary {
+                background: var(--bg-tertiary, #1a1a1a);
+                color: var(--text-primary, #fff);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .btn-secondary:hover {
+                background: var(--bg-hover, #333);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// 수정된 프롬프트 가져오기
+function getEditedPrompt(shotId, aiName, imageId) {
+    const editKey = `${shotId}_${aiName}_${imageId}`;
+    return editedPrompts[editKey];
+}

@@ -1964,9 +1964,6 @@
                     <button class="dropdown-item" onclick="exportFullData(); hideExportDropdown();" style="display: block; width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
                         📦 전체 프로젝트 백업
                     </button>
-                    <button class="dropdown-item" onclick="exportData(); hideExportDropdown();" style="display: block; width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; cursor: pointer;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
-                        🔗 URL만 백업
-                    </button>
                 </div>
             </div>
 			<button class="btn btn-secondary" id="scenario-export-btn" style="display:none;">전체 시나리오 다운로드</button>
@@ -2894,72 +2891,6 @@
 			}
 		}
 
-       // JSON 내보내기
-       function exportData() {
-           try {
-               if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots) {
-                   return showMessage('저장할 URL 데이터가 없습니다.', 'error');
-               }
-               
-               // URL 데이터만 추출
-               const urlData = {
-                   type: 'urls_backup',
-                   version: '1.0',
-                   timestamp: new Date().toISOString(),
-                   film_id: currentData.film_id,
-                   urls: {}
-               };
-               
-               // 각 샷에서 URL 정보만 추출
-               currentData.breakdown_data.shots.forEach(shot => {
-                   const shotUrls = {};
-                   
-                   // 이미지 URL
-                   if (shot.image_design?.ai_generated_images) {
-                       shotUrls.image_urls = shot.image_design.ai_generated_images;
-                   }
-                   
-                   // 비디오 URL
-                   if (shot.video_urls) {
-                       shotUrls.video_urls = shot.video_urls;
-                   }
-                   
-                   // 오디오 URL
-                   if (shot.content?.audio_urls) {
-                       shotUrls.audio_urls = shot.content.audio_urls;
-                   }
-                   
-                   // 참조 이미지 URL
-                   if (shot.reference_images) {
-                       shotUrls.reference_images = shot.reference_images;
-                   }
-                   
-                   if (Object.keys(shotUrls).length > 0) {
-                       urlData.urls[shot.id] = shotUrls;
-                   }
-               });
-               
-               // 프로젝트 레벨 음악 URL
-               if (currentData.film_metadata?.project_music_urls) {
-                   urlData.project_music_urls = currentData.film_metadata.project_music_urls;
-               }
-               
-               const jsonFileName = getProjectFileName().replace('.json', '_urls.json');
-               const blob = new Blob([JSON.stringify(urlData, null, 2)], { type: 'application/json' });
-               const url = URL.createObjectURL(blob);
-               const a = document.createElement('a');
-               a.href = url;
-               a.download = jsonFileName;
-               document.body.appendChild(a);
-               a.click();
-               document.body.removeChild(a);
-               URL.revokeObjectURL(url);
-               
-               showMessage(`URL 데이터가 ${jsonFileName} 파일로 저장되었습니다.`, 'success');
-           } catch (error) {
-               showMessage(`URL 내보내기 오류: ${error.message}`, 'error');
-           }
-       }
 
        // 전체 프로젝트 데이터 백업
        function exportFullData() {
