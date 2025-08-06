@@ -338,7 +338,15 @@ function updateProjectCardStatus() {
 
 // 임시 데이터 초기화 함수
 function clearAllTempData() {
-    if (!confirm('모든 임시 JSON 데이터와 처리 완료 플래그를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+    const message = '모든 데이터를 초기화하시겠습니까?\n\n' +
+                   '다음 항목들이 삭제됩니다:\n' +
+                   '• 임시 업로드 데이터\n' +
+                   '• 스토리보드 데이터\n' +
+                   '• 컨셉아트 데이터\n' +
+                   '• 수정된 프롬프트\n\n' +
+                   '이 작업은 되돌릴 수 없습니다.';
+    
+    if (!confirm(message)) {
         return;
     }
     
@@ -384,6 +392,38 @@ function clearAllTempData() {
         deletedCount++;
     }
     
+    // 스토리보드 관련 데이터 삭제
+    const storyboardKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('breakdownData') || 
+                   key.includes('lastSaved') || 
+                   key.includes('shotMemos') ||
+                   key.includes('shot_') ||
+                   key.includes('filmProduction') ||
+                   key.includes('stage6ImagePrompts') ||
+                   key.includes('stage7VideoPrompts') ||
+                   key.includes('stage8AudioPrompts') ||
+                   key.includes('audioFiles_') ||
+                   key.includes('editedImagePrompts'))) {
+            storyboardKeys.push(key);
+        }
+    }
+    
+    storyboardKeys.forEach(key => {
+        localStorage.removeItem(key);
+        deletedCount++;
+    });
+    
+    // 컨셉아트 관련 데이터 삭제
+    const conceptArtKeys = ['conceptArtManagerData_v1.2', 'editedConceptPrompts'];
+    conceptArtKeys.forEach(key => {
+        if (localStorage.getItem(key)) {
+            localStorage.removeItem(key);
+            deletedCount++;
+        }
+    });
+    
     // 업로드 상태 초기화
     Object.keys(uploadStatus).forEach(key => {
         uploadStatus[key] = false;
@@ -410,9 +450,15 @@ function clearAllTempData() {
     
     // 완료 메시지 표시
     if (deletedCount > 0) {
-        alert(`${deletedCount}개의 임시 데이터가 초기화되었습니다.\n\n이제 새로운 JSON 파일을 업로드할 수 있습니다.`);
+        alert(`모든 데이터가 초기화되었습니다.\n\n` +
+              `삭제된 항목 수: ${deletedCount}개\n` +
+              `• 임시 업로드 데이터\n` +
+              `• 스토리보드 데이터\n` +
+              `• 컨셉아트 데이터\n` +
+              `• 수정된 프롬프트\n\n` +
+              `이제 새로운 프로젝트를 시작할 수 있습니다.`);
     } else {
-        alert('초기화할 임시 데이터가 없습니다.');
+        alert('초기화할 데이터가 없습니다.');
     }
 }
 
