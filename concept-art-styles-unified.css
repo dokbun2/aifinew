@@ -568,38 +568,47 @@ select:focus {
     }
     
     .header {
-        height: auto;
-        padding: var(--space-sm) var(--space-md);
+        height: 60px;
+        padding: 0 var(--space-sm);
     }
     
     .header-content {
-        flex-direction: column;
+        flex-direction: row;
         gap: var(--space-sm);
-        align-items: flex-start;
+        align-items: center;
+        height: 100%;
     }
     
     .header-left {
-        width: 100%;
-        justify-content: space-between;
+        flex: 1;
+        justify-content: flex-start;
+        gap: var(--space-sm);
     }
     
     .header-right {
-        width: 100%;
+        width: auto;
     }
     
     .header-buttons {
-        width: 100%;
-        justify-content: flex-start;
-        gap: var(--space-xs);
+        width: auto;
+        justify-content: flex-end;
+        gap: 6px;
     }
     
     .header-btn {
-        font-size: 0.8rem;
-        padding: 6px 12px;
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+    
+    .header-title {
+        font-size: 0.95rem;
+        white-space: nowrap;
     }
     
     .home-btn {
-        padding: 6px 12px;
-        font-size: 0.875rem;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        white-space: nowrap;
     }
 }

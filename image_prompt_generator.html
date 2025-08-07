@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 프롬프트 생성기</title>
+    
+    <!-- CSS 파일 링크 -->
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="stylesheet" href="concept-art-styles-modern.css">
+    <link rel="stylesheet" href="concept-art-styles-unified.css">
+    
+    <!-- SEO -->
+    <meta name="description" content="AI 이미지 생성을 위한 프롬프트 제작 도구">
+    <meta name="keywords" content="AI 이미지생성, 프롬프트, Midjourney, DALL-E, Stable Diffusion">
+    
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
+    
+    <style>
+        /* 페이지 특화 스타일 */
+        .main-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: var(--space-lg);
+            padding-top: 80px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* PC에서 적절한 컨텐츠 너비 유지 */
+        @media (min-width: 1200px) {
+            .main-container {
+                padding-left: 3%;
+                padding-right: 3%;
+            }
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+
+        .section-header {
+            margin-bottom: var(--space-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .section-header-left {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* 입력 영역 스타일 */
+        .input-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        /* 큰 화면에서 최적 비율 */
+        @media (min-width: 1400px) {
+            .input-area {
+                grid-template-columns: 1fr 1fr;
+                gap: var(--space-lg);
+            }
+        }
+        
+        /* 초대형 화면에서 더 넓은 레이아웃 */
+        @media (min-width: 1600px) {
+            .input-area {
+                grid-template-columns: 1.2fr 0.8fr;
+                gap: var(--space-xl);
+            }
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm);
+            transition: all var(--transition-base);
+        }
+
+        .input-section:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+        }
+
+        .input-section h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+            word-break: keep-all;
+            white-space: normal;
+        }
+
+        .text-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm);
+            color: var(--text-primary);
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 150px;
+            transition: all var(--transition-base);
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+        }
+
+        /* 파일 업로드 스타일 */
+        .file-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-sm);
+            padding: var(--space-md);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .file-upload-area.drag-over {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-sm);
+            opacity: 0.7;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xs);
+            font-size: 0.85rem;
+        }
+
+        .upload-hint {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 이미지 프리뷰 */
+        .image-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            margin-top: var(--space-sm);
+        }
+
+        .remove-image-btn {
+            position: absolute;
+            top: var(--space-xs);
+            right: var(--space-xs);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all var(--transition-base);
+        }
+
+        .remove-image-btn:hover {
+            background: rgba(239, 68, 68, 1);
+            transform: scale(1.1);
+        }
+
+        /* 버튼 그룹 */
+        .button-group {
+            display: flex;
+            gap: var(--space-sm);
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: var(--radius-full);
+            font-family: 'Paperlogy', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-export {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        /* 생성된 프롬프트 영역 */
+        .output-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-sm);
+            padding: var(--space-md);
+            margin-top: var(--space-md);
+            display: none;
+        }
+
+        .output-section.active {
+            display: block;
+        }
+
+        .output-text {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm);
+            color: var(--text-primary);
+            font-family: 'Paperlogy', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .copy-btn {
+            margin-top: var(--space-sm);
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* 프롬프트 보기 영역 */
+        .prompt-preview-section {
+            margin-top: var(--space-lg);
+            margin-bottom: var(--space-md);
+        }
+
+        .preview-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .prompt-preview {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            padding: var(--space-md);
+            min-height: 80px;
+            font-family: 'Paperlogy', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            transition: all var(--transition-base);
+        }
+
+        .prompt-preview:hover {
+            border-color: rgba(168, 85, 247, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .preview-placeholder {
+            color: var(--text-tertiary);
+            font-style: italic;
+            margin: 0;
+        }
+
+        .prompt-preview.has-content {
+            color: var(--text-primary);
+            font-style: normal;
+        }
+
+        /* 구조별 카드 섹션 */
+        .prompt-cards-section {
+            margin-top: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .cards-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+        }
+
+        .cards-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            word-break: keep-all;
+            white-space: normal;
+        }
+
+        .btn-import {
+            background: var(--secondary-gradient);
+            color: white;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+        }
+
+        .btn-import:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .prompt-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-sm);
+        }
+        
+        /* 큰 화면에서 더 많은 카드 표시 */
+        @media (min-width: 1600px) {
+            .prompt-cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: var(--space-md);
+            }
+        }
+
+        .prompt-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm);
+            transition: all var(--transition-base);
+            position: relative;
+        }
+
+        .prompt-card:hover {
+            border-color: rgba(168, 85, 247, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .prompt-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xs);
+        }
+
+        .prompt-card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .prompt-card-edit-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+        }
+
+        .prompt-card-edit-btn:hover {
+            color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .prompt-card-content {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            min-height: 40px;
+        }
+
+        .prompt-card-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-sm);
+            padding: var(--space-xs);
+            color: var(--text-primary);
+            font-family: 'Paperlogy', sans-serif;
+            font-size: 0.8rem;
+            resize: vertical;
+            min-height: 60px;
+            display: none;
+        }
+
+        .prompt-card.editing .prompt-card-content {
+            display: none;
+        }
+
+        .prompt-card.editing .prompt-card-input {
+            display: block;
+        }
+
+        .prompt-card-actions {
+            display: none;
+            gap: var(--space-xs);
+            margin-top: var(--space-xs);
+        }
+
+        .prompt-card.editing .prompt-card-actions {
+            display: flex;
+        }
+
+        .prompt-card-btn {
+            padding: 4px 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .prompt-card-save {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .prompt-card-save:hover {
+            background: rgba(16, 185, 129, 0.8);
+        }
+
+        .prompt-card-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .prompt-card-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* 토스트 메시지 */
+        .toast {
+            position: fixed;
+            bottom: var(--space-md);
+            right: var(--space-md);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+            font-size: 0.85rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all var(--transition-base);
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 태블릿 디자인 (768px - 1199px) */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .main-container {
+                padding-left: var(--space-md);
+                padding-right: var(--space-md);
+            }
+        }
+
+        /* 모바일 디자인 */
+        @media (max-width: 767px) {
+            .input-area {
+                grid-template-columns: 1fr;
+                gap: var(--space-sm);
+            }
+
+            .button-group {
+                justify-content: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .main-container {
+                padding: var(--space-sm);
+                padding-top: 70px;
+                max-width: 100%;
+            }
+            
+            .section {
+                padding: var(--space-sm);
+                margin-bottom: var(--space-sm);
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-sm);
+            }
+            
+            .section-header-left {
+                width: 100%;
+            }
+            
+            .section-title {
+                font-size: 1rem;
+                word-break: keep-all;
+                white-space: normal;
+            }
+            
+            .section-subtitle {
+                font-size: 0.75rem;
+                word-break: keep-all;
+                white-space: normal;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                white-space: nowrap;
+                min-width: auto;
+            }
+            
+            .btn-ai-connect {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .text-input {
+                min-height: 120px;
+                font-size: 0.8rem;
+                word-break: break-word;
+            }
+            
+            .file-upload-area {
+                min-height: 120px;
+                padding: var(--space-sm);
+            }
+            
+            .upload-icon {
+                font-size: 1.5rem;
+            }
+            
+            .upload-text {
+                font-size: 0.8rem;
+                word-break: keep-all;
+            }
+            
+            .upload-hint {
+                font-size: 0.7rem;
+                word-break: keep-all;
+            }
+            
+            .prompt-preview-section {
+                margin-top: var(--space-md);
+                margin-bottom: var(--space-sm);
+            }
+            
+            .prompt-preview {
+                min-height: 60px;
+                padding: var(--space-sm);
+                font-size: 0.8rem;
+                word-break: break-word;
+                white-space: pre-wrap;
+            }
+            
+            .preview-title {
+                font-size: 0.85rem;
+                word-break: keep-all;
+            }
+            
+            .preview-placeholder {
+                word-break: keep-all;
+                white-space: normal;
+            }
+            
+            .prompt-cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .prompt-card {
+                padding: var(--space-xs);
+            }
+            
+            .prompt-card-title {
+                font-size: 0.8rem;
+                word-break: keep-all;
+            }
+            
+            .prompt-card-content {
+                font-size: 0.75rem;
+                word-break: break-word;
+            }
+            
+            .cards-title {
+                word-break: keep-all;
+                white-space: normal;
+                font-size: 0.8rem;
+            }
+            
+            .cards-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-xs);
+            }
+            
+            .btn-import {
+                width: 100%;
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+        }
+        
+        /* 초소형 모바일 (max-width: 380px) */
+        @media (max-width: 380px) {
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- Gradient Mesh Background -->
+    <div class="gradient-mesh-bg"></div>
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="index.html" class="home-btn">🏠 홈</a>
+                <h2 class="header-title" style="font-size: 1.1rem;">이미지 프롬프트 생성기</h2>
+            </div>
+            <div class="header-right">
+                <div class="header-buttons">
+                    <a href="storyboard/index.html" class="header-btn">스토리보드</a>
+                    <a href="your_title_storyboard_v9.4_c.html" class="header-btn">컨셉아트</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- 요청사항 입력 섹션 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-header-left">
+                    <h2 class="section-title">요청사항 입력</h2>
+                    <p class="section-subtitle">2가지(텍스트/이미지) 모두 작성 가능</p>
+                </div>
+                <button class="btn btn-primary btn-ai-connect" id="ai-connect-btn">
+                    🤖 AI 연동
+                </button>
+            </div>
+
+            <div class="input-area">
+                <!-- 텍스트 입력 영역 -->
+                <div class="input-section">
+                    <h3>텍스트 입력창</h3>
+                    <textarea 
+                        id="text-input" 
+                        class="text-input" 
+                        placeholder="생성하고 싶은 이미지에 대한 설명을 입력하세요..."
+                    ></textarea>
+                </div>
+
+                <!-- 이미지 업로드 영역 -->
+                <div class="input-section">
+                    <h3>파일 업로드</h3>
+                    <div class="file-upload-area" id="file-upload-area">
+                        <input type="file" id="file-input" class="file-input" accept=".jpg,.jpeg,.png,.gif" />
+                        <div class="upload-icon">📸</div>
+                        <div class="upload-text">이미지를 드래그하거나 클릭하여 업로드</div>
+                        <div class="upload-hint">JPG, PNG, GIF 형식 지원 (최대 10MB)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 프롬프트 보기 영역 -->
+            <div class="prompt-preview-section">
+                <h3 class="preview-title">프롬프트 보기</h3>
+                <div class="prompt-preview" id="prompt-preview">
+                    <p class="preview-placeholder">텍스트를 입력하거나 이미지를 업로드하면 실시간으로 프롬프트가 생성됩니다.</p>
+                </div>
+            </div>
+
+            <!-- 구조별 카드 섹션 -->
+            <div class="prompt-cards-section" id="prompt-cards-section">
+                <div class="cards-header">
+                    <h3 class="cards-title">🎯 프롬프트 구조 편집기</h3>
+                    <button class="btn btn-import" id="import-prompt-btn" onclick="importPromptFromPreview()">
+                        📥 가져오기
+                    </button>
+                </div>
+                <div class="prompt-cards-grid" id="prompt-cards-grid">
+                    <!-- 카드들이 동적으로 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- 버튼 그룹 -->
+            <div class="button-group">
+                <button class="btn btn-primary" id="generate-prompt-btn">
+                    ✨ 프롬프트 생성
+                </button>
+            </div>
+        </div>
+
+        <!-- 생성된 프롬프트 출력 섹션 -->
+        <div class="section output-section" id="output-section">
+            <div class="section-header">
+                <h2 class="section-title">생성된 프롬프트</h2>
+            </div>
+            <div class="output-text" id="output-text"></div>
+            <button class="btn copy-btn" id="copy-prompt-btn">
+                📋 프롬프트 복사
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Message -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // 데이터 저장용 객체
+        let promptData = {
+            textInput: '',
+            imageFile: null,
+            imagePreview: null,
+            generatedPrompts: [],
+            structuredPrompt: {}
+        };
+
+        // DOM 요소들
+        const textInput = document.getElementById('text-input');
+        const fileInput = document.getElementById('file-input');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const generateBtn = document.getElementById('generate-prompt-btn');
+        const outputSection = document.getElementById('output-section');
+        const outputText = document.getElementById('output-text');
+        const copyPromptBtn = document.getElementById('copy-prompt-btn');
+        const toast = document.getElementById('toast');
+        const aiConnectBtn = document.querySelector('.btn-ai-connect');
+        const promptPreview = document.getElementById('prompt-preview');
+        const promptCardsSection = document.getElementById('prompt-cards-section');
+        const promptCardsGrid = document.getElementById('prompt-cards-grid');
+
+        // 파일 업로드 영역 클릭 이벤트
+        fileUploadArea.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('remove-image-btn')) {
+                fileInput.click();
+            }
+        });
+
+        // 드래그 앤 드롭 이벤트
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('drag-over');
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('drag-over');
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // 파일 선택 이벤트
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // 파일 처리 함수
+        function handleFileSelect(file) {
+            // 파일 타입 검증
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                showToast('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다.', 'error');
+                return;
+            }
+
+            // 파일 크기 검증 (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('파일 크기는 10MB 이하여야 합니다.', 'error');
+                return;
+            }
+
+            // 파일 읽기
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                promptData.imageFile = file;
+                promptData.imagePreview = e.target.result;
+                displayImagePreview(e.target.result);
+                updatePromptPreview();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 이미지 프리뷰 표시
+        function displayImagePreview(src) {
+            fileUploadArea.innerHTML = `
+                <button class="remove-image-btn" onclick="removeImage()">×</button>
+                <img src="${src}" alt="업로드된 이미지" class="image-preview">
+            `;
+        }
+
+        // 이미지 제거
+        function removeImage() {
+            promptData.imageFile = null;
+            promptData.imagePreview = null;
+            fileInput.value = '';
+            
+            fileUploadArea.innerHTML = `
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">이미지를 드래그하거나 클릭하여 업로드</div>
+                <div class="upload-hint">JPG, PNG, GIF 형식 지원 (최대 10MB)</div>
+            `;
+            
+            updatePromptPreview();
+        }
+
+        // 프롬프트 생성
+        generateBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            
+            if (!text && !promptData.imageFile) {
+                showToast('텍스트를 입력하거나 이미지를 업로드해주세요.', 'error');
+                return;
+            }
+
+            // 간단한 프롬프트 생성 로직 (실제로는 AI API 연동)
+            let prompt = '';
+            
+            if (text) {
+                // 텍스트 기반 프롬프트 향상
+                prompt = enhancePrompt(text);
+            }
+            
+            if (promptData.imageFile) {
+                if (prompt) {
+                    prompt += '\n\n[이미지 참조 포함]\n';
+                }
+                prompt += '업로드된 이미지를 기반으로 한 스타일과 구성';
+            }
+
+            // 프롬프트 저장 및 표시
+            promptData.generatedPrompts.push({
+                timestamp: new Date().toISOString(),
+                input: text,
+                hasImage: !!promptData.imageFile,
+                output: prompt
+            });
+
+            displayPrompt(prompt);
+            saveToLocalStorage();
+        });
+
+        // 프롬프트 파싱 함수
+        function parsePrompt(text) {
+            const structure = {};
+            
+            // 먼저 전체 텍스트에서 모든 파라미터를 추출
+            const params = [];
+            const paramPattern = /--\w+\s+[^\s]+/g;
+            let match;
+            while ((match = paramPattern.exec(text)) !== null) {
+                params.push(match[0]);
+            }
+            
+            // 파라미터를 텍스트에서 제거
+            let cleanText = text;
+            params.forEach(param => {
+                cleanText = cleanText.replace(param, '');
+            });
+            
+            // 파라미터가 있으면 PARAMETERS에 저장
+            if (params.length > 0) {
+                structure['PARAMETERS'] = params.join(' ');
+            }
+            
+            // 세미콜론으로 분리
+            const lines = cleanText.split(';').map(line => line.trim()).filter(line => line);
+            
+            lines.forEach(line => {
+                const colonIndex = line.indexOf(':');
+                if (colonIndex > -1) {
+                    const key = line.substring(0, colonIndex).trim();
+                    const value = line.substring(colonIndex + 1).trim();
+                    structure[key] = value;
+                }
+            });
+            
+            return structure;
+        }
+
+        // 프롬프트 향상 함수
+        function enhancePrompt(text) {
+            // 구조화된 프롬프트인지 확인
+            if (text.includes(':') && text.includes(';')) {
+                return text; // 이미 구조화된 프롬프트는 그대로 반환
+            }
+            
+            // 기본 향상 키워드
+            const enhancements = {
+                quality: 'highly detailed, 4k, professional',
+                style: 'cinematic lighting, photorealistic',
+                camera: 'rule of thirds composition',
+            };
+
+            let enhanced = text;
+            
+            // 품질 관련 키워드가 없으면 추가
+            if (!text.toLowerCase().includes('detailed') && !text.toLowerCase().includes('quality')) {
+                enhanced += ', ' + enhancements.quality;
+            }
+
+            return enhanced;
+        }
+
+        // 구조화된 프롬프트를 텍스트로 변환
+        function structureToText(structure) {
+            let text = '';
+            const params = structure['PARAMETERS'] || '';
+            const keys = Object.keys(structure).filter(key => key !== 'PARAMETERS');
+            
+            keys.forEach((key, index) => {
+                if (structure[key]) { // 값이 있는 경우만 추가
+                    text += `${key}: ${structure[key]}`;
+                    if (index < keys.length - 1) {
+                        text += '; ';
+                    }
+                }
+            });
+            
+            if (params) {
+                text += ' ' + params;
+            }
+            
+            return text;
+        }
+
+        // 카드 생성 함수
+        function createPromptCards(structure) {
+            promptCardsGrid.innerHTML = '';
+            
+            // PARAMETERS를 제외한 키들을 먼저 처리
+            const keys = Object.keys(structure).filter(key => key !== 'PARAMETERS');
+            
+            // PARAMETERS가 있으면 마지막에 추가
+            if (structure.hasOwnProperty('PARAMETERS')) {
+                keys.push('PARAMETERS');
+            }
+            
+            keys.forEach(key => {
+                const card = document.createElement('div');
+                card.className = 'prompt-card';
+                card.dataset.key = key;
+                
+                card.innerHTML = `
+                    <div class="prompt-card-header">
+                        <div class="prompt-card-title">${key}</div>
+                        <button class="prompt-card-edit-btn" onclick="editCard('${key}')">✏️</button>
+                    </div>
+                    <div class="prompt-card-content">${structure[key]}</div>
+                    <textarea class="prompt-card-input" data-key="${key}" onkeydown="handleCardKeydown(event, '${key}')">${structure[key]}</textarea>
+                    <div class="prompt-card-actions">
+                        <button class="prompt-card-btn prompt-card-save" onclick="saveCard('${key}')">저장</button>
+                        <button class="prompt-card-btn prompt-card-cancel" onclick="cancelCard('${key}')">취소</button>
+                    </div>
+                `;
+                
+                promptCardsGrid.appendChild(card);
+            });
+            
+            promptCardsSection.style.display = 'block';
+        }
+
+        // 카드 편집 함수
+        function editCard(key) {
+            const card = document.querySelector(`.prompt-card[data-key="${key}"]`);
+            card.classList.add('editing');
+            const input = card.querySelector('.prompt-card-input');
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        // 카드 저장 함수
+        function saveCard(key) {
+            const card = document.querySelector(`.prompt-card[data-key="${key}"]`);
+            const input = card.querySelector('.prompt-card-input');
+            const content = card.querySelector('.prompt-card-content');
+            
+            promptData.structuredPrompt[key] = input.value;
+            content.textContent = input.value;
+            card.classList.remove('editing');
+            
+            // 프롬프트 미리보기 업데이트
+            updatePromptPreview();
+            saveToLocalStorage();
+        }
+
+        // 카드 취소 함수
+        function cancelCard(key) {
+            const card = document.querySelector(`.prompt-card[data-key="${key}"]`);
+            const input = card.querySelector('.prompt-card-input');
+            
+            input.value = promptData.structuredPrompt[key];
+            card.classList.remove('editing');
+        }
+
+        // 프롬프트 표시
+        function displayPrompt(prompt) {
+            outputText.textContent = prompt;
+            outputSection.classList.add('active');
+            
+            // 스크롤
+            outputSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 프롬프트 복사
+        copyPromptBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(outputText.textContent)
+                .then(() => {
+                    showToast('프롬프트가 클립보드에 복사되었습니다.', 'success');
+                })
+                .catch(() => {
+                    showToast('복사에 실패했습니다.', 'error');
+                });
+        });
+
+        // AI 연동 버튼 (데모)
+        aiConnectBtn.addEventListener('click', () => {
+            showToast('AI 연동 기능은 준비 중입니다.', 'info');
+        });
+
+        // 토스트 메시지 표시
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = 'toast show';
+            
+            if (type === 'error') {
+                toast.style.background = 'rgba(239, 68, 68, 0.9)';
+            } else if (type === 'info') {
+                toast.style.background = 'rgba(59, 130, 246, 0.9)';
+            } else {
+                toast.style.background = 'rgba(16, 185, 129, 0.9)';
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 로컬 스토리지 저장
+        function saveToLocalStorage() {
+            localStorage.setItem('imagePromptData', JSON.stringify(promptData));
+        }
+
+        // 로컬 스토리지에서 불러오기
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('imagePromptData');
+            if (saved) {
+                promptData = JSON.parse(saved);
+                
+                // 텍스트 복원
+                if (promptData.textInput) {
+                    textInput.value = promptData.textInput;
+                }
+                
+                // 이미지 복원
+                if (promptData.imagePreview) {
+                    displayImagePreview(promptData.imagePreview);
+                }
+            }
+        }
+
+        // 프롬프트 미리보기 업데이트 함수
+        function updatePromptPreview() {
+            const text = textInput.value.trim();
+            
+            if (!text && !promptData.imageFile && Object.keys(promptData.structuredPrompt).length === 0) {
+                promptPreview.innerHTML = '<p class="preview-placeholder">텍스트를 입력하거나 이미지를 업로드하면 실시간으로 프롬프트가 생성됩니다.</p>';
+                promptPreview.classList.remove('has-content');
+                promptCardsSection.style.display = 'none';
+                return;
+            }
+
+            let previewText = '';
+            
+            // 구조화된 프롬프트가 있으면 우선 사용
+            if (Object.keys(promptData.structuredPrompt).length > 0) {
+                previewText = structureToText(promptData.structuredPrompt);
+            } else if (text) {
+                // 텍스트 기반 프롬프트 미리보기
+                previewText = enhancePrompt(text);
+                
+                // 구조화된 프롬프트인지 확인하고 파싱
+                if (text.includes(':') && text.includes(';')) {
+                    promptData.structuredPrompt = parsePrompt(text);
+                    createPromptCards(promptData.structuredPrompt);
+                } else {
+                    promptCardsSection.style.display = 'none';
+                }
+            }
+            
+            // 이미지 참조는 구조화된 프롬프트일 때는 추가하지 않음
+            if (promptData.imageFile && Object.keys(promptData.structuredPrompt).length === 0) {
+                if (previewText) {
+                    previewText += '\n\n[이미지 참조 포함]\n';
+                }
+                previewText += '업로드된 이미지를 기반으로 한 스타일과 구성';
+            }
+
+            promptPreview.textContent = previewText;
+            promptPreview.classList.add('has-content');
+        }
+
+        // 텍스트 입력 저장 및 미리보기 업데이트
+        textInput.addEventListener('input', () => {
+            promptData.textInput = textInput.value;
+            saveToLocalStorage();
+            updatePromptPreview();
+        });
+
+        // 페이지 로드 시 데이터 복원
+        window.addEventListener('load', () => {
+            loadFromLocalStorage();
+            
+            // localStorage에 데이터가 없으면 예시 프롬프트 설정
+            if (!promptData.textInput && !localStorage.getItem('imagePromptData')) {
+                const examplePrompt = `STYLE: 3D animation, Pixar/Disney style render; MEDIUM: CGI 3D animation; CAMERA: wide shot, eye level, professional studio scene; SUBJECT: stick figure character relaxing in director's chair, wearing oversized sunglasses holding whiskey glass, feet up on ottoman, confident relaxed pose; CHARACTER: simple stick figure with round head, thin black line body and limbs, comically oversized designer sunglasses, minimalist yet expressive, wearing suggested white shirt collar and dark pants through simple lines; FURNITURE: plush brown leather director's chair with rounded arms, matching ottoman footrest, luxurious vintage style; PROPS: crystal whiskey glass in stick hand, professional film cameras on tripods, C-stands with lights, reflectors, boom mics, cables on floor; AI ROBOTS: multiple cute robot assistants busily working around studio, one adjusting camera angle, another holding reflector, one operating boom mic, small wheeled robot managing cables, drone robot adjusting overhead light, all with glowing LED eyes and metallic finish; LIGHTING: dramatic studio lighting setup, warm key lights creating amber glow, cool blue fill lights for contrast, multiple light sources visible including softboxes and LED panels, professional photography setup; ENVIRONMENT: professional film studio with visible ceiling grid, white cyc wall, equipment cases, monitors showing footage, busy production atmosphere; ATMOSPHERE: humorous contrast between simple stick figure star and high-tech AI crew, behind-the-scenes movie production vibe, warm and cool color contrast; QUALITY: highly detailed 3D render, professional lighting, cinematic composition --ar 16:9 --v 6`;
+                
+                textInput.value = examplePrompt;
+                promptData.textInput = examplePrompt;
+            }
+            
+            // 텍스트 입력창에 기본값이 있으면 promptData에 저장
+            if (textInput.value.trim()) {
+                promptData.textInput = textInput.value.trim();
+                
+                // 구조화된 프롬프트인 경우 자동으로 파싱하여 카드 생성
+                const text = textInput.value.trim();
+                if (text.includes(':') && text.includes(';')) {
+                    promptData.structuredPrompt = parsePrompt(text);
+                    createPromptCards(promptData.structuredPrompt);
+                }
+            }
+            
+            updatePromptPreview();
+        });
+
+        // 카드 입력창 키보드 이벤트 처리
+        function handleCardKeydown(event, key) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                saveCard(key);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelCard(key);
+            }
+        }
+
+        // 프롬프트 가져오기 함수
+        function importPromptFromPreview() {
+            const previewText = promptPreview.textContent;
+            
+            if (!previewText || previewText.includes('텍스트를 입력하거나')) {
+                showToast('가져올 프롬프트가 없습니다.', 'error');
+                return;
+            }
+            
+            // 구조화된 프롬프트가 아닌 경우 기본 구조로 변환
+            if (!previewText.includes(':') || !previewText.includes(';')) {
+                // 기본 구조 템플릿
+                const defaultStructure = {
+                    'STYLE': '',
+                    'MEDIUM': '',
+                    'CAMERA': '',
+                    'SUBJECT': '',
+                    'CHARACTER': '',
+                    'FURNITURE': '',
+                    'PROPS': '',
+                    'AI ROBOTS': '',
+                    'LIGHTING': '',
+                    'ENVIRONMENT': '',
+                    'ATMOSPHERE': '',
+                    'QUALITY': '',
+                    'PARAMETERS': ''
+                };
+                
+                // 간단한 프롬프트는 SUBJECT에 넣기
+                defaultStructure['SUBJECT'] = previewText.replace(/\[이미지 참조 포함\][\s\S]*/, '').trim();
+                
+                promptData.structuredPrompt = defaultStructure;
+                createPromptCards(defaultStructure);
+                promptCardsSection.style.display = 'block';
+                showToast('프롬프트를 기본 구조로 가져왔습니다. 각 항목을 편집해주세요.', 'success');
+            } else {
+                // 이미 구조화된 프롬프트인 경우 파싱
+                const parsed = parsePrompt(previewText);
+                
+                // 기본 구조 키들
+                const defaultKeys = ['STYLE', 'MEDIUM', 'CAMERA', 'SUBJECT', 'CHARACTER', 
+                                   'FURNITURE', 'PROPS', 'AI ROBOTS', 'LIGHTING', 
+                                   'ENVIRONMENT', 'ATMOSPHERE', 'QUALITY', 'PARAMETERS'];
+                
+                // 기본 구조에 맞춰서 정렬
+                const structuredData = {};
+                defaultKeys.forEach(key => {
+                    structuredData[key] = parsed[key] || '';
+                });
+                
+                // 기본 키에 없는 추가 키들도 포함
+                Object.keys(parsed).forEach(key => {
+                    if (!defaultKeys.includes(key)) {
+                        structuredData[key] = parsed[key];
+                    }
+                });
+                
+                promptData.structuredPrompt = structuredData;
+                createPromptCards(structuredData);
+                promptCardsSection.style.display = 'block';
+                showToast('프롬프트를 구조 편집기로 가져왔습니다.', 'success');
+            }
+        }
+
+        // window 전역 함수로 등록 (인라인 onclick용)
+        window.removeImage = removeImage;
+        window.editCard = editCard;
+        window.saveCard = saveCard;
+        window.cancelCard = cancelCard;
+        window.importPromptFromPreview = importPromptFromPreview;
+        window.handleCardKeydown = handleCardKeydown;
+    </script>
+</body>
+</html>
