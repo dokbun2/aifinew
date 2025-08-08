@@ -3145,13 +3145,15 @@
             const hasCharacterKeys = ['CHARACTER_SHEET', 'BODY_TYPE', 'HAIR', 'FACE_SHAPE', 'FACIAL_FEATURES', 'SKIN', 'EXPRESSION', 'GAZE'].some(key => parsed[key]);
             const hasGeneralKeys = ['SCENE', 'LOCATION', 'LOCATION_DETAIL', 'TIME_LIGHTING', 'ARTIFICIAL_LIGHT', 'ATMOSPHERE', 'WEATHER', 'FOREGROUND', 'BACKGROUND'].some(key => parsed[key]);
             
-            // 자동 탭 전환 (캐릭터 키가 있으면 캐릭터 탭, 일반 키가 있으면 일반 탭)
-            if (hasCharacterKeys && !hasGeneralKeys) {
+            // 자동 탭 전환 우선순위: 캐릭터 > 일반이미지 > 유지
+            if (hasCharacterKeys) {
+                // 캐릭터 관련 키가 하나라도 있으면 캐릭터 탭으로
                 switchStructureTab('character');
-            } else if (hasGeneralKeys && !hasCharacterKeys) {
+            } else if (hasGeneralKeys) {
+                // 캐릭터 키가 없고 일반 키가 있으면 일반이미지 탭으로
                 switchStructureTab('general');
             }
-            // 둘 다 있거나 둘 다 없으면 현재 탭 유지
+            // 둘 다 없으면 현재 탭 유지
             
             const defaultKeys = ['STYLE', 'MEDIUM', 'CAMERA', 'SUBJECT', 'CHARACTER', 'FURNITURE', 'PROPS', 'AI ROBOTS', 'LIGHTING', 'ENVIRONMENT', 'ATMOSPHERE', 'QUALITY', 'PARAMETERS'];
             const structuredData = {};
