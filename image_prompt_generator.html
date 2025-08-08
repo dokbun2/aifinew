@@ -24,6 +24,7 @@
             margin: 0 auto;
             padding: var(--space-lg);
             padding-top: 80px;
+            padding-bottom: 100px; /* 하단 드롭다운을 위한 여백 */
             position: relative;
             z-index: 1;
         }
@@ -440,6 +441,7 @@
         .sub-tab-contents {
             min-height: 400px;
             width: 100%;
+            padding-bottom: 50px; /* 하단 여백 추가 */
         }
         
         .sub-tab-content {
@@ -1610,6 +1612,10 @@
             "Infrared", "Light Painting", "Lo-fi", "Low Key", "Macro", "Nightscapes", 
             "Noir", "Photorealistic", "Polaroid", "Portrait", "Vintage", "Film Noir",
             "Anamorphic", "Split Toning", "Film Emulation", "Kodak Vision", "Fujifilm",
+            // 실전 MJ 최적화 포토 장르
+            "Studio Portrait", "Beauty Shot", "Fashion Editorial", "Product Photography",
+            "Street Photography", "Architectural Photography", "Landscape", "Food Photography",
+            "Still Life",
             
             // 2025 트렌드 미학
             "Y2K Aesthetic", "McBling", "Dreamcore", "Weirdcore", "Liminal Space", 
@@ -1790,7 +1796,10 @@
                 "Group Shot", "Establishing Shot", "Master Shot", "Cutaway", "Reaction Shot",
                 // 시네마틱 기법
                 "Split Screen", "Match Cut", "Cross-cutting", "Jump Cut", "Whip Pan", "Rack Focus",
-                "Pull Focus", "Deep Focus", "Shallow Focus", "Selective Focus"
+                "Pull Focus", "Deep Focus", "Shallow Focus", "Selective Focus",
+                // MJ에서 자주 쓰는 렌즈/거리감 키워드
+                "Ultra Wide", "Wide Angle", "Standard Lens", "Telephoto", "Macro",
+                "Close-up Portrait", "Headshot", "Full Body Shot"
             ],
             CAMERA_EFFECTS: [
                 // V7 렌즈 효과
@@ -1815,7 +1824,7 @@
                 "Fujifilm GFX 100 II", "Hasselblad X2D", "Leica M11", "Panasonic S5 II", "RED V-Raptor",
                 "ARRI Alexa", "Blackmagic URSA", "iPhone 15 Pro", "Google Pixel 8 Pro",
                 // 카메라 타입
-                "DSLR", "Mirrorless", "Medium Format", "Large Format", "Full Frame", "APS-C", "Micro 4/3",
+                "DSLR", "Mirrorless", "Medium Format", "Large Format", "Full Frame", "APS-C", "Micro Four Thirds",
                 "Film Camera", "35mm Film", "120 Film", "4x5 Film", "8x10 Film", "Instant Camera",
                 // 특수 카메라
                 "Drone Camera", "Action Camera", "360 Camera", "Light Field Camera", "Thermal Camera",
@@ -1917,7 +1926,7 @@
                 // 이미지 참조
                 "--iw 0.5", "--iw 1", "--iw 2", "--cref", "--cw 0", "--cw 100",
                 // 기타 V7 파라미터
-                "--no", "--seed", "--stop", "--tile", "--repeat", "--video",
+                "--no", "--seed", "--stop", "--tile", "--repeat", "--video", "--style raw",
                 // 디테일 설정
                 "High Detail", "Ultra Detailed", "Intricate Details", "Fine Details", "Macro Details",
                 "Texture Detail", "Surface Detail", "Realistic Texture", "Stylized", "Simplified"
@@ -1988,6 +1997,15 @@
         // 드롭다운 값의 한글 번역 매핑
         const dropdownTranslations = {
             // STYLE translations (partial - will expand)
+            "Studio Portrait": "스튜디오 인물 사진",
+            "Beauty Shot": "뷰티 샷",
+            "Fashion Editorial": "패션 에디토리얼",
+            "Product Photography": "제품 사진",
+            "Street Photography": "스트리트 사진",
+            "Architectural Photography": "건축 사진",
+            "Landscape": "풍경 사진",
+            "Food Photography": "푸드 사진",
+            "Still Life": "정물 사진",
             "Y2K Aesthetic": "Y2K 미학",
             "McBling": "맥블링",
             "Dreamcore": "드림코어",
@@ -2033,6 +2051,50 @@
             "Close-up": "클로즈업",
             "Over the Shoulder": "오버 더 숄더",
             "Point of View (POV)": "주관적 시점",
+            "Extreme Wide Shot": "익스트림 와이드 샷",
+            "Medium Shot": "미디엄 샷",
+            "Medium Close-up": "미디엄 클로즈업",
+            "Extreme Close-up": "익스트림 클로즈업",
+            "Macro Shot": "매크로 샷",
+            "Detail Shot": "디테일 샷",
+            "Insert Shot": "인서트 샷",
+            "Static Shot": "정지 샷",
+            "Pan Left": "좌로 패닝",
+            "Pan Right": "우로 패닝",
+            "Tilt Up": "틸트 업",
+            "Tilt Down": "틸트 다운",
+            "Tracking Shot": "트래킹 샷",
+            "Dolly In": "돌리 인",
+            "Dolly Out": "돌리 아웃",
+            "Crane Shot": "크레인 샷",
+            "Handheld": "핸드헬드",
+            "Gimbal Shot": "짐벌 샷",
+            "Reverse Shot": "리버스 샷",
+            "Two Shot": "투 샷",
+            "Three Shot": "쓰리 샷",
+            "Group Shot": "그룹 샷",
+            "Establishing Shot": "설정 샷",
+            "Master Shot": "마스터 샷",
+            "Cutaway": "컷어웨이",
+            "Reaction Shot": "리액션 샷",
+            "Split Screen": "스플릿 스크린",
+            "Match Cut": "매치 컷",
+            "Cross-cutting": "크로스 컷팅",
+            "Jump Cut": "점프 컷",
+            "Whip Pan": "휩 팬",
+            "Rack Focus": "랙 포커스",
+            "Pull Focus": "풀 포커스",
+            "Deep Focus": "딥 포커스",
+            "Shallow Focus": "얕은 포커스",
+            "Selective Focus": "선택적 포커스",
+            "Ultra Wide": "울트라 와이드",
+            "Wide Angle": "광각",
+            "Standard Lens": "표준 렌즈",
+            "Telephoto": "망원",
+            "Macro": "매크로",
+            "Close-up Portrait": "클로즈업 인물",
+            "Headshot": "헤드샷",
+            "Full Body Shot": "전신 샷",
             
             // LIGHTING_TECHNIQUE translations
             "Volumetric Lighting": "볼류메트릭 조명",
@@ -2071,6 +2133,7 @@
             "--stylize 1000": "--stylize 1000 (스타일 강함)",
             "--weird 0": "--weird 0 (일반적)",
             "--weird 3000": "--weird 3000 (매우 독특함)",
+            "--style raw": "--style raw (스타일 최소화)",
             
             // COLOR_TONE translations
             "Vibrant Colors": "선명한 색상",
@@ -2994,6 +3057,31 @@
                     // 키보드 이벤트 리스너 추가
                     addKeyboardListeners(dropdown, wrapper);
                     
+                    // 드롭다운이 화면에 보이도록 위치 조정 및 스크롤
+                    const dropdownRect = dropdown.getBoundingClientRect();
+                    const windowHeight = window.innerHeight;
+                    const inputRect = wrapper.getBoundingClientRect();
+                    
+                    // 드롭다운의 하단이 화면 밖에 있는 경우
+                    if (dropdownRect.bottom > windowHeight - 20) {
+                        // 옵션 1: 위로 열기 (공간이 충분한 경우)
+                        const spaceAbove = inputRect.top;
+                        const dropdownHeight = dropdown.offsetHeight;
+                        
+                        if (spaceAbove > dropdownHeight + 50) {
+                            // 드롭다운을 입력창 위에 표시
+                            dropdown.style.bottom = 'calc(100% + 4px)';
+                            dropdown.style.top = 'auto';
+                        } else {
+                            // 옵션 2: 스크롤하여 전체가 보이게 함
+                            const scrollAmount = dropdownRect.bottom - windowHeight + 50; // 50px 여유
+                            window.scrollBy({
+                                top: scrollAmount,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                    
                     // 드롭다운 내부 클릭 이벤트 전파 차단
                     dropdown.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -3106,6 +3194,10 @@
             dropdown.querySelectorAll('.style-option').forEach(option => {
                 option.classList.remove('focused');
             });
+            
+            // 드롭다운 위치 초기화
+            dropdown.style.bottom = 'auto';
+            dropdown.style.top = 'calc(100% + 4px)';
         }
         
         // 키보드 이벤트 리스너 추가
@@ -3185,44 +3277,43 @@
         // 저장 버튼 클릭 시 변경요청 값을 변경반영으로 복사
         function saveToApplied(event, key) {
             // 저장 버튼을 클릭한 드롭다운 컨테이너 찾기
-            // event.target에서 가장 가까운 dropdown-container를 찾는다
             const button = event.target;
-            const container = button.closest('.dropdown-container');
+            let container = button.closest('.dropdown-container');
             
             if (!container) {
-                // 만약 못 찾으면 활성화된 컨테이너에서 찾기
-                const activeContainer = document.querySelector('.dropdown-container.active');
-                if (activeContainer) {
-                    container = activeContainer;
-                } else {
+                // 키로 직접 찾거나, 활성 컨테이너로 대체
+                container = document.querySelector(`.dropdown-container[data-key="${key}"]`) ||
+                            document.querySelector('.dropdown-container.active');
+                if (!container) {
                     showToast('드롭다운을 먼저 열어주세요.', 'error');
                     return;
                 }
             }
             
-            // 변경요청 입력 필드 찾기
             const requestInput = container.querySelector(`input[data-key="${key}-request"]`);
             const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
+            const existingInput = container.querySelector(`input[data-key="${key}"]`);
             
-            if (requestInput && appliedInput) {
-                if (requestInput.value.trim()) {
-                    // 변경요청 값을 변경반영으로 복사
-                    appliedInput.value = requestInput.value;
-                    appliedInput.dispatchEvent(new Event('change'));
-                    
-                    // 토스트 메시지 표시
-                    showToast('변경요청 내용이 변경반영으로 저장되었습니다.', 'success');
-                } else {
-                    // 변경요청이 비어있으면 기존 내용을 복사
-                    const existingValue = window.imagePromptState?.[key] || '';
-                    if (existingValue) {
-                        appliedInput.value = existingValue;
-                        appliedInput.dispatchEvent(new Event('change'));
-                        showToast('기존 내용이 변경반영으로 복사되었습니다.', 'success');
-                    } else {
-                        showToast('변경요청 내용을 입력하거나 기존 내용이 있어야 합니다.', 'error');
-                    }
+            if (!appliedInput) return;
+            
+            const requestValue = (requestInput?.value || '').trim();
+            let valueToApply = requestValue;
+            
+            if (!valueToApply) {
+                // 요청값이 없으면 동일 카드의 기존내용 → 전역 상태 순으로 사용
+                valueToApply = (existingInput?.value || '').trim();
+                if (!valueToApply) {
+                    valueToApply = (promptData?.structuredPrompt?.[key] || '').trim();
                 }
+            }
+            
+            if (valueToApply) {
+                appliedInput.value = valueToApply;
+                // 구조 데이터 즉시 반영하여 프리뷰/저장 동기화
+                updateStructureValue(key, valueToApply);
+                showToast(requestValue ? '변경요청 내용이 변경반영으로 저장되었습니다.' : '기존 내용이 변경반영으로 복사되었습니다.', 'success');
+            } else {
+                showToast('변경요청 또는 기존내용이 비어있습니다.', 'error');
             }
         }
         
