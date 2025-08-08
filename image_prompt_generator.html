@@ -1344,6 +1344,16 @@
             </div>
         </div>
 
+        <!-- 최종 프롬프트 섹션 -->
+        <div class="section" id="final-prompt-section" style="display:none;">
+            <div class="section-header">
+                <h2 class="section-title">최종 프롬프트</h2>
+            </div>
+            <textarea id="final-prompt-text" class="text-input" placeholder="최종 프롬프트가 여기 표시됩니다." readonly style="min-height:140px;"></textarea>
+            <div class="button-group" style="margin-top: 8px;">
+                <button class="btn copy-btn" id="copy-final-prompt-btn">📋 프롬프트 복사</button>
+            </div>
+        </div>
         <!-- 생성된 프롬프트 출력 섹션 -->
         <div class="section output-section" id="output-section">
             <div class="section-header">
@@ -1372,6 +1382,9 @@
         const outputSection = document.getElementById('output-section');
         const outputText = document.getElementById('output-text');
         const copyPromptBtn = document.getElementById('copy-prompt-btn');
+        const finalPromptSection = document.getElementById('final-prompt-section');
+        const finalPromptText = document.getElementById('final-prompt-text');
+        const copyFinalPromptBtn = document.getElementById('copy-final-prompt-btn');
         const toast = document.getElementById('toast');
         const aiConnectBtn = document.querySelector('.btn-ai-connect');
         const promptPreview = document.getElementById('prompt-preview');
@@ -1412,6 +1425,11 @@
 
             displayPrompt(prompt);
             saveToLocalStorage();
+
+            // 최종 프롬프트 섹션 업데이트
+            const finalText = structureToMultilineText(promptData.structuredPrompt || {}) || prompt;
+            finalPromptText.value = finalText || prompt;
+            finalPromptSection.style.display = 'block';
         });
 
         // 예시 프롬프트 불러오기 함수
@@ -2338,6 +2356,192 @@
             "Robot": "로봇",
             "Alien": "외계인",
 
+            // BODY_TYPE translations
+            "Slim": "슬림",
+            "Athletic": "운동형",
+            "Muscular": "근육질",
+            "Average": "보통 체형",
+            "Curvy": "굽이진 체형",
+            "Petite": "아담한",
+            "Tall": "키 큰",
+            "Short": "키 작은",
+            "Stocky": "다부진",
+            "Lean": "마른 근육질",
+            "Bulky": "덩치 큰",
+            "Toned": "탄탄한",
+            "Soft": "부드러운",
+            "Angular": "각진",
+            "Round": "둥근",
+            "Hourglass": "모래시계형",
+            "Pear-shaped": "하체 발달(배형)",
+            "V-shaped": "역삼각형",
+
+            // HAIR translations
+            "Long": "긴 머리",
+            "Short": "짧은 머리",
+            "Medium": "중간 길이",
+            "Wavy": "웨이브",
+            "Straight": "생머리",
+            "Curly": "곱슬",
+            "Braided": "땋은 머리",
+            "Ponytail": "포니테일",
+            "Bun": "번 헤어",
+            "Pixie Cut": "픽시 컷",
+            "Bob Cut": "보브 컷",
+            "Undercut": "언더컷",
+            "Mohawk": "모히칸",
+            "Afro": "아프로",
+            "Dreadlocks": "드레드락",
+            "Bald": "대머리",
+            "Buzz Cut": "버즈 컷",
+            "Flowing": "흩날리는",
+            "Messy": "헝클어진",
+            "Neat": "단정한",
+            "Styled": "스타일링",
+            "Natural": "내추럴",
+            "Colored": "염색",
+            "Highlighted": "하이라이트",
+            "Ombre": "옴브레",
+
+            // FACE_SHAPE translations
+            "Oval": "타원형",
+            "Round": "둥근형",
+            "Square": "사각형",
+            "Heart": "하트형",
+            "Diamond": "다이아몬드형",
+            "Oblong": "긴형",
+            "Triangle": "삼각형",
+            "Rectangular": "직사각형",
+
+            // FACIAL_FEATURES translations
+            "Sharp": "날카로운",
+            "Soft": "부드러운",
+            "Angular": "각진",
+            "Round": "둥근",
+            "Defined": "또렷한",
+            "Delicate": "섬세한",
+            "Strong": "강한",
+            "Gentle": "온화한",
+            "Prominent Cheekbones": "도드라진 광대뼈",
+            "Dimples": "보조개",
+            "Freckles": "주근깨",
+            "Beauty Mark": "점(뷰티 마크)",
+            "Scar": "흉터",
+            "Wrinkles": "주름",
+            "Smooth Skin": "매끈한 피부",
+            "Beard": "수염",
+            "Mustache": "콧수염",
+            "Goatee": "염소수염",
+            "Clean Shaven": "면도함",
+            "Stubble": "수염자국",
+
+            // SKIN translations
+            "Fair": "밝은 피부",
+            "Light": "연한 피부",
+            "Medium": "중간 피부",
+            "Tan": "햇볕에 탄 피부",
+            "Dark": "짙은 피부",
+            "Pale": "창백한 피부",
+            "Olive": "올리브 톤",
+            "Warm Tone": "웜 톤",
+            "Cool Tone": "쿨 톤",
+            "Freckled": "주근깨 피부",
+            "Clear": "깨끗한 피부",
+            "Glowing": "빛나는 피부",
+            "Matte": "매트 피부",
+            "Dewy": "윤광 피부",
+            "Dry": "건성",
+            "Oily": "지성",
+            "Textured": "결 있는 피부",
+            "Smooth": "매끈함",
+
+            // EXPRESSION translations (추가 보강)
+            "Neutral": "무표정",
+            "Confident": "자신감 있는",
+            "Thoughtful": "사색적인",
+            "Determined": "결연한",
+            "Embarrassed": "당황한",
+            "Disappointed": "실망한",
+
+            // CLOTHING translations 보강
+            "Jeans and T-shirt": "청바지와 티셔츠",
+            "Hoodie": "후디",
+            "Jacket": "재킷",
+            "Coat": "코트",
+            "Sweater": "스웨터",
+            "Shorts": "반바지",
+            "Skirt": "스커트",
+
+            // ACCESSORIES translations
+            "Glasses": "안경",
+            "Sunglasses": "선글라스",
+            "Hat": "모자",
+            "Cap": "캡",
+            "Headband": "헤어밴드",
+            "Earrings": "귀걸이",
+            "Necklace": "목걸이",
+            "Bracelet": "팔찌",
+            "Ring": "반지",
+            "Watch": "시계",
+            "Belt": "벨트",
+            "Scarf": "스카프",
+            "Gloves": "장갑",
+            "Bag": "가방",
+            "Backpack": "백팩",
+            "Jewelry": "주얼리",
+            "Tattoo": "문신",
+            "Piercing": "피어싱",
+            "Mask": "마스크",
+            "Crown": "왕관",
+            "Tiara": "티아라",
+            "Badge": "배지",
+            "Pin": "핀",
+
+            // PROPS translations (주요 예시)
+            "Weapon": "무기",
+            "Tool": "도구",
+            "Book": "책",
+            "Phone": "전화기",
+            "Computer": "컴퓨터",
+            "Umbrella": "우산",
+            "Cane": "지팡이",
+            "Staff": "스태프",
+            "Musical Instrument": "악기",
+            "Sports Equipment": "스포츠 장비",
+            "Food": "음식",
+            "Drink": "음료",
+            "Flower": "꽃",
+            "Key": "열쇠",
+            "Map": "지도",
+            "Scroll": "두루마리",
+            "Crystal": "크리스탈",
+            "Orb": "오브",
+            "Potion": "물약",
+            "Artifact": "유물",
+            "Device": "장치",
+
+            // POSE translations (주요 예시)
+            "Standing": "서 있는",
+            "Sitting": "앉아 있는",
+            "Walking": "걷는",
+            "Running": "뛰는",
+            "Jumping": "점프",
+            "Flying": "비행",
+            "Fighting": "전투",
+            "Dancing": "춤추는",
+            "Relaxed": "편안한",
+            "Tense": "긴장한",
+            "Dynamic": "다이내믹",
+            "Static": "정적인",
+            "Action Pose": "액션 포즈",
+            "Rest Pose": "휴식 포즈",
+            "Hero Pose": "영웅 포즈",
+            "Dramatic Pose": "드라마틱 포즈",
+            "Casual Pose": "캐주얼 포즈",
+            "Formal Pose": "포멀 포즈",
+            "Combat Stance": "전투 자세",
+            "Defensive Stance": "방어 자세",
+
             // GAZE translations
             "Direct": "정면 응시",
             "Averted": "시선 회피",
@@ -2885,6 +3089,18 @@
                 .catch(() => {
                     showToast('복사에 실패했습니다.', 'error');
                 });
+        });
+
+        // 최종 프롬프트 복사
+        copyFinalPromptBtn.addEventListener('click', () => {
+            const value = finalPromptText.value || '';
+            if (!value.trim()) {
+                showToast('복사할 최종 프롬프트가 없습니다.', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(value)
+                .then(() => showToast('최종 프롬프트가 복사되었습니다.', 'success'))
+                .catch(() => showToast('복사에 실패했습니다.', 'error'));
         });
 
         // AI 연동 버튼 (데모)
