@@ -1245,6 +1245,11 @@
             }
         }
         
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+        
     </style>
 </head>
 <body class="dark-theme">
@@ -1538,21 +1543,48 @@
         
         // 캐릭터 하위 탭 전환 함수
         function switchCharacterSubTab(categoryIndex) {
+            // 캐릭터 탭 내에서만 작동하도록 범위 제한
+            const characterContainer = document.querySelector('.character-container');
+            if (!characterContainer) return;
+            
             // 모든 하위 탭 버튼의 active 클래스 제거
-            document.querySelectorAll('.sub-tab-button').forEach(btn => {
+            characterContainer.querySelectorAll('.sub-tab-button').forEach(btn => {
                 btn.classList.remove('active');
             });
             
             // 클릭된 탭 버튼에 active 클래스 추가
-            document.querySelector(`.sub-tab-button[data-category="${categoryIndex}"]`)?.classList.add('active');
+            characterContainer.querySelector(`.sub-tab-button[data-category="${categoryIndex}"]`)?.classList.add('active');
             
             // 모든 컨텐츠 숨김
-            document.querySelectorAll('.sub-tab-content').forEach(content => {
+            characterContainer.querySelectorAll('.sub-tab-content').forEach(content => {
                 content.classList.remove('active');
             });
             
             // 선택된 컨텐츠만 표시
-            document.querySelector(`.sub-tab-content[data-category="${categoryIndex}"]`)?.classList.add('active');
+            characterContainer.querySelector(`.sub-tab-content[data-category="${categoryIndex}"]`)?.classList.add('active');
+        }
+        
+        // 일반 하위 탭 전환 함수
+        function switchGeneralSubTab(categoryIndex) {
+            // 일반 탭 내에서만 작동하도록 범위 제한
+            const generalContainer = document.querySelector('.general-container');
+            if (!generalContainer) return;
+            
+            // 모든 하위 탭 버튼의 active 클래스 제거
+            generalContainer.querySelectorAll('.sub-tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 클릭된 탭 버튼에 active 클래스 추가
+            generalContainer.querySelector(`.sub-tab-button[data-category="${categoryIndex}"]`)?.classList.add('active');
+            
+            // 모든 컨텐츠 숨김
+            generalContainer.querySelectorAll('.sub-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 선택된 컨텐츠만 표시
+            generalContainer.querySelector(`.sub-tab-content[data-category="${categoryIndex}"]`)?.classList.add('active');
         }
         
         // 카드 생성 함수
@@ -1561,6 +1593,7 @@
             
             // 캐릭터 탭 카테고리 (이미지 기준)
             // 스타일 옵션 목록
+        // 스타일 옵션 목록
         const styleOptions = [
             "Aerial", "Analog", "Cinematic", "Documentary", "Drone", "Futuristic", "HDR", "High Key", 
             "Hyperrealistic", "Infrared", "Light Painting", "Lo-fi", "Low Key", "Macro", "Nightscapes", 
@@ -1580,13 +1613,178 @@
             "Double Exposure", "Fantasy", "Horror", "Installation", "Psychedelic", "Retro-Futurism", 
             "Sacred Geometry", "Sci-Fi", "Stained Glass", "Steampunk", "Surrealism"
         ];
+
+        // 각 섹션별 드롭다운 옵션
+        const dropdownOptions = {
+            STYLE: styleOptions,
+            MEDIUM: [
+                "Photography", "Digital Art", "Traditional Art", "3D Render", "Mixed Media", "Collage",
+                "Oil Painting", "Watercolor", "Acrylic", "Pencil Drawing", "Charcoal", "Ink", "Pastel",
+                "Digital Painting", "Vector Art", "Pixel Art", "Photo Manipulation", "CGI", "Sculpture"
+            ],
+            'ERA/CULTURAL_REF': [
+                "Modern", "Contemporary", "Victorian", "Renaissance", "Medieval", "Ancient", "Futuristic",
+                "Retro 80s", "Retro 90s", "Art Deco Era", "Art Nouveau Era", "Baroque Period", "Gothic Era",
+                "Industrial Age", "Space Age", "Cyberpunk Era", "Steampunk Era", "Post-Apocalyptic"
+            ],
+            SCENE: [
+                "Daily Life", "Celebration", "Action Scene", "Quiet Moment", "Romantic Scene", 
+                "Battle Scene", "Peaceful Scene", "Dramatic Moment", "Comedy Scene", "Horror Scene",
+                "Fantasy Scene", "Sci-fi Scene", "Historical Scene", "Urban Scene", "Nature Scene",
+                "Indoor Scene", "Outdoor Scene", "Night Scene", "Day Scene", "Sunset/Sunrise Scene"
+            ],
+            COLOR_TONE: [
+                "Vibrant", "Muted", "Pastel", "Monochrome", "Black and White", "Sepia", "Warm Tones",
+                "Cool Tones", "Earth Tones", "Neon Colors", "Primary Colors", "Complementary Colors",
+                "Analogous Colors", "Triadic Colors", "Split Complementary", "High Contrast", "Low Contrast",
+                "Gradient", "Rainbow", "Metallic"
+            ],
+            CHARACTER: [
+                "Main Character", "Supporting Character", "Background Character", "Hero", "Villain",
+                "Mentor", "Sidekick", "Love Interest", "Comic Relief", "Mysterious Figure",
+                "Child", "Teenager", "Adult", "Elderly", "Male", "Female", "Non-binary", "Robot", "Alien"
+            ],
+            CHARACTER_SHEET: [
+                "Full Body Reference", "Turn Around", "Expression Sheet", "Costume Design", "Detail Sheet",
+                "Action Poses", "Idle Pose", "Portrait", "Profile View", "Three Quarter View", "Back View"
+            ],
+            BODY_TYPE: [
+                "Slim", "Athletic", "Muscular", "Average", "Curvy", "Petite", "Tall", "Short", "Stocky",
+                "Lean", "Bulky", "Toned", "Soft", "Angular", "Round", "Hourglass", "Pear-shaped", "V-shaped"
+            ],
+            HAIR: [
+                "Long", "Short", "Medium", "Wavy", "Straight", "Curly", "Braided", "Ponytail", "Bun",
+                "Pixie Cut", "Bob Cut", "Undercut", "Mohawk", "Afro", "Dreadlocks", "Bald", "Buzz Cut",
+                "Flowing", "Messy", "Neat", "Styled", "Natural", "Colored", "Highlighted", "Ombre"
+            ],
+            FACE_SHAPE: [
+                "Oval", "Round", "Square", "Heart", "Diamond", "Oblong", "Triangle", "Rectangular"
+            ],
+            FACIAL_FEATURES: [
+                "Sharp", "Soft", "Angular", "Round", "Defined", "Delicate", "Strong", "Gentle",
+                "Prominent Cheekbones", "Dimples", "Freckles", "Beauty Mark", "Scar", "Wrinkles",
+                "Smooth Skin", "Beard", "Mustache", "Goatee", "Clean Shaven", "Stubble"
+            ],
+            SKIN: [
+                "Fair", "Light", "Medium", "Tan", "Dark", "Pale", "Olive", "Warm Tone", "Cool Tone",
+                "Freckled", "Clear", "Glowing", "Matte", "Dewy", "Dry", "Oily", "Textured", "Smooth"
+            ],
+            EXPRESSION: [
+                "Happy", "Sad", "Angry", "Surprised", "Fearful", "Disgusted", "Neutral", "Confident",
+                "Shy", "Excited", "Bored", "Thoughtful", "Worried", "Relaxed", "Determined", "Confused",
+                "Amused", "Annoyed", "Curious", "Proud", "Embarrassed", "Hopeful", "Disappointed"
+            ],
+            GAZE: [
+                "Direct", "Averted", "Downward", "Upward", "Side Glance", "Over Shoulder", "Closed Eyes",
+                "Half-lidded", "Wide Open", "Squinting", "Winking", "Rolling Eyes", "Staring", "Dreamy"
+            ],
+            CLOTHING: [
+                "Casual", "Formal", "Business", "Sport", "Traditional", "Modern", "Vintage", "Futuristic",
+                "Fantasy", "Military", "School Uniform", "Work Uniform", "Costume", "Armor", "Dress",
+                "Suit", "Jeans and T-shirt", "Hoodie", "Jacket", "Coat", "Sweater", "Shorts", "Skirt"
+            ],
+            ACCESSORIES: [
+                "Glasses", "Sunglasses", "Hat", "Cap", "Headband", "Earrings", "Necklace", "Bracelet",
+                "Ring", "Watch", "Belt", "Scarf", "Gloves", "Bag", "Backpack", "Jewelry", "Tattoo",
+                "Piercing", "Mask", "Crown", "Tiara", "Badge", "Pin"
+            ],
+            PROPS: [
+                "Weapon", "Tool", "Book", "Phone", "Computer", "Bag", "Umbrella", "Cane", "Staff",
+                "Musical Instrument", "Sports Equipment", "Food", "Drink", "Flower", "Key", "Map",
+                "Scroll", "Crystal", "Orb", "Potion", "Artifact", "Device"
+            ],
+            POSE: [
+                "Standing", "Sitting", "Walking", "Running", "Jumping", "Flying", "Fighting", "Dancing",
+                "Relaxed", "Tense", "Dynamic", "Static", "Action Pose", "Rest Pose", "Hero Pose",
+                "Dramatic Pose", "Casual Pose", "Formal Pose", "Combat Stance", "Defensive Stance"
+            ],
+            CAMERA: [
+                "Wide Shot", "Medium Shot", "Close-up", "Extreme Close-up", "Long Shot", "Full Shot",
+                "American Shot", "Over Shoulder", "Point of View", "Dutch Angle", "High Angle",
+                "Low Angle", "Bird's Eye View", "Worm's Eye View", "Aerial View", "Tracking Shot",
+                "Pan Shot", "Tilt Shot", "Zoom In", "Zoom Out", "Dolly Shot", "Crane Shot"
+            ],
+            CAMERA_EFFECTS: [
+                "Depth of Field", "Motion Blur", "Lens Flare", "Bokeh", "Vignette", "Chromatic Aberration",
+                "Film Grain", "Gaussian Blur", "Radial Blur", "Tilt Shift", "Fish Eye", "Wide Angle",
+                "Telephoto", "Macro Lens", "Anamorphic", "Split Screen", "Double Exposure"
+            ],
+            CAMERA_TECH: [
+                "DSLR", "Mirrorless", "Film Camera", "Digital Camera", "Phone Camera", "Drone Camera",
+                "Action Camera", "360 Camera", "Medium Format", "Large Format", "Polaroid", "Disposable",
+                "Professional", "Amateur", "Vintage Camera", "Modern Camera"
+            ],
+            LOCATION: [
+                "City Street", "Forest", "Beach", "Mountain", "Desert", "Ocean", "Lake", "River",
+                "Park", "Garden", "Castle", "Palace", "House", "Apartment", "Office", "School",
+                "Hospital", "Restaurant", "Cafe", "Shop", "Mall", "Station", "Airport", "Harbor",
+                "Bridge", "Tunnel", "Road", "Highway", "Alley", "Rooftop", "Underground", "Space",
+                "Fantasy World", "Alien Planet", "Underwater", "Sky", "Cloud City", "Floating Island"
+            ],
+            LOCATION_DETAIL: [
+                "Cozy Corner", "Open Space", "Narrow Path", "Wide Area", "Hidden Spot", "Central Area",
+                "Edge/Border", "Entrance", "Exit", "Main Hall", "Side Room", "Basement", "Attic",
+                "Balcony", "Terrace", "Courtyard", "Backyard", "Front Yard", "Parking Lot", "Lobby"
+            ],
+            TIME_LIGHTING: [
+                "Dawn", "Early Morning", "Morning", "Noon", "Afternoon", "Late Afternoon", "Dusk",
+                "Evening", "Night", "Midnight", "Blue Hour", "Golden Hour", "Magic Hour", "Overcast",
+                "Sunny", "Cloudy", "Rainy", "Snowy", "Foggy", "Misty", "Clear Sky", "Starry Night"
+            ],
+            ARTIFICIAL_LIGHT: [
+                "Neon Lights", "Street Lamp", "Candlelight", "Firelight", "Torch Light", "LED Light",
+                "Fluorescent", "Incandescent", "Spotlight", "Stage Lights", "Studio Lighting", "Flash",
+                "Laser Light", "Hologram", "Projector Light", "Emergency Light", "Fairy Lights", "Lantern"
+            ],
+            ATMOSPHERE: [
+                "Mysterious", "Romantic", "Tense", "Peaceful", "Chaotic", "Serene", "Energetic",
+                "Melancholic", "Joyful", "Scary", "Dreamy", "Realistic", "Surreal", "Nostalgic",
+                "Futuristic", "Ancient", "Modern", "Timeless", "Ethereal", "Gritty", "Whimsical"
+            ],
+            WEATHER: [
+                "Clear", "Sunny", "Cloudy", "Partly Cloudy", "Overcast", "Rainy", "Heavy Rain",
+                "Drizzle", "Stormy", "Thunder", "Lightning", "Snowy", "Blizzard", "Hail", "Foggy",
+                "Misty", "Windy", "Hurricane", "Tornado", "Rainbow", "Aurora"
+            ],
+            FOREGROUND: [
+                "Empty", "Minimal", "Detailed", "Objects", "Characters", "Nature Elements", "Architecture",
+                "Vehicles", "Props", "Debris", "Foliage", "Water", "Rocks", "Sand", "Snow"
+            ],
+            BACKGROUND: [
+                "Simple", "Complex", "Blurred", "Detailed", "Abstract", "Realistic", "Gradient",
+                "Pattern", "Textured", "Plain", "Busy", "Minimalist", "Scenic", "Urban", "Natural"
+            ],
+            LIGHTING: [
+                "Natural Light", "Artificial Light", "Mixed Lighting", "Soft Light", "Hard Light",
+                "Directional", "Ambient", "Diffused", "Backlit", "Side Lit", "Front Lit", "Top Lit",
+                "Bottom Lit", "Rim Light", "Key Light", "Fill Light", "Three Point Lighting"
+            ],
+            LIGHTING_TECHNIQUE: [
+                "Rembrandt Lighting", "Split Lighting", "Broad Lighting", "Short Lighting", "Butterfly Lighting",
+                "Loop Lighting", "Rim Lighting", "Backlighting", "Silhouette", "High Key", "Low Key",
+                "Chiaroscuro", "Ambient Occlusion", "Global Illumination", "Volumetric Lighting"
+            ],
+            QUALITY: [
+                "High Resolution", "4K", "8K", "HD", "Ultra HD", "Photorealistic", "Hyperdetailed",
+                "Sharp Focus", "Soft Focus", "Bokeh", "Motion Blur", "Depth of Field", "Crystal Clear",
+                "Film Grain", "Noise", "Clean", "Polished", "Raw", "Unprocessed", "Professional"
+            ],
+            PARAMETERS: [
+                "High Detail", "Ultra Detailed", "Intricate Details", "Fine Details", "Macro Details",
+                "Texture Detail", "Surface Detail", "Realistic Texture", "Stylized", "Simplified",
+                "Complex Composition", "Simple Composition", "Balanced", "Dynamic", "Static"
+            ]
+        };
         
         // 한글 제목 매핑
         const koreanTitles = {
             'STYLE': '스타일',
             'MEDIUM': '매체',
+            'ERA/CULTURAL_REF': '시대/문화 참조',
             'CHARACTER': '캐릭터',
             'CAMERA': '카메라',
+            'SCENE': '장면',
+            'COLOR_TONE': '색조',
             'GAZE': '시선',
             'CHARACTER_SHEET': '캐릭터 시트',
             'BODY_TYPE': '체형',
@@ -1602,7 +1800,27 @@
             'BACKGROUND': '배경',
             'LIGHTING': '조명',
             'QUALITY': '품질',
-            'PARAMETERS': '파라미터'
+            'PARAMETERS': '파라미터',
+            'CHARACTER_1': '캐릭터 1',
+            'CHARACTER_1_DETAIL': '캐릭터 1 상세',
+            'CHARACTER_2': '캐릭터 2',
+            'CHARACTER_2_DETAIL': '캐릭터 2 상세',
+            'CHARACTER_3': '캐릭터 3',
+            'CHARACTER_3_DETAIL': '캐릭터 3 상세',
+            'CHARACTER_4': '캐릭터 4',
+            'CHARACTER_4_DETAIL': '캐릭터 4 상세',
+            'CHARACTER_5': '캐릭터 5',
+            'CHARACTER_5_DETAIL': '캐릭터 5 상세',
+            'LOCATION': '장소',
+            'LOCATION_DETAIL': '장소 상세',
+            'TIME_LIGHTING': '시간대/조명',
+            'ARTIFICIAL_LIGHT': '인공 조명',
+            'ATMOSPHERE': '분위기',
+            'WEATHER': '날씨',
+            'FOREGROUND': '전경',
+            'CAMERA_EFFECTS': '카메라 효과',
+            'LIGHTING_TECHNIQUE': '조명 기법',
+            'CAMERA_TECH': '카메라 기술'
         };
         
         const characterCategories = [
@@ -1701,7 +1919,6 @@
                                                 <button type="button" class="btn-field-action btn-ai-save" onclick="aiSaveField('${key}')">AI저장</button>
                                             </div>
                                         </div>
-                                        ${key === 'STYLE' ? `
                                         <div class="select-input-wrapper">
                                             <input type="text" 
                                                    class="dropdown-field-input with-select" 
@@ -1712,21 +1929,15 @@
                                             </button>
                                             <div class="style-options-dropdown" style="display: none;">
                                                 <div class="style-options-search">
-                                                    <input type="text" placeholder="스타일 검색..." onkeyup="filterStyleDropdown(this)">
+                                                    <input type="text" placeholder="검색..." onkeyup="filterStyleDropdown(this)">
                                                 </div>
                                                 <div class="style-options-list">
-                                                    ${styleOptions.map((option, idx) => 
+                                                    ${(dropdownOptions[key] || []).map((option, idx) => 
                                                         `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${option}</div>`
                                                     ).join('')}
                                                 </div>
                                             </div>
                                         </div>
-                                        ` : `
-                                        <input type="text" 
-                                               class="dropdown-field-input" 
-                                               data-key="${key}-request" 
-                                               placeholder="변경 요청사항을 입력하세요">
-                                        `}
                                     </div>
                                     <div class="dropdown-field">
                                         <label class="dropdown-field-label">변경 반영</label>
@@ -1749,51 +1960,120 @@
                 promptCardsGrid.appendChild(characterContainer);
                 
             } else {
-                // 일반이미지 탭: 기존 카드 형태 유지
-                const categories = generalCategories;
-                Object.entries(categories).forEach(([categoryName, categoryKeys]) => {
-                    const section = document.createElement('div');
-                    section.className = 'structure-section';
+                // 일반이미지 탭: 드롭다운 형태로 변경
+                const generalContainer = document.createElement('div');
+                generalContainer.className = 'general-container';
+                
+                // 일반 탭 하위 카테고리 생성
+                const subTabs = document.createElement('div');
+                subTabs.className = 'character-sub-tabs';
+                subTabs.innerHTML = `
+                    <div class="sub-tab-buttons">
+                        <button type="button" class="sub-tab-button active" data-category="0" onclick="switchGeneralSubTab(0)">기본정보</button>
+                        <button type="button" class="sub-tab-button" data-category="1" onclick="switchGeneralSubTab(1)">캐릭터 정보</button>
+                        <button type="button" class="sub-tab-button" data-category="2" onclick="switchGeneralSubTab(2)">배경/환경 정보</button>
+                        <button type="button" class="sub-tab-button" data-category="3" onclick="switchGeneralSubTab(3)">기술 정보</button>
+                    </div>
+                `;
+                generalContainer.appendChild(subTabs);
+                
+                // 각 카테고리별 컨텐츠 생성
+                const subTabContents = document.createElement('div');
+                subTabContents.className = 'sub-tab-contents';
+                
+                const generalCategoriesArray = [
+                    { name: '기본정보', items: generalCategories['기본정보'] },
+                    { name: '캐릭터 정보', items: generalCategories['캐릭터 정보'] },
+                    { name: '배경/환경 정보', items: generalCategories['배경/환경 정보'] },
+                    { name: '기술 정보', items: generalCategories['기술 정보'] }
+                ];
+                
+                generalCategoriesArray.forEach((category, catIndex) => {
+                    const content = document.createElement('div');
+                    content.className = `sub-tab-content ${catIndex === 0 ? 'active' : ''}`;
+                    content.dataset.category = catIndex;
                     
-                    const sectionTitle = document.createElement('h4');
-                    sectionTitle.className = 'structure-section-title';
-                    sectionTitle.textContent = categoryName;
-                    section.appendChild(sectionTitle);
+                    let startNumber = 1;
+                    if (catIndex === 1) startNumber = 7;  // 캐릭터 정보
+                    else if (catIndex === 2) startNumber = 16;  // 배경/환경 정보  
+                    else if (catIndex === 3) startNumber = 24;  // 기술 정보
                     
-                    const sectionGrid = document.createElement('div');
-                    sectionGrid.className = 'prompt-cards-grid';
-                    
-                    categoryKeys.forEach(key => {
-                        if (structure.hasOwnProperty(key) || categoryKeys.includes(key)) {
-                            const card = document.createElement('div');
-                            card.className = 'prompt-card';
-                            card.dataset.key = key;
-                            
-                            const value = structure[key] || '';
-                            
-                            card.innerHTML = `
-                                <div class="prompt-card-header">
-                                    <div class="prompt-card-title">${key}</div>
-                                    <button class="prompt-card-edit-btn" onclick="editCard('${key}')">✏️</button>
+                    category.items.forEach((key, index) => {
+                        const value = structure[key] || '';
+                        const itemNumber = startNumber + index;
+                        
+                        // 드롭다운 컨테이너 생성
+                        const dropdownContainer = document.createElement('div');
+                        dropdownContainer.className = 'dropdown-container';
+                        dropdownContainer.dataset.key = key;
+                        
+                        dropdownContainer.innerHTML = `
+                            <div class="dropdown-header" onclick="toggleDropdown(this.parentElement)">
+                                <div class="dropdown-title">
+                                    <span class="dropdown-number">${itemNumber}</span>
+                                    <span>${koreanTitles[key] || key}</span>
+                                    <span class="dropdown-english-label">${key}</span>
                                 </div>
-                                <div class="prompt-card-content">${value}</div>
-                                <textarea class="prompt-card-input" data-key="${key}" onkeydown="handleCardKeydown(event, '${key}')">${value}</textarea>
-                                <div class="prompt-card-actions">
-                                    <button class="prompt-card-btn prompt-card-save" onclick="saveCard('${key}')">저장</button>
-                                    <button class="prompt-card-btn prompt-card-cancel" onclick="cancelCard('${key}')">취소</button>
+                                <span class="dropdown-arrow">▼</span>
+                            </div>
+                            <div class="dropdown-content">
+                                <div class="dropdown-fields">
+                                    <div class="dropdown-field">
+                                        <label class="dropdown-field-label">기존내용</label>
+                                        <input type="text" 
+                                               class="dropdown-field-input" 
+                                               value="${value}" 
+                                               data-key="${key}" 
+                                               onchange="updateStructureValue('${key}', this.value)"
+                                               placeholder="기존 내용을 입력하세요">
+                                    </div>
+                                    <div class="dropdown-field">
+                                        <div class="dropdown-field-label-with-buttons">
+                                            <label class="dropdown-field-label">변경요청</label>
+                                            <div class="field-action-buttons">
+                                                <button type="button" class="btn-field-action btn-save" onclick="saveToApplied('${key}')">저장</button>
+                                                <button type="button" class="btn-field-action btn-ai-save" onclick="aiSaveField('${key}')">AI저장</button>
+                                            </div>
+                                        </div>
+                                        <div class="select-input-wrapper">
+                                            <input type="text" 
+                                                   class="dropdown-field-input with-select" 
+                                                   data-key="${key}-request" 
+                                                   placeholder="직접 입력 또는 선택">
+                                            <button type="button" class="dropdown-toggle-btn" onclick="event.stopPropagation(); toggleStyleDropdown(this)">
+                                                <span class="dropdown-icon">▼</span>
+                                            </button>
+                                            <div class="style-options-dropdown" style="display: none;">
+                                                <div class="style-options-search">
+                                                    <input type="text" placeholder="검색..." onkeyup="filterStyleDropdown(this)">
+                                                </div>
+                                                <div class="style-options-list">
+                                                    ${(dropdownOptions[key] || []).map((option, idx) => 
+                                                        `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${option}</div>`
+                                                    ).join('')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-field">
+                                        <label class="dropdown-field-label">변경 반영</label>
+                                        <input type="text" 
+                                               class="dropdown-field-input" 
+                                               data-key="${key}-applied" 
+                                               placeholder="변경된 내용을 입력하세요">
+                                    </div>
                                 </div>
-                            `;
-                            
-                            sectionGrid.appendChild(card);
-                        }
+                            </div>
+                        `;
+                        
+                        content.appendChild(dropdownContainer);
                     });
                     
-                    // 섹션에 카드가 있는 경우에만 추가
-                    if (sectionGrid.children.length > 0) {
-                        section.appendChild(sectionGrid);
-                        promptCardsGrid.appendChild(section);
-                    }
+                    subTabContents.appendChild(content);
                 });
+                
+                generalContainer.appendChild(subTabContents);
+                promptCardsGrid.appendChild(generalContainer);
             }
             
             // 카테고리에 포함되지 않은 기타 키들 처리
@@ -2471,6 +2751,7 @@
         window.handleCardKeydown = handleCardKeydown;
         window.switchStructureTab = switchStructureTab;
         window.switchCharacterSubTab = switchCharacterSubTab;
+        window.switchGeneralSubTab = switchGeneralSubTab;
         window.updateStructureValue = updateStructureValue;
         window.toggleDropdown = toggleDropdown;
         window.toggleStyleDropdown = toggleStyleDropdown;
