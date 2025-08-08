@@ -44,7 +44,8 @@
             padding: var(--space-md);
             margin-bottom: var(--space-md);
             position: relative;
-            overflow: hidden;
+            /* 드롭다운이 섹션 밖으로 나갈 때 잘리지 않도록 */
+            overflow: visible;
         }
 
         .section::before {
@@ -270,6 +271,8 @@
         /* 프롬프트 카드 섹션 전체 너비 보장 */
         #prompt-cards-section {
             width: 100%;
+            /* 드롭다운이 화면 하단에 닿아도 여유 공간 확보 */
+            padding-bottom: calc(var(--space-xl, 48px));
         }
         
         #prompt-cards-grid {
@@ -670,8 +673,8 @@
             border-radius: var(--radius-md);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
             z-index: 10000;
-            max-height: 300px;
-            overflow: hidden;
+            max-height: 340px;
+            overflow: auto;
             display: flex;
             flex-direction: column;
             pointer-events: auto;
@@ -908,6 +911,8 @@
             margin-right: calc(-1 * var(--space-md));
             padding: var(--space-md);
             background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: visible; /* 내부 드롭다운이 넘쳐도 보이도록 */
         }
 
         .cards-header {
@@ -1622,14 +1627,13 @@
             "Dark Academia", "Cottagecore", "Vaporwave", "Synthwave", "Webcore",
             "Glitchcore", "Traumacore", "Nostalgiacore", "Blobitecture",
             
-            // V7 특화 스타일
-            "Hyperrealistic", "Hyperdetailed", "Raw Mode", "Draft Mode", "Photorealism",
-            "Ultra Detailed", "Omni Reference", "Style Reference", "Extreme Detail",
+            // V7 특화 스타일 (파라미터/품질 성격 제거)
+            "Hyperrealistic", "Hyperdetailed", "Photorealism",
             
             // 디지털 아트
             "3D Render", "8-bit Art", "CGI", "Cyberpunk", "Digital Painting", 
             "Fractal Art", "Generative Art", "Glitch Art", "Graffiti Art", "Isometric", 
-            "Low Poly", "Minimalism", "Neon Art", "Pixel Art", "Ray Tracing", 
+            "Low Poly", "Minimalism", "Neon Art", "Pixel Art", 
             "Vector Art", "Voxel Art", "Flat Design", "Material Design",
             
             // 일러스트레이션
@@ -1661,7 +1665,7 @@
             STYLE: styleOptions,
             MEDIUM: [
                 // V7 디지털 매체
-                "AI Generated", "Midjourney V7", "Neural Art", "GAN Art", "Diffusion Model", "Stable Diffusion",
+                "AI Generated", "Neural Art", "GAN Art", "Diffusion Model", "Stable Diffusion",
                 "Photorealistic Render", "Hyperrealistic CG", "Unreal Engine 5", "Unity HDRP", "Octane Render",
                 "Redshift Render", "V-Ray", "Arnold Render", "Cycles Render", "RTX Ray Tracing",
                 // 전통 매체
@@ -1903,8 +1907,8 @@
                 // 해상도
                 "16K", "8K", "4K", "2K", "HD", "Ultra HD", "Full HD", "QHD", "UHD", "FHD",
                 // 디테일 레벨
-                "Hyperdetailed", "Ultra Detailed", "Highly Detailed", "Intricately Detailed", "Photorealistic",
-                "Hyperrealistic", "Ultra Realistic", "Super Resolution", "Megapixel", "Extreme Detail",
+                "Hyperdetailed", "Ultra Detailed", "Highly Detailed", "Intricately Detailed",
+                "Photorealistic", "Hyperrealistic", "Ultra Realistic", "Extreme Detail",
                 // 포커스
                 "Sharp Focus", "Soft Focus", "Selective Focus", "Deep Focus", "Shallow Depth of Field",
                 "Bokeh", "Motion Blur", "Gaussian Blur", "Tilt Shift", "Focus Stacking",
@@ -1912,7 +1916,7 @@
                 "Crystal Clear", "Crisp", "Clean", "Polished", "Refined", "Raw", "Unprocessed",
                 "Film Grain", "Digital Noise", "Pristine", "Professional", "Studio Quality",
                 // V7 특수 모드
-                "Raw Mode", "Draft Mode", "Omni Reference", "Style Raw", "Vary Strong"
+                "Raw Mode", "Draft Mode", "Style Raw"
             ],
             PARAMETERS: [
                 // V7 파라미터
@@ -1927,9 +1931,7 @@
                 "--iw 0.5", "--iw 1", "--iw 2", "--cref", "--cw 0", "--cw 100",
                 // 기타 V7 파라미터
                 "--no", "--seed", "--stop", "--tile", "--repeat", "--video", "--style raw",
-                // 디테일 설정
-                "High Detail", "Ultra Detailed", "Intricate Details", "Fine Details", "Macro Details",
-                "Texture Detail", "Surface Detail", "Realistic Texture", "Stylized", "Simplified"
+                // 디테일 설정 (파라미터가 아닌 설명성 키워드는 제거)
             ],
             // 일반 이미지 탭용 캐릭터 옵션
             CHARACTER_1: [
@@ -2148,7 +2150,6 @@
             
             // MEDIUM translations
             "AI Generated": "AI 생성",
-            "Midjourney V7": "미드저니 V7",
             "Neural Art": "신경망 아트",
             "GAN Art": "GAN 아트",
             "Diffusion Model": "확산 모델",
@@ -2317,6 +2318,55 @@
             "Low Contrast": "낮은 대비",
             
             // CHARACTER translations
+            "Main Character": "주인공",
+            "Supporting Character": "조연",
+            "Background Character": "배경 인물",
+            "Hero": "영웅",
+            "Villain": "악당",
+            "Mentor": "멘토",
+            "Sidekick": "조수",
+            "Love Interest": "연인 대상",
+            "Comic Relief": "코믹 릴리프",
+            "Mysterious Figure": "의문의 인물",
+            "Child": "아이",
+            "Teenager": "십대",
+            "Adult": "성인",
+            "Elderly": "노년",
+            "Male": "남성",
+            "Female": "여성",
+            "Non-binary": "논바이너리",
+            "Robot": "로봇",
+            "Alien": "외계인",
+
+            // GAZE translations
+            "Direct": "정면 응시",
+            "Averted": "시선 회피",
+            "Downward": "아래쪽 시선",
+            "Upward": "위쪽 시선",
+            "Side Glance": "옆눈질",
+            "Over Shoulder": "어깨 너머 보기",
+            "Closed Eyes": "눈 감음",
+            "Half-lidded": "반쯤 감은 눈",
+            "Wide Open": "크게 뜬 눈",
+            "Squinting": "가늘게 뜬 눈",
+            "Winking": "윙크",
+            "Rolling Eyes": "눈 굴리기",
+            "Staring": "응시",
+            "Dreamy": "몽환적인 시선",
+
+            // CHARACTER_SHEET translations
+            "Full Body Reference": "전신 참고",
+            "Turn Around": "턴어라운드",
+            "Expression Sheet": "표정 시트",
+            "Costume Design": "의상 디자인",
+            "Detail Sheet": "디테일 시트",
+            "Action Poses": "액션 포즈",
+            "Idle Pose": "아이들 포즈",
+            "Portrait": "인물 사진",
+            "Profile View": "측면 뷰",
+            "Three Quarter View": "3/4 뷰",
+            "Back View": "후면 뷰",
+
             "young woman": "젊은 여성",
             "young man": "젊은 남성",
             "middle-aged woman": "중년 여성",
@@ -2779,49 +2829,7 @@
                 promptCardsGrid.appendChild(generalContainer);
             }
             
-            // 카테고리에 포함되지 않은 기타 키들 처리
-            // 캐릭터 탭에서는 기타 항목 표시하지 않음 (하위 탭으로 정리됨)
-            if (currentStructureTab !== 'character') {
-                const allCategoryKeys = Object.values(generalCategories).flat();
-                const otherKeys = Object.keys(structure).filter(key => !allCategoryKeys.includes(key));
-                
-                if (otherKeys.length > 0) {
-                const otherSection = document.createElement('div');
-                otherSection.className = 'structure-section';
-                
-                const sectionTitle = document.createElement('h4');
-                sectionTitle.className = 'structure-section-title';
-                sectionTitle.textContent = '기타';
-                otherSection.appendChild(sectionTitle);
-                
-                const sectionGrid = document.createElement('div');
-                sectionGrid.className = 'prompt-cards-grid';
-                
-                otherKeys.forEach(key => {
-                    const card = document.createElement('div');
-                    card.className = 'prompt-card';
-                    card.dataset.key = key;
-                    
-                    card.innerHTML = `
-                        <div class="prompt-card-header">
-                            <div class="prompt-card-title">${key}</div>
-                            <button class="prompt-card-edit-btn" onclick="editCard('${key}')">✏️</button>
-                        </div>
-                        <div class="prompt-card-content">${structure[key]}</div>
-                        <textarea class="prompt-card-input" data-key="${key}" onkeydown="handleCardKeydown(event, '${key}')">${structure[key]}</textarea>
-                        <div class="prompt-card-actions">
-                            <button class="prompt-card-btn prompt-card-save" onclick="saveCard('${key}')">저장</button>
-                            <button class="prompt-card-btn prompt-card-cancel" onclick="cancelCard('${key}')">취소</button>
-                        </div>
-                    `;
-                    
-                    sectionGrid.appendChild(card);
-                });
-                
-                    otherSection.appendChild(sectionGrid);
-                    promptCardsGrid.appendChild(otherSection);
-                }
-            }
+            // 일반이미지 탭: '기타' 섹션은 생성하지 않음 (요청에 따라 제거)
             
             promptCardsSection.style.display = 'block';
         }
@@ -3168,8 +3176,15 @@
             }
         }
         
-        // 드롭다운 토글 함수
+        // 드롭다운 토글 함수 (하나만 열림 유지)
         function toggleDropdown(container) {
+            // 이미 열려있는 다른 컨테이너 모두 닫기
+            document.querySelectorAll('.dropdown-container.active').forEach((open) => {
+                if (open !== container) {
+                    open.classList.remove('active');
+                }
+            });
+            // 현재 컨테이너 토글
             container.classList.toggle('active');
         }
         
@@ -3231,24 +3246,12 @@
                     const windowHeight = window.innerHeight;
                     const inputRect = wrapper.getBoundingClientRect();
                     
-                    // 드롭다운의 하단이 화면 밖에 있는 경우
+                    // 드롭다운은 항상 아래로만 열리게 고정하고, 화면 밖이면 스크롤로 보이게 함
+                    dropdown.style.top = 'calc(100% + 4px)';
+                    dropdown.style.bottom = 'auto';
                     if (dropdownRect.bottom > windowHeight - 20) {
-                        // 옵션 1: 위로 열기 (공간이 충분한 경우)
-                        const spaceAbove = inputRect.top;
-                        const dropdownHeight = dropdown.offsetHeight;
-                        
-                        if (spaceAbove > dropdownHeight + 50) {
-                            // 드롭다운을 입력창 위에 표시
-                            dropdown.style.bottom = 'calc(100% + 4px)';
-                            dropdown.style.top = 'auto';
-                        } else {
-                            // 옵션 2: 스크롤하여 전체가 보이게 함
-                            const scrollAmount = dropdownRect.bottom - windowHeight + 50; // 50px 여유
-                            window.scrollBy({
-                                top: scrollAmount,
-                                behavior: 'smooth'
-                            });
-                        }
+                        const scrollAmount = dropdownRect.bottom - windowHeight + 50; // 50px 여유
+                        window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
                     }
                     
                     // 드롭다운 내부 클릭 이벤트 전파 차단
@@ -3364,7 +3367,7 @@
                 option.classList.remove('focused');
             });
             
-            // 드롭다운 위치 초기화
+            // 드롭다운 위치 초기화 (항상 아래로)
             dropdown.style.bottom = 'auto';
             dropdown.style.top = 'calc(100% + 4px)';
         }
