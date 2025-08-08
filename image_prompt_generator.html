@@ -134,52 +134,6 @@
             box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
         }
 
-        /* 파일 업로드 스타일 */
-        .file-upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: var(--radius-sm);
-            padding: var(--space-md);
-            text-align: center;
-            cursor: pointer;
-            transition: all var(--transition-base);
-            min-height: 150px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .file-upload-area:hover {
-            border-color: var(--accent-purple);
-            background: rgba(168, 85, 247, 0.05);
-        }
-
-        .file-upload-area.drag-over {
-            border-color: var(--accent-green);
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .upload-icon {
-            font-size: 2rem;
-            margin-bottom: var(--space-sm);
-            opacity: 0.7;
-        }
-
-        .upload-text {
-            color: var(--text-secondary);
-            margin-bottom: var(--space-xs);
-            font-size: 0.85rem;
-        }
-
-        .upload-hint {
-            font-size: 0.75rem;
-            color: var(--text-tertiary);
-        }
-
-        .file-input {
-            display: none;
-        }
 
         /* 이미지 프리뷰 */
         .image-preview {
@@ -306,7 +260,7 @@
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
         }
 
-        /* 프롬프트 보기 영역 */
+        /* 프롬프트 입력 영역 */
         .prompt-preview-section {
             margin-top: var(--space-lg);
             margin-bottom: var(--space-md);
@@ -360,7 +314,7 @@
             font-style: normal;
         }
 
-        /* 프롬프트 보기 입력 가능 스타일 */
+        /* 프롬프트 입력 가능 스타일 */
         .prompt-preview[contenteditable="true"] {
             cursor: text;
             outline: none;
@@ -742,6 +696,7 @@
             transition: all var(--transition-base);
             font-size: 0.85rem;
             color: var(--text-secondary);
+            position: relative;
         }
         
         .style-option:hover {
@@ -754,6 +709,18 @@
             background: rgba(168, 85, 247, 0.2);
             color: var(--accent-purple);
             font-weight: 600;
+            position: relative;
+            padding-right: 35px;
+        }
+        
+        .style-option.selected::after {
+            content: '✓';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-purple);
+            font-size: 1rem;
         }
         
         .style-option.focused {
@@ -1204,24 +1171,6 @@
                 word-break: break-word;
             }
             
-            .file-upload-area {
-                min-height: 120px;
-                padding: var(--space-sm);
-            }
-            
-            .upload-icon {
-                font-size: 1.5rem;
-            }
-            
-            .upload-text {
-                font-size: 0.8rem;
-                word-break: keep-all;
-            }
-            
-            .upload-hint {
-                font-size: 0.7rem;
-                word-break: keep-all;
-            }
             
             .prompt-preview-section {
                 margin-top: var(--space-md);
@@ -1325,30 +1274,17 @@
             <div class="section-header">
                 <div class="section-header-left">
                     <h2 class="section-title">요청사항 입력</h2>
-                    <p class="section-subtitle">2가지(텍스트/이미지) 모두 작성 가능</p>
                 </div>
                 <button class="btn btn-primary btn-ai-connect" id="ai-connect-btn">
                     🤖 AI 연동
                 </button>
             </div>
 
-            <!-- 이미지 업로드 영역만 유지 -->
-            <div class="input-area" style="display: block;">
-                <div class="input-section">
-                    <h3>파일 업로드</h3>
-                    <div class="file-upload-area" id="file-upload-area">
-                        <input type="file" id="file-input" class="file-input" accept=".jpg,.jpeg,.png,.gif" />
-                        <div class="upload-icon">📸</div>
-                        <div class="upload-text">이미지를 드래그하거나 클릭하여 업로드</div>
-                        <div class="upload-hint">JPG, PNG, GIF 형식 지원 (최대 10MB)</div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- 프롬프트 보기 영역 -->
+            <!-- 프롬프트 입력 영역 -->
             <div class="prompt-preview-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
-                    <h3 class="preview-title">프롬프트 보기</h3>
+                    <h3 class="preview-title">프롬프트 입력</h3>
                     <button class="btn btn-secondary" id="load-example-btn" onclick="loadExamplePrompt()" style="font-size: 0.85rem; padding: 8px 16px;">
                         예시 프롬프트 불러오기
                     </button>
@@ -1405,15 +1341,11 @@
         // 데이터 저장용 객체
         let promptData = {
             textInput: '',
-            imageFile: null,
-            imagePreview: null,
             generatedPrompts: [],
             structuredPrompt: {}
         };
 
         // DOM 요소들
-        const fileInput = document.getElementById('file-input');
-        const fileUploadArea = document.getElementById('file-upload-area');
         const generateBtn = document.getElementById('generate-prompt-btn');
         const outputSection = document.getElementById('output-section');
         const outputText = document.getElementById('output-text');
@@ -1429,95 +1361,14 @@
         let currentFocusedIndex = -1;
         let activeDropdown = null;
 
-        // 파일 업로드 영역 클릭 이벤트
-        fileUploadArea.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('remove-image-btn')) {
-                fileInput.click();
-            }
-        });
 
-        // 드래그 앤 드롭 이벤트
-        fileUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.add('drag-over');
-        });
-
-        fileUploadArea.addEventListener('dragleave', () => {
-            fileUploadArea.classList.remove('drag-over');
-        });
-
-        fileUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.remove('drag-over');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFileSelect(files[0]);
-            }
-        });
-
-        // 파일 선택 이벤트
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileSelect(e.target.files[0]);
-            }
-        });
-
-        // 파일 처리 함수
-        function handleFileSelect(file) {
-            // 파일 타입 검증
-            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-            if (!validTypes.includes(file.type)) {
-                showToast('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다.', 'error');
-                return;
-            }
-
-            // 파일 크기 검증 (10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('파일 크기는 10MB 이하여야 합니다.', 'error');
-                return;
-            }
-
-            // 파일 읽기
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                promptData.imageFile = file;
-                promptData.imagePreview = e.target.result;
-                displayImagePreview(e.target.result);
-                updatePromptPreview();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // 이미지 프리뷰 표시
-        function displayImagePreview(src) {
-            fileUploadArea.innerHTML = `
-                <button class="remove-image-btn" onclick="removeImage()">×</button>
-                <img src="${src}" alt="업로드된 이미지" class="image-preview">
-            `;
-        }
-
-        // 이미지 제거
-        function removeImage() {
-            promptData.imageFile = null;
-            promptData.imagePreview = null;
-            fileInput.value = '';
-            
-            fileUploadArea.innerHTML = `
-                <div class="upload-icon">📸</div>
-                <div class="upload-text">이미지를 드래그하거나 클릭하여 업로드</div>
-                <div class="upload-hint">JPG, PNG, GIF 형식 지원 (최대 10MB)</div>
-            `;
-            
-            updatePromptPreview();
-        }
 
         // 프롬프트 생성
         generateBtn.addEventListener('click', () => {
             const text = promptData.textInput || promptPreview.innerText.trim();
             
-            if (!text && !promptData.imageFile) {
-                showToast('프롬프트를 입력하거나 이미지를 업로드해주세요.', 'error');
+            if (!text) {
+                showToast('프롬프트를 입력해주세요.', 'error');
                 return;
             }
 
@@ -1529,18 +1380,11 @@
                 prompt = enhancePrompt(text);
             }
             
-            if (promptData.imageFile) {
-                if (prompt) {
-                    prompt += '\n\n[이미지 참조 포함]\n';
-                }
-                prompt += '업로드된 이미지를 기반으로 한 스타일과 구성';
-            }
 
             // 프롬프트 저장 및 표시
             promptData.generatedPrompts.push({
                 timestamp: new Date().toISOString(),
                 input: text,
-                hasImage: !!promptData.imageFile,
                 output: prompt
             });
 
@@ -1862,8 +1706,7 @@
                                             <input type="text" 
                                                    class="dropdown-field-input with-select" 
                                                    data-key="${key}-request" 
-                                                   placeholder="직접 입력 또는 선택"
-                                                   onkeyup="filterStyleOptions(this)">
+                                                   placeholder="직접 입력 또는 선택">
                                             <button type="button" class="dropdown-toggle-btn" onclick="event.stopPropagation(); toggleStyleDropdown(this)">
                                                 <span class="dropdown-icon">▼</span>
                                             </button>
@@ -2093,10 +1936,6 @@
                     promptPreview.classList.add('has-content');
                 }
                 
-                // 이미지 복원
-                if (promptData.imagePreview) {
-                    displayImagePreview(promptData.imagePreview);
-                }
             }
         }
 
@@ -2104,7 +1943,7 @@
         function updatePromptPreview() {
             const text = promptData.textInput || promptPreview.innerText.trim();
             
-            if (!text && !promptData.imageFile && Object.keys(promptData.structuredPrompt).length === 0) {
+            if (!text && Object.keys(promptData.structuredPrompt).length === 0) {
                 if (!userEditingPreview) {
                     promptPreview.innerHTML = '<p class="preview-placeholder">여기에 프롬프트를 직접 입력하거나 예시 프롬프트를 불러올 수 있습니다.</p>';
                 }
@@ -2133,13 +1972,6 @@
                 }
             }
             
-            // 이미지 참조는 구조화된 프롬프트일 때는 추가하지 않음
-            if (promptData.imageFile && Object.keys(promptData.structuredPrompt).length === 0) {
-                if (previewText) {
-                    previewText += '\n\n[이미지 참조 포함]\n';
-                }
-                previewText += '업로드된 이미지를 기반으로 한 스타일과 구성';
-            }
 
             if (!userEditingPreview) {
                 promptPreview.textContent = previewText;
@@ -2381,6 +2213,28 @@
                 button.setAttribute('aria-expanded', 'true');
                 dropdown.setAttribute('role', 'listbox');
                 
+                // 드롭다운 선택 상태 초기화
+                if (!wrapper.dropdownSelections) {
+                    wrapper.dropdownSelections = [];
+                }
+                
+                // 현재 입력값에서 드롭다운 옵션에 해당하는 값들 찾기
+                const input = wrapper.querySelector('.dropdown-field-input');
+                const currentValues = input.value.trim() ? input.value.split(',').map(v => v.trim()).filter(v => v) : [];
+                const options = dropdown.querySelectorAll('.style-option');
+                
+                // 드롭다운 선택 상태 업데이트
+                wrapper.dropdownSelections = [];
+                options.forEach(option => {
+                    const optionValue = option.textContent.trim();
+                    if (currentValues.includes(optionValue)) {
+                        option.classList.add('selected');
+                        wrapper.dropdownSelections.push(optionValue);
+                    } else {
+                        option.classList.remove('selected');
+                    }
+                });
+                
                 // 검색 입력창에 포커스
                 setTimeout(() => {
                     const searchInput = dropdown.querySelector('.style-options-search input');
@@ -2397,25 +2251,55 @@
             }
         }
         
-        // 스타일 옵션 선택
+        // 스타일 옵션 선택 (다중 선택 지원)
         function selectStyleOption(element, value, inputKey) {
             event.stopPropagation();
             event.preventDefault();
             
             const wrapper = element.closest('.select-input-wrapper');
             const input = wrapper.querySelector('.dropdown-field-input');
-            const dropdown = wrapper.querySelector('.style-options-dropdown');
-            const button = wrapper.querySelector('.dropdown-toggle-btn');
             
-            input.value = value;
+            // 현재 입력값을 배열로 변환 (쉼표로 구분)
+            let currentValues = input.value.trim() ? input.value.split(',').map(v => v.trim()).filter(v => v) : [];
+            
+            // 드롭다운에서 선택된 값들만 관리하기 위한 데이터 속성
+            if (!wrapper.dropdownSelections) {
+                wrapper.dropdownSelections = [];
+            }
+            
+            // 이미 드롭다운에서 선택된 값인지 확인
+            const dropdownIndex = wrapper.dropdownSelections.indexOf(value);
+            
+            if (dropdownIndex > -1) {
+                // 이미 선택된 경우 제거 (토글)
+                wrapper.dropdownSelections.splice(dropdownIndex, 1);
+                element.classList.remove('selected');
+                
+                // 전체 값에서도 제거
+                const valueIndex = currentValues.indexOf(value);
+                if (valueIndex > -1) {
+                    currentValues.splice(valueIndex, 1);
+                }
+            } else {
+                // 선택되지 않은 경우 추가
+                wrapper.dropdownSelections.push(value);
+                element.classList.add('selected');
+                
+                // 전체 값에 추가 (중복 확인)
+                if (!currentValues.includes(value)) {
+                    currentValues.push(value);
+                }
+            }
+            
+            // 입력 필드에 업데이트
+            input.value = currentValues.join(', ');
             input.dispatchEvent(new Event('change'));
-            updateStructureValue(inputKey.replace('-request', ''), value);
             
-            // 드롭다운 닫기
-            closeDropdown(dropdown, button);
+            // 구조 데이터 업데이트
+            const key = inputKey.replace('-request', '');
+            updateStructureValue(key, input.value);
             
-            // 입력 필드로 포커스 이동
-            input.focus();
+            // 드롭다운은 열어둠 (다중 선택을 위해)
         }
         
         // 스타일 드롭다운 필터링

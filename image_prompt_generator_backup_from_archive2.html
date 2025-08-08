@@ -323,7 +323,7 @@
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
         }
 
-        /* 프롬프트 보기 영역 */
+        /* 프롬프트 입력 영역 */
         .prompt-preview-section {
             margin-top: var(--space-lg);
             margin-bottom: var(--space-md);
@@ -377,7 +377,7 @@
             font-style: normal;
         }
 
-        /* 프롬프트 보기 입력 가능 스타일 */
+        /* 프롬프트 입력 가능 스타일 */
         .prompt-preview[contenteditable="true"] {
             cursor: text;
             outline: none;
@@ -1341,7 +1341,6 @@
             <div class="section-header">
                 <div class="section-header-left">
                     <h2 class="section-title">요청사항 입력</h2>
-                    <p class="section-subtitle">2가지(텍스트/이미지) 모두 작성 가능</p>
                 </div>
                 <button class="btn btn-primary btn-ai-connect" id="ai-connect-btn">
                     🤖 AI 연동
@@ -1371,9 +1370,9 @@
                 </div>
             </div>
 
-            <!-- 프롬프트 보기 영역 -->
+            <!-- 프롬프트 입력 영역 -->
             <div class="prompt-preview-section">
-                <h3 class="preview-title">프롬프트 보기</h3>
+                <h3 class="preview-title">프롬프트 입력</h3>
                 <div class="prompt-preview" id="prompt-preview" contenteditable="true" spellcheck="false">
                     <p class="preview-placeholder">텍스트를 입력하거나 이미지를 업로드하면 실시간으로 프롬프트가 생성됩니다.</p>
                 </div>
