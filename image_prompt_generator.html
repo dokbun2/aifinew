@@ -1349,7 +1349,7 @@
             <div class="section-header">
                 <h2 class="section-title">최종 프롬프트</h2>
             </div>
-            <textarea id="final-prompt-text" class="text-input" placeholder="최종 프롬프트가 여기 표시됩니다." readonly style="min-height:140px;"></textarea>
+            <textarea id="final-prompt-text" class="text-input" placeholder="최종 프롬프트가 여기 표시됩니다." readonly style="min-height:320px;"></textarea>
             <div class="button-group" style="margin-top: 8px;">
                 <button class="btn copy-btn" id="copy-final-prompt-btn">📋 프롬프트 복사</button>
             </div>
@@ -3224,7 +3224,7 @@
                 localStorage.removeItem('aiEditPrompt');
                 
                 // 토스트 메시지 표시
-                showToast('스토리보드에서 프롬프트를 가져왔습니다.', 'success');
+                showToast('프롬프트를 가져왔습니다.', 'success');
             }
             
             // 프롬프트 미리보기에 기본값이 있으면 확인

@@ -459,6 +459,7 @@ const uiRenderer = {
                         ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                         <button class="btn btn-primary" onclick="promptManager.copyPrompt('${aiTool}', 'base')">프롬프트 복사</button>
                         <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', 'base')" style="margin-left: 8px;">프롬프트 수정</button>
+                        <button class="btn btn-ai-edit" onclick="promptManager.aiEditPrompt('${aiTool}', 'base')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
                     </div>
                     <div class="image-container" id="image-base-${aiTool}">
                         <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
@@ -539,6 +540,7 @@ const uiRenderer = {
                                     ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                                     <button class="btn btn-primary" onclick="promptManager.copyVariantPrompt('${aiTool}', '${typeKey}', ${index})">프롬프트 복사</button>
                                     <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', '${typeKey}', ${index})" style="margin-left: 8px;">프롬프트 수정</button>
+                                    <button class="btn btn-ai-edit" onclick="promptManager.aiEditPrompt('${aiTool}', '${typeKey}', ${index})" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
                                 </div>
                                 <div class="image-container" id="image-${typeKey}_${index}-${aiTool}">
                                     <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
@@ -568,6 +570,7 @@ const uiRenderer = {
                                     ${isEditedP ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                                     <button class="btn btn-primary" onclick="promptManager.copyVariantPrompt('${aiTool}', '${permutationKey}')">프롬프트 복사</button>
                                     <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', '${permutationKey}')" style="margin-left: 8px;">프롬프트 수정</button>
+                                    <button class="btn btn-ai-edit" onclick="promptManager.aiEditPrompt('${aiTool}', '${permutationKey}')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
                                 </div>
                             `;
                             typeContent.appendChild(permDiv);
@@ -997,6 +1000,60 @@ const promptManager = {
             `;
             document.head.appendChild(style);
         }
+    },
+    
+    aiEditPrompt: function(aiTool, type, index = null) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        let promptToTransfer = '';
+        
+        // 프롬프트 타입에 따라 적절한 프롬프트 가져오기
+        if (type === 'base') {
+            // 기본 프롬프트
+            if (concept.base_prompts && concept.base_prompts[aiTool]) {
+                // 수정된 프롬프트 확인
+                const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+                const promptKey = `${concept.id}_${aiTool}_base`;
+                promptToTransfer = editedPrompts[promptKey]?.prompt || concept.base_prompts[aiTool];
+            }
+        } else if (concept.character_variations && concept.character_variations[aiTool]) {
+            // 캐릭터 변형 프롬프트
+            const variations = concept.character_variations[aiTool];
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            
+            if (index !== null) {
+                // 일반 변형 프롬프트
+                const typeInfo = CHARACTER_TYPES[type];
+                if (typeInfo && variations[type]) {
+                    const variationPrompt = variations[type][index];
+                    if (variationPrompt) {
+                        const promptKey = `${concept.id}_${aiTool}_${variationPrompt.key}`;
+                        promptToTransfer = editedPrompts[promptKey]?.prompt || variationPrompt.prompt;
+                    }
+                }
+            } else {
+                // 퍼뮤테이션 프롬프트
+                if (variations[type]) {
+                    const promptKey = `${concept.id}_${aiTool}_${type}`;
+                    promptToTransfer = editedPrompts[promptKey]?.prompt || variations[type];
+                }
+            }
+        }
+        
+        if (!promptToTransfer) {
+            utils.showToast('전달할 프롬프트를 찾을 수 없습니다.');
+            return;
+        }
+        
+        // localStorage에 프롬프트 저장
+        localStorage.setItem('aiEditPrompt', promptToTransfer);
+        
+        // 이미지 프롬프트 생성기 페이지로 이동
+        window.location.href = 'image_prompt_generator.html';
     }
 };
 

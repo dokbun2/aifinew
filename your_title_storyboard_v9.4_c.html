@@ -114,7 +114,9 @@
                     </div>
                     
                     <div id="prompts-tab" class="tab-content">
-                        <h3>기본 프롬프트</h3>
+                        <h3 style="display:flex;align-items:center;gap:8px;">기본 프롬프트
+                            <span id="base-prompt-modified-badge" class="badge-modified" style="display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:10px;background:#34d399;color:#0b3b1e;font-weight:700;font-size:12px;line-height:1;">수정됨</span>
+                        </h3>
                         <div class="tabs ai-tabs" id="base-prompt-ai-tabs">
                             <!-- AI 탭 버튼은 JavaScript로 동적 생성 -->
                         </div>
@@ -147,6 +149,9 @@
         </div>
     </div>
     <div id="toast-message" class="toast"></div>
+    <style>
+      .badge-modified{box-shadow:0 0 0 1px rgba(0,0,0,.15) inset}
+    </style>
 	<!-- 이미지 모달 -->
 	<div id="imageModal" class="image-modal" onclick="closeImageModal(event)">
 		<span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
