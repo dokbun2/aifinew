@@ -384,6 +384,13 @@
             flex-direction: column;
             max-width: none !important;
         }
+        /* 일반이미지 컨테이너도 동일 스타일 적용 */
+        .general-container {
+            width: 100% !important;
+            display: flex;
+            flex-direction: column;
+            max-width: none !important;
+        }
         
         /* 캐릭터 하위 탭 스타일 */
         .character-sub-tabs {
@@ -938,8 +945,9 @@
             gap: var(--space-sm);
         }
         
-        /* 캐릭터 탭에서 prompt-cards-grid 오버라이드 */
-        .prompt-cards-grid:has(.character-container) {
+        /* 캐릭터/일반이미지 탭에서 prompt-cards-grid 오버라이드 */
+        .prompt-cards-grid:has(.character-container),
+        .prompt-cards-grid:has(.general-container) {
             display: block;
             width: 100%;
         }
@@ -1065,6 +1073,11 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        /* Hidden class for filtering */
+        .hidden {
+            display: none !important;
+        }
+        
         /* 토스트 메시지 */
         .toast {
             position: fixed;
@@ -1290,9 +1303,6 @@
             <div class="prompt-preview-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
                     <h3 class="preview-title">프롬프트 입력</h3>
-                    <button class="btn btn-secondary" id="load-example-btn" onclick="loadExamplePrompt()" style="font-size: 0.85rem; padding: 8px 16px;">
-                        예시 프롬프트 불러오기
-                    </button>
                 </div>
                 <div class="prompt-preview" id="prompt-preview" contenteditable="true" spellcheck="false">
                     <p class="preview-placeholder">여기에 프롬프트를 직접 입력하거나 예시 프롬프트를 불러올 수 있습니다.</p>
@@ -1593,39 +1603,94 @@
             
             // 캐릭터 탭 카테고리 (이미지 기준)
             // 스타일 옵션 목록
-        // 스타일 옵션 목록
+        // 스타일 옵션 목록 (2025 Midjourney v7 최신 업데이트)
         const styleOptions = [
-            "Aerial", "Analog", "Cinematic", "Documentary", "Drone", "Futuristic", "HDR", "High Key", 
-            "Hyperrealistic", "Infrared", "Light Painting", "Lo-fi", "Low Key", "Macro", "Nightscapes", 
-            "Noir", "Photorealistic", "Polaroid", "Portrait", "Vintage", "Whimsical", "Surrealistic", 
-            "Minimalistic", "Fine Art", "Street", "War/Conflict", "Abstract", "Anime Style", "Cartoon", 
-            "Chibi", "Children's Book", "Comic Book", "Concept Art", "Disney Style", "Fantasy Illustration", 
-            "Graphic Novel", "Manga", "Pixar", "Studio Ghibli", "Flat Design", "Sketch Style", 
-            "Papercut Illustration", "Line Art", "3D Render", "8-bit Art", "CGI", "Cyberpunk", 
-            "Digital Painting", "Fractal Art", "Generative Art", "Glitch Art", "Graffiti Art", "Isometric", 
-            "Low Poly", "Minimalism", "Neon Art", "Pixel Art", "Pop Art", "Ray Tracing", "Retro", 
-            "Synthwave", "Technical Drawing", "Vaporwave", "Vector Art", "Voxel Art", "Acrylic Painting", 
-            "Anatomical Drawing", "Art Deco", "Art Nouveau", "Baroque", "Charcoal", "Chinese Ink painting", 
-            "Cubism", "Etching", "Expressionism", "Gothic", "Gouache Painting", "Impressionism", 
-            "Ink Drawing", "Korean Minhwa", "Oil Painting", "Pastel Drawing", "Pencil Sketch", 
-            "Persian Miniature", "Pointillism", "Realistic Painting", "Renaissance", "Rococo", 
-            "Romanticism", "Sumi-e", "Ukiyo-e", "Watercolor", "Bauhaus", "Collage", "Dark Fantasy", 
-            "Double Exposure", "Fantasy", "Horror", "Installation", "Psychedelic", "Retro-Futurism", 
-            "Sacred Geometry", "Sci-Fi", "Stained Glass", "Steampunk", "Surrealism"
+            // 포토그래피 & 시네마틱
+            "Aerial", "Analog", "Cinematic", "Documentary", "Drone", "HDR", "High Key", 
+            "Infrared", "Light Painting", "Lo-fi", "Low Key", "Macro", "Nightscapes", 
+            "Noir", "Photorealistic", "Polaroid", "Portrait", "Vintage", "Film Noir",
+            "Anamorphic", "Split Toning", "Film Emulation", "Kodak Vision", "Fujifilm",
+            
+            // 2025 트렌드 미학
+            "Y2K Aesthetic", "McBling", "Dreamcore", "Weirdcore", "Liminal Space", 
+            "Dark Academia", "Cottagecore", "Vaporwave", "Synthwave", "Webcore",
+            "Glitchcore", "Traumacore", "Nostalgiacore", "Blobitecture",
+            
+            // V7 특화 스타일
+            "Hyperrealistic", "Hyperdetailed", "Raw Mode", "Draft Mode", "Photorealism",
+            "Ultra Detailed", "Omni Reference", "Style Reference", "Extreme Detail",
+            
+            // 디지털 아트
+            "3D Render", "8-bit Art", "CGI", "Cyberpunk", "Digital Painting", 
+            "Fractal Art", "Generative Art", "Glitch Art", "Graffiti Art", "Isometric", 
+            "Low Poly", "Minimalism", "Neon Art", "Pixel Art", "Ray Tracing", 
+            "Vector Art", "Voxel Art", "Flat Design", "Material Design",
+            
+            // 일러스트레이션
+            "Anime Style", "Cartoon", "Chibi", "Children's Book", "Comic Book", 
+            "Concept Art", "Disney Style", "Fantasy Illustration", "Graphic Novel", 
+            "Manga", "Pixar", "Studio Ghibli", "Sketch Style", "Papercut Illustration", 
+            "Line Art", "Whimsical", "Editorial Illustration",
+            
+            // 전통 예술
+            "Acrylic Painting", "Anatomical Drawing", "Charcoal", "Chinese Ink Painting", 
+            "Etching", "Gouache Painting", "Ink Drawing", "Korean Minhwa", "Oil Painting", 
+            "Pastel Drawing", "Pencil Sketch", "Persian Miniature", "Sumi-e", "Ukiyo-e", 
+            "Watercolor", "Fresco", "Tempera",
+            
+            // 예술 운동
+            "Abstract", "Art Deco", "Art Nouveau", "Baroque", "Bauhaus", "Brutalism",
+            "Cubism", "Dadaism", "Expressionism", "Fauvism", "Gothic", "Impressionism", 
+            "Minimalistic", "Neo-Expressionism", "Pointillism", "Pop Art", "Renaissance", 
+            "Rococo", "Romanticism", "Suprematism", "Surrealism", "Symbolism",
+            
+            // 특수 효과 & 기타
+            "Collage", "Dark Fantasy", "Double Exposure", "Fantasy", "Horror", 
+            "Installation", "Psychedelic", "Retro", "Retro-Futurism", "Sacred Geometry", 
+            "Sci-Fi", "Stained Glass", "Steampunk", "Technical Drawing"
         ];
 
         // 각 섹션별 드롭다운 옵션
         const dropdownOptions = {
             STYLE: styleOptions,
             MEDIUM: [
-                "Photography", "Digital Art", "Traditional Art", "3D Render", "Mixed Media", "Collage",
-                "Oil Painting", "Watercolor", "Acrylic", "Pencil Drawing", "Charcoal", "Ink", "Pastel",
-                "Digital Painting", "Vector Art", "Pixel Art", "Photo Manipulation", "CGI", "Sculpture"
+                // V7 디지털 매체
+                "AI Generated", "Midjourney V7", "Neural Art", "GAN Art", "Diffusion Model", "Stable Diffusion",
+                "Photorealistic Render", "Hyperrealistic CG", "Unreal Engine 5", "Unity HDRP", "Octane Render",
+                "Redshift Render", "V-Ray", "Arnold Render", "Cycles Render", "RTX Ray Tracing",
+                // 전통 매체
+                "Oil Painting", "Watercolor", "Acrylic", "Gouache", "Tempera", "Encaustic", "Fresco",
+                "Pencil Drawing", "Graphite", "Charcoal", "Conte", "Silverpoint", "Ink Drawing", "Pen and Ink",
+                "Pastel", "Oil Pastel", "Soft Pastel", "Chalk", "Crayon", "Colored Pencil",
+                // 사진 매체
+                "Digital Photography", "Film Photography", "35mm Film", "Medium Format", "Large Format",
+                "Instant Photography", "Polaroid", "Daguerreotype", "Cyanotype", "Tintype",
+                // 혼합 매체
+                "Mixed Media", "Collage", "Digital Collage", "Photo Manipulation", "Photobashing",
+                "3D Sculpture", "Digital Sculpture", "ZBrush", "Procedural Art", "Algorithmic Art",
+                // 특수 매체
+                "Holography", "VR Art", "AR Art", "NFT Art", "Generative Art", "Interactive Art",
+                "Video Art", "Projection Mapping", "Light Installation", "Sound Visualization"
             ],
             'ERA/CULTURAL_REF': [
-                "Modern", "Contemporary", "Victorian", "Renaissance", "Medieval", "Ancient", "Futuristic",
-                "Retro 80s", "Retro 90s", "Art Deco Era", "Art Nouveau Era", "Baroque Period", "Gothic Era",
-                "Industrial Age", "Space Age", "Cyberpunk Era", "Steampunk Era", "Post-Apocalyptic"
+                // 2025 트렌드 시대
+                "Y2K Revival", "2000s Nostalgia", "McBling Era", "Indie Sleaze", "2010s Tumblr Era",
+                "Vaporwave Era", "Synthwave Era", "Retrowave", "Outrun", "Dark Academia Period",
+                "Light Academia", "Cottagecore Era", "Goblincore", "Fairycore", "Angelcore",
+                // 역사적 시대
+                "Ancient Egypt", "Ancient Greece", "Ancient Rome", "Byzantine", "Medieval", "Renaissance",
+                "Baroque Period", "Rococo", "Victorian Era", "Edwardian Era", "Art Nouveau Era",
+                "Art Deco Era", "Roaring Twenties", "Great Depression", "World War II Era",
+                // 현대 시대
+                "1950s Americana", "1960s Mod", "1970s Disco", "1980s Neon", "1990s Grunge",
+                "2000s Digital", "2010s Minimalism", "2020s Post-Pandemic", "Contemporary", "Near Future",
+                // 대안 역사/미래
+                "Cyberpunk 2077", "Steampunk Victorian", "Dieselpunk", "Atompunk", "Biopunk",
+                "Solarpunk", "Lunarpunk", "Desertpunk", "Oceanpunk", "Forestpunk",
+                // 문화적 참조
+                "Japanese Edo Period", "Chinese Dynasty", "Korean Joseon", "Indian Mughal",
+                "Islamic Golden Age", "African Kingdoms", "Pre-Columbian", "Native American",
+                "Scandinavian Viking", "Celtic", "Slavic", "Mediterranean"
             ],
             SCENE: [
                 "Daily Life", "Celebration", "Action Scene", "Quiet Moment", "Romantic Scene", 
@@ -1634,10 +1699,22 @@
                 "Indoor Scene", "Outdoor Scene", "Night Scene", "Day Scene", "Sunset/Sunrise Scene"
             ],
             COLOR_TONE: [
-                "Vibrant", "Muted", "Pastel", "Monochrome", "Black and White", "Sepia", "Warm Tones",
-                "Cool Tones", "Earth Tones", "Neon Colors", "Primary Colors", "Complementary Colors",
-                "Analogous Colors", "Triadic Colors", "Split Complementary", "High Contrast", "Low Contrast",
-                "Gradient", "Rainbow", "Metallic"
+                // V7 색상 팔레트
+                "Vibrant Colors", "Muted Colors", "Pastel Colors", "Neon Colors", "Fluorescent", "Bioluminescent",
+                "Monochromatic", "Duotone", "Tritone", "Multitone", "Black and White", "Grayscale",
+                // 색온도
+                "Warm Tones", "Cool Tones", "Neutral Tones", "Earth Tones", "Jewel Tones", "Candy Colors",
+                "Ice Colors", "Fire Colors", "Ocean Colors", "Forest Colors", "Desert Colors", "Sky Colors",
+                // 색상 조화
+                "Complementary Colors", "Analogous Colors", "Triadic Colors", "Tetradic Colors",
+                "Split Complementary", "Double Complementary", "Square Color Scheme", "Monochromatic Harmony",
+                // 특수 색상
+                "Metallic", "Gold", "Silver", "Bronze", "Copper", "Chrome", "Iridescent", "Holographic",
+                "Gradient", "Rainbow", "Prismatic", "Opalescent", "Pearlescent", "Luminescent",
+                // 콘트라스트
+                "High Contrast", "Low Contrast", "Medium Contrast", "Soft Contrast", "Hard Contrast",
+                // 빈티지 색상
+                "Sepia", "Vintage Film", "Faded Colors", "Retro Colors", "Kodachrome", "Technicolor"
             ],
             CHARACTER: [
                 "Main Character", "Supporting Character", "Background Character", "Hero", "Villain",
@@ -1699,20 +1776,53 @@
                 "Dramatic Pose", "Casual Pose", "Formal Pose", "Combat Stance", "Defensive Stance"
             ],
             CAMERA: [
-                "Wide Shot", "Medium Shot", "Close-up", "Extreme Close-up", "Long Shot", "Full Shot",
-                "American Shot", "Over Shoulder", "Point of View", "Dutch Angle", "High Angle",
-                "Low Angle", "Bird's Eye View", "Worm's Eye View", "Aerial View", "Tracking Shot",
-                "Pan Shot", "Tilt Shot", "Zoom In", "Zoom Out", "Dolly Shot", "Crane Shot"
+                // V7 카메라 앵글
+                "Eye Level", "High Angle", "Low Angle", "Dutch Angle", "Bird's Eye View", "Worm's Eye View",
+                "Aerial View", "Overhead Shot", "Ground Level", "Shoulder Level", "Hip Level", "Knee Level",
+                // 샷 타입
+                "Extreme Wide Shot", "Wide Shot", "Medium Wide Shot", "Medium Shot", "Medium Close-up",
+                "Close-up", "Extreme Close-up", "Macro Shot", "Detail Shot", "Insert Shot",
+                // 카메라 무브먼트
+                "Static Shot", "Pan Left", "Pan Right", "Tilt Up", "Tilt Down", "Tracking Shot",
+                "Dolly In", "Dolly Out", "Crane Shot", "Steadicam", "Handheld", "Gimbal Shot",
+                // 특수 샷
+                "Over the Shoulder", "Point of View (POV)", "Reverse Shot", "Two Shot", "Three Shot",
+                "Group Shot", "Establishing Shot", "Master Shot", "Cutaway", "Reaction Shot",
+                // 시네마틱 기법
+                "Split Screen", "Match Cut", "Cross-cutting", "Jump Cut", "Whip Pan", "Rack Focus",
+                "Pull Focus", "Deep Focus", "Shallow Focus", "Selective Focus"
             ],
             CAMERA_EFFECTS: [
-                "Depth of Field", "Motion Blur", "Lens Flare", "Bokeh", "Vignette", "Chromatic Aberration",
-                "Film Grain", "Gaussian Blur", "Radial Blur", "Tilt Shift", "Fish Eye", "Wide Angle",
-                "Telephoto", "Macro Lens", "Anamorphic", "Split Screen", "Double Exposure"
+                // V7 렌즈 효과
+                "Bokeh", "Depth of Field", "Shallow DOF", "Deep DOF", "Focus Stacking", "Tilt Shift",
+                "Lens Flare", "Chromatic Aberration", "Vignetting", "Barrel Distortion", "Pincushion Distortion",
+                // 블러 효과
+                "Motion Blur", "Gaussian Blur", "Radial Blur", "Zoom Blur", "Spin Blur", "Path Blur",
+                "Field Blur", "Iris Blur", "Tilt-Shift Blur", "Surface Blur", "Box Blur",
+                // 특수 렌즈
+                "Fish Eye", "Ultra Wide Angle", "Wide Angle", "Normal Lens", "Telephoto", "Super Telephoto",
+                "Macro Lens", "Anamorphic", "Lensbaby", "Tilt-Shift Lens", "Periscope Lens",
+                // 필터 효과
+                "ND Filter", "Polarizing Filter", "UV Filter", "Graduated Filter", "Color Filter",
+                "Infrared Filter", "Star Filter", "Prism Filter", "Kaleidoscope", "Crystal Filter",
+                // 예술적 효과
+                "Double Exposure", "Multiple Exposure", "Long Exposure", "Light Trails", "Star Trails",
+                "HDR Effect", "Orton Effect", "Dragan Effect", "Harris Shutter", "Solarization"
             ],
             CAMERA_TECH: [
-                "DSLR", "Mirrorless", "Film Camera", "Digital Camera", "Phone Camera", "Drone Camera",
-                "Action Camera", "360 Camera", "Medium Format", "Large Format", "Polaroid", "Disposable",
-                "Professional", "Amateur", "Vintage Camera", "Modern Camera"
+                // 카메라 브랜드 및 모델
+                "Canon EOS R5", "Canon 5D Mark IV", "Nikon Z9", "Nikon D850", "Sony A7R V", "Sony FX3",
+                "Fujifilm GFX 100 II", "Hasselblad X2D", "Leica M11", "Panasonic S5 II", "RED V-Raptor",
+                "ARRI Alexa", "Blackmagic URSA", "iPhone 15 Pro", "Google Pixel 8 Pro",
+                // 카메라 타입
+                "DSLR", "Mirrorless", "Medium Format", "Large Format", "Full Frame", "APS-C", "Micro 4/3",
+                "Film Camera", "35mm Film", "120 Film", "4x5 Film", "8x10 Film", "Instant Camera",
+                // 특수 카메라
+                "Drone Camera", "Action Camera", "360 Camera", "Light Field Camera", "Thermal Camera",
+                "High Speed Camera", "Time-lapse Camera", "Pinhole Camera", "Tilt-Shift Camera",
+                // 렌즈 정보
+                "Prime Lens", "Zoom Lens", "24mm", "35mm", "50mm", "85mm", "135mm", "200mm", "400mm",
+                "14-24mm", "24-70mm", "70-200mm", "100-400mm", "f/1.2", "f/1.4", "f/1.8", "f/2.8"
             ],
             LOCATION: [
                 "City Street", "Forest", "Beach", "Mountain", "Desert", "Ocean", "Lake", "River",
@@ -1739,7 +1849,10 @@
             ATMOSPHERE: [
                 "Mysterious", "Romantic", "Tense", "Peaceful", "Chaotic", "Serene", "Energetic",
                 "Melancholic", "Joyful", "Scary", "Dreamy", "Realistic", "Surreal", "Nostalgic",
-                "Futuristic", "Ancient", "Modern", "Timeless", "Ethereal", "Gritty", "Whimsical"
+                "Futuristic", "Ancient", "Modern", "Timeless", "Ethereal", "Gritty", "Whimsical",
+                "Liminal", "Uncanny", "Dreamcore", "Weirdcore", "Vaporwave", "Dark Academia",
+                "Cottagecore", "Cyberpunk", "Dystopian", "Utopian", "Apocalyptic", "Mystical",
+                "Haunting", "Enchanting", "Unsettling", "Comforting", "Alienating", "Intimate"
             ],
             WEATHER: [
                 "Clear", "Sunny", "Cloudy", "Partly Cloudy", "Overcast", "Rainy", "Heavy Rain",
@@ -1760,20 +1873,336 @@
                 "Bottom Lit", "Rim Light", "Key Light", "Fill Light", "Three Point Lighting"
             ],
             LIGHTING_TECHNIQUE: [
-                "Rembrandt Lighting", "Split Lighting", "Broad Lighting", "Short Lighting", "Butterfly Lighting",
-                "Loop Lighting", "Rim Lighting", "Backlighting", "Silhouette", "High Key", "Low Key",
-                "Chiaroscuro", "Ambient Occlusion", "Global Illumination", "Volumetric Lighting"
+                // V7 조명 기술
+                "Volumetric Lighting", "Ray Tracing", "Global Illumination", "Path Tracing", "Subsurface Scattering",
+                "Caustics", "Bloom Effect", "Light Leaks", "Lens Flare", "Bokeh Lighting",
+                "HDRI Lighting", "IBL (Image Based Lighting)", "PBR Lighting", "Unreal Engine 5 Lumen",
+                // 클래식 조명
+                "Rembrandt Lighting", "Butterfly Lighting", "Split Lighting", "Rim Lighting", "Loop Lighting",
+                "Broad Lighting", "Short Lighting", "Natural Lighting", "Studio Lighting", "Golden Hour",
+                "Blue Hour", "High Key", "Low Key", "Chiaroscuro", "Ambient Occlusion",
+                // 시네마틱 조명
+                "Cinematic Lighting", "Film Noir Lighting", "Neon Lighting", "Candlelight", "Firelight",
+                "Moonlight", "Starlight", "Northern Lights", "Bioluminescence", "Blacklight",
+                // 특수 효과 조명
+                "Holographic Lighting", "Prismatic Light", "Iridescent Lighting", "Chromatic Aberration", "Light Painting",
+                "Backlighting", "Silhouette", "Contre-jour", "Tyndall Effect", "God Rays"
             ],
             QUALITY: [
-                "High Resolution", "4K", "8K", "HD", "Ultra HD", "Photorealistic", "Hyperdetailed",
-                "Sharp Focus", "Soft Focus", "Bokeh", "Motion Blur", "Depth of Field", "Crystal Clear",
-                "Film Grain", "Noise", "Clean", "Polished", "Raw", "Unprocessed", "Professional"
+                // V7 품질 설정
+                "--q 0.25", "--q 0.5", "--q 1", "--q 2", "--raw", "--turbo", "--fast", "--relax",
+                // 해상도
+                "16K", "8K", "4K", "2K", "HD", "Ultra HD", "Full HD", "QHD", "UHD", "FHD",
+                // 디테일 레벨
+                "Hyperdetailed", "Ultra Detailed", "Highly Detailed", "Intricately Detailed", "Photorealistic",
+                "Hyperrealistic", "Ultra Realistic", "Super Resolution", "Megapixel", "Extreme Detail",
+                // 포커스
+                "Sharp Focus", "Soft Focus", "Selective Focus", "Deep Focus", "Shallow Depth of Field",
+                "Bokeh", "Motion Blur", "Gaussian Blur", "Tilt Shift", "Focus Stacking",
+                // 텍스처
+                "Crystal Clear", "Crisp", "Clean", "Polished", "Refined", "Raw", "Unprocessed",
+                "Film Grain", "Digital Noise", "Pristine", "Professional", "Studio Quality",
+                // V7 특수 모드
+                "Raw Mode", "Draft Mode", "Omni Reference", "Style Raw", "Vary Strong"
             ],
             PARAMETERS: [
+                // V7 파라미터
+                "--v 7", "--ar 16:9", "--ar 9:16", "--ar 1:1", "--ar 4:3", "--ar 3:2", "--ar 21:9",
+                "--chaos 0", "--chaos 25", "--chaos 50", "--chaos 75", "--chaos 100",
+                "--stylize 0", "--stylize 100", "--stylize 250", "--stylize 500", "--stylize 750", "--stylize 1000",
+                "--weird 0", "--weird 250", "--weird 500", "--weird 750", "--weird 1000", "--weird 3000",
+                // 스타일 참조
+                "--sref", "--sw 0", "--sw 100", "--sw 250", "--sw 500", "--sw 750", "--sw 1000",
+                "--sv 1", "--sv 2", "--sv 3", "--sv 4",
+                // 이미지 참조
+                "--iw 0.5", "--iw 1", "--iw 2", "--cref", "--cw 0", "--cw 100",
+                // 기타 V7 파라미터
+                "--no", "--seed", "--stop", "--tile", "--repeat", "--video",
+                // 디테일 설정
                 "High Detail", "Ultra Detailed", "Intricate Details", "Fine Details", "Macro Details",
-                "Texture Detail", "Surface Detail", "Realistic Texture", "Stylized", "Simplified",
-                "Complex Composition", "Simple Composition", "Balanced", "Dynamic", "Static"
+                "Texture Detail", "Surface Detail", "Realistic Texture", "Stylized", "Simplified"
+            ],
+            // 일반 이미지 탭용 캐릭터 옵션
+            CHARACTER_1: [
+                "young woman", "young man", "middle-aged woman", "middle-aged man", "elderly woman", "elderly man",
+                "teenager", "child", "baby", "toddler", "professional", "student", "artist", "scientist",
+                "doctor", "teacher", "engineer", "musician", "athlete", "chef", "police officer", "firefighter",
+                "soldier", "pilot", "astronaut", "dancer", "actor", "model", "photographer", "writer"
+            ],
+            CHARACTER_1_DETAIL: [
+                "smiling", "serious", "thoughtful", "confident", "nervous", "excited", "calm", "angry",
+                "sad", "happy", "surprised", "focused", "relaxed", "determined", "curious", "worried",
+                "casual clothes", "formal wear", "uniform", "traditional dress", "modern fashion", "vintage style",
+                "athletic wear", "business suit", "streetwear", "costume", "armor", "robe"
+            ],
+            CHARACTER_2: [
+                "young woman", "young man", "middle-aged woman", "middle-aged man", "elderly woman", "elderly man",
+                "teenager", "child", "baby", "toddler", "professional", "student", "artist", "scientist",
+                "doctor", "teacher", "engineer", "musician", "athlete", "chef", "police officer", "firefighter",
+                "soldier", "pilot", "astronaut", "dancer", "actor", "model", "photographer", "writer"
+            ],
+            CHARACTER_2_DETAIL: [
+                "smiling", "serious", "thoughtful", "confident", "nervous", "excited", "calm", "angry",
+                "sad", "happy", "surprised", "focused", "relaxed", "determined", "curious", "worried",
+                "casual clothes", "formal wear", "uniform", "traditional dress", "modern fashion", "vintage style",
+                "athletic wear", "business suit", "streetwear", "costume", "armor", "robe"
+            ],
+            CHARACTER_3: [
+                "young woman", "young man", "middle-aged woman", "middle-aged man", "elderly woman", "elderly man",
+                "teenager", "child", "baby", "toddler", "professional", "student", "artist", "scientist",
+                "doctor", "teacher", "engineer", "musician", "athlete", "chef", "police officer", "firefighter",
+                "soldier", "pilot", "astronaut", "dancer", "actor", "model", "photographer", "writer"
+            ],
+            CHARACTER_3_DETAIL: [
+                "smiling", "serious", "thoughtful", "confident", "nervous", "excited", "calm", "angry",
+                "sad", "happy", "surprised", "focused", "relaxed", "determined", "curious", "worried",
+                "casual clothes", "formal wear", "uniform", "traditional dress", "modern fashion", "vintage style",
+                "athletic wear", "business suit", "streetwear", "costume", "armor", "robe"
+            ],
+            CHARACTER_4: [
+                "young woman", "young man", "middle-aged woman", "middle-aged man", "elderly woman", "elderly man",
+                "teenager", "child", "baby", "toddler", "professional", "student", "artist", "scientist",
+                "doctor", "teacher", "engineer", "musician", "athlete", "chef", "police officer", "firefighter",
+                "soldier", "pilot", "astronaut", "dancer", "actor", "model", "photographer", "writer"
+            ],
+            CHARACTER_4_DETAIL: [
+                "smiling", "serious", "thoughtful", "confident", "nervous", "excited", "calm", "angry",
+                "sad", "happy", "surprised", "focused", "relaxed", "determined", "curious", "worried",
+                "casual clothes", "formal wear", "uniform", "traditional dress", "modern fashion", "vintage style",
+                "athletic wear", "business suit", "streetwear", "costume", "armor", "robe"
+            ],
+            CHARACTER_5: [
+                "young woman", "young man", "middle-aged woman", "middle-aged man", "elderly woman", "elderly man",
+                "teenager", "child", "baby", "toddler", "professional", "student", "artist", "scientist",
+                "doctor", "teacher", "engineer", "musician", "athlete", "chef", "police officer", "firefighter",
+                "soldier", "pilot", "astronaut", "dancer", "actor", "model", "photographer", "writer"
+            ],
+            CHARACTER_5_DETAIL: [
+                "smiling", "serious", "thoughtful", "confident", "nervous", "excited", "calm", "angry",
+                "sad", "happy", "surprised", "focused", "relaxed", "determined", "curious", "worried",
+                "casual clothes", "formal wear", "uniform", "traditional dress", "modern fashion", "vintage style",
+                "athletic wear", "business suit", "streetwear", "costume", "armor", "robe"
             ]
+        };
+        
+        // 드롭다운 값의 한글 번역 매핑
+        const dropdownTranslations = {
+            // STYLE translations (partial - will expand)
+            "Y2K Aesthetic": "Y2K 미학",
+            "McBling": "맥블링",
+            "Dreamcore": "드림코어",
+            "Weirdcore": "위어드코어", 
+            "Liminal Space": "리미널 스페이스",
+            "Dark Academia": "다크 아카데미아",
+            "Cottagecore": "코티지코어",
+            "Vaporwave": "베이퍼웨이브",
+            "Synthwave": "신스웨이브",
+            "Webcore": "웹코어",
+            "Hyperrealistic": "초현실적인",
+            "Hyperdetailed": "초정밀한",
+            "Raw Mode": "로우 모드",
+            "Draft Mode": "드래프트 모드",
+            "Photorealism": "포토리얼리즘",
+            
+            // MEDIUM translations
+            "AI Generated": "AI 생성",
+            "Midjourney V7": "미드저니 V7",
+            "Neural Art": "신경망 아트",
+            "GAN Art": "GAN 아트",
+            "Diffusion Model": "확산 모델",
+            "Stable Diffusion": "스테이블 디퓨전",
+            "Photorealistic Render": "포토리얼리스틱 렌더",
+            "Hyperrealistic CG": "초현실적 CG",
+            "Unreal Engine 5": "언리얼 엔진 5",
+            "Oil Painting": "유화",
+            "Watercolor": "수채화",
+            "Acrylic": "아크릴",
+            "Pencil Drawing": "연필 드로잉",
+            "Charcoal": "목탄",
+            "Digital Photography": "디지털 사진",
+            "Film Photography": "필름 사진",
+            
+            // CAMERA translations
+            "Eye Level": "눈높이",
+            "High Angle": "하이 앵글",
+            "Low Angle": "로우 앵글",
+            "Dutch Angle": "더치 앵글",
+            "Bird's Eye View": "조감도",
+            "Worm's Eye View": "개구리 시점",
+            "Wide Shot": "와이드 샷",
+            "Close-up": "클로즈업",
+            "Over the Shoulder": "오버 더 숄더",
+            "Point of View (POV)": "주관적 시점",
+            
+            // LIGHTING_TECHNIQUE translations
+            "Volumetric Lighting": "볼류메트릭 조명",
+            "Ray Tracing": "레이 트레이싱",
+            "Global Illumination": "글로벌 일루미네이션",
+            "Path Tracing": "패스 트레이싱",
+            "Subsurface Scattering": "서브서페이스 스캐터링",
+            "Rembrandt Lighting": "렘브란트 조명",
+            "Golden Hour": "골든 아워",
+            "Blue Hour": "블루 아워",
+            "Cinematic Lighting": "시네마틱 조명",
+            
+            // QUALITY translations
+            "--q 0.25": "--q 0.25 (빠른 품질)",
+            "--q 0.5": "--q 0.5 (중간 품질)",
+            "--q 1": "--q 1 (기본 품질)",
+            "--q 2": "--q 2 (높은 품질)",
+            "--raw": "--raw (로우 모드)",
+            "--turbo": "--turbo (터보 모드)",
+            "--fast": "--fast (빠른 모드)",
+            "--relax": "--relax (릴렉스 모드)",
+            "16K": "16K 해상도",
+            "8K": "8K 해상도",
+            "4K": "4K 해상도",
+            "Sharp Focus": "선명한 초점",
+            "Soft Focus": "부드러운 초점",
+            
+            // PARAMETERS translations
+            "--v 7": "--v 7 (버전 7)",
+            "--ar 16:9": "--ar 16:9 (와이드스크린)",
+            "--ar 9:16": "--ar 9:16 (세로형)",
+            "--ar 1:1": "--ar 1:1 (정사각형)",
+            "--chaos 0": "--chaos 0 (일관성 높음)",
+            "--chaos 100": "--chaos 100 (변화 많음)",
+            "--stylize 100": "--stylize 100 (스타일 약함)",
+            "--stylize 1000": "--stylize 1000 (스타일 강함)",
+            "--weird 0": "--weird 0 (일반적)",
+            "--weird 3000": "--weird 3000 (매우 독특함)",
+            
+            // COLOR_TONE translations
+            "Vibrant Colors": "선명한 색상",
+            "Muted Colors": "차분한 색상",
+            "Pastel Colors": "파스텔 색상",
+            "Neon Colors": "네온 색상",
+            "Warm Tones": "따뜻한 톤",
+            "Cool Tones": "차가운 톤",
+            "Earth Tones": "대지 색조",
+            "Monochromatic": "단색",
+            "High Contrast": "높은 대비",
+            "Low Contrast": "낮은 대비",
+            
+            // CHARACTER translations
+            "young woman": "젊은 여성",
+            "young man": "젊은 남성",
+            "middle-aged woman": "중년 여성",
+            "middle-aged man": "중년 남성",
+            "elderly woman": "노년 여성",
+            "elderly man": "노년 남성",
+            "teenager": "십대",
+            "child": "아이",
+            "professional": "전문가",
+            "student": "학생",
+            "artist": "예술가",
+            "scientist": "과학자",
+            
+            // ATMOSPHERE translations
+            "Mysterious": "신비로운",
+            "Romantic": "로맨틱한",
+            "Peaceful": "평화로운",
+            "Chaotic": "혼란스러운",
+            "Dreamy": "꿈같은",
+            "Realistic": "현실적인",
+            "Futuristic": "미래적인",
+            "Ancient": "고대의",
+            "Liminal": "경계의",
+            "Uncanny": "기이한",
+            "Vaporwave": "베이퍼웨이브",
+            "Cyberpunk": "사이버펑크",
+            
+            // CLOTHING translations
+            "smiling": "웃는",
+            "serious": "진지한",
+            "thoughtful": "사색적인",
+            "confident": "자신감 있는",
+            "nervous": "긴장한",
+            "excited": "흥분한",
+            "calm": "차분한",
+            "angry": "화난",
+            "sad": "슬픈",
+            "happy": "행복한",
+            "surprised": "놀란",
+            "focused": "집중한",
+            "relaxed": "편안한",
+            "determined": "결연한",
+            "curious": "호기심 있는",
+            "worried": "걱정하는",
+            "casual clothes": "캐주얼 의상",
+            "formal wear": "정장",
+            "uniform": "유니폼",
+            "traditional dress": "전통 의상",
+            "modern fashion": "현대 패션",
+            "vintage style": "빈티지 스타일",
+            "athletic wear": "운동복",
+            "business suit": "비즈니스 정장",
+            "streetwear": "스트리트웨어",
+            "costume": "코스튬",
+            "armor": "갑옷",
+            "robe": "로브",
+            
+            // SCENE translations
+            "Daily Life": "일상 생활",
+            "Celebration": "축하",
+            "Action Scene": "액션 장면",
+            "Quiet Moment": "조용한 순간",
+            "Romantic Scene": "로맨틱한 장면",
+            "Battle Scene": "전투 장면",
+            "Peaceful Scene": "평화로운 장면",
+            "Dramatic Moment": "극적인 순간",
+            
+            // LOCATION translations
+            "City Street": "도시 거리",
+            "Forest": "숲",
+            "Beach": "해변",
+            "Mountain": "산",
+            "Desert": "사막",
+            "Ocean": "바다",
+            "Lake": "호수",
+            "River": "강",
+            "Park": "공원",
+            "Garden": "정원",
+            "Castle": "성",
+            "Palace": "궁전",
+            
+            // WEATHER translations
+            "Clear": "맑음",
+            "Sunny": "화창함",
+            "Cloudy": "흐림",
+            "Rainy": "비",
+            "Snowy": "눈",
+            "Foggy": "안개",
+            "Stormy": "폭풍",
+            
+            // ERA translations
+            "Y2K Revival": "Y2K 리바이벌",
+            "2000s Nostalgia": "2000년대 향수",
+            "McBling Era": "맥블링 시대",
+            "Indie Sleaze": "인디 슬리즈",
+            "Victorian Era": "빅토리아 시대",
+            "Renaissance": "르네상스",
+            "Medieval": "중세",
+            "Ancient Egypt": "고대 이집트",
+            "Cyberpunk 2077": "사이버펑크 2077",
+            "Steampunk Victorian": "스팀펑크 빅토리아",
+            
+            // Additional common terms
+            "Ultra Detailed": "초정밀",
+            "Highly Detailed": "매우 상세한",
+            "Intricate Details": "복잡한 디테일",
+            "Fine Details": "세밀한 디테일",
+            "High Resolution": "고해상도",
+            "Professional": "전문적인",
+            "Artistic": "예술적인",
+            "Creative": "창의적인",
+            "Modern": "현대적인",
+            "Classic": "클래식한",
+            "Traditional": "전통적인",
+            "Contemporary": "동시대의",
+            "Futuristic": "미래적인",
+            "Vintage": "빈티지",
+            "Retro": "레트로"
         };
         
         // 한글 제목 매핑
@@ -1915,7 +2344,7 @@
                                         <div class="dropdown-field-label-with-buttons">
                                             <label class="dropdown-field-label">변경요청</label>
                                             <div class="field-action-buttons">
-                                                <button type="button" class="btn-field-action btn-save" onclick="saveToApplied('${key}')">저장</button>
+                                                <button type="button" class="btn-field-action btn-save" onclick="saveToApplied(event, '${key}')">저장</button>
                                                 <button type="button" class="btn-field-action btn-ai-save" onclick="aiSaveField('${key}')">AI저장</button>
                                             </div>
                                         </div>
@@ -1932,9 +2361,11 @@
                                                     <input type="text" placeholder="검색..." onkeyup="filterStyleDropdown(this)">
                                                 </div>
                                                 <div class="style-options-list">
-                                                    ${(dropdownOptions[key] || []).map((option, idx) => 
-                                                        `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${option}</div>`
-                                                    ).join('')}
+                                                    ${(dropdownOptions[key] || []).map((option, idx) => {
+                                                        const translation = dropdownTranslations[option] || option;
+                                                        const displayText = translation !== option ? `${option} (${translation})` : option;
+                                                        return `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" data-value="${option}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${displayText}</div>`;
+                                                    }).join('')}
                                                 </div>
                                             </div>
                                         </div>
@@ -1980,6 +2411,43 @@
                 // 각 카테고리별 컨텐츠 생성
                 const subTabContents = document.createElement('div');
                 subTabContents.className = 'sub-tab-contents';
+
+                // 이미지 상의 번호 체계에 맞춘 커스텀 넘버 매핑
+                const generalNumberMap = {
+                    // 기본정보 (1~6)
+                    'STYLE': 1,
+                    'MEDIUM': 2,
+                    'ERA/CULTURAL_REF': 3,
+                    'CAMERA': 4,
+                    'SCENE': 5,
+                    'COLOR_TONE': 6,
+                    // 캐릭터 정보 (6~15) - 이미지 상 표기대로 유지
+                    'CHARACTER_1': 6,
+                    'CHARACTER_1_DETAIL': 7,
+                    'CHARACTER_2': 8,
+                    'CHARACTER_2_DETAIL': 9,
+                    'CHARACTER_3': 10,
+                    'CHARACTER_3_DETAIL': 11,
+                    'CHARACTER_4': 12,
+                    'CHARACTER_4_DETAIL': 13,
+                    'CHARACTER_5': 14,
+                    'CHARACTER_5_DETAIL': 15,
+                    // 배경/환경 정보 (17~25, 21은 기술 정보에 배정)
+                    'LOCATION': 17,
+                    'LOCATION_DETAIL': 18,
+                    'TIME_LIGHTING': 19,
+                    'ARTIFICIAL_LIGHT': 20,
+                    'ATMOSPHERE': 22,
+                    'WEATHER': 23,
+                    'FOREGROUND': 24,
+                    'BACKGROUND': 25,
+                    // 기술 정보 (16, 21, 27, 28, 29)
+                    'CAMERA_EFFECTS': 16,
+                    'LIGHTING_TECHNIQUE': 21,
+                    'CAMERA_TECH': 27,
+                    'QUALITY': 28,
+                    'PARAMETERS': 29
+                };
                 
                 const generalCategoriesArray = [
                     { name: '기본정보', items: generalCategories['기본정보'] },
@@ -1993,14 +2461,15 @@
                     content.className = `sub-tab-content ${catIndex === 0 ? 'active' : ''}`;
                     content.dataset.category = catIndex;
                     
+                    // 기본 시작 번호 (커스텀 매핑이 없는 항목 대비용)
                     let startNumber = 1;
-                    if (catIndex === 1) startNumber = 7;  // 캐릭터 정보
-                    else if (catIndex === 2) startNumber = 16;  // 배경/환경 정보  
-                    else if (catIndex === 3) startNumber = 24;  // 기술 정보
+                    if (catIndex === 1) startNumber = 7;
+                    else if (catIndex === 2) startNumber = 17;
+                    else if (catIndex === 3) startNumber = 16;
                     
                     category.items.forEach((key, index) => {
                         const value = structure[key] || '';
-                        const itemNumber = startNumber + index;
+                        const itemNumber = generalNumberMap[key] ?? (startNumber + index);
                         
                         // 드롭다운 컨테이너 생성
                         const dropdownContainer = document.createElement('div');
@@ -2031,7 +2500,7 @@
                                         <div class="dropdown-field-label-with-buttons">
                                             <label class="dropdown-field-label">변경요청</label>
                                             <div class="field-action-buttons">
-                                                <button type="button" class="btn-field-action btn-save" onclick="saveToApplied('${key}')">저장</button>
+                                                <button type="button" class="btn-field-action btn-save" onclick="saveToApplied(event, '${key}')">저장</button>
                                                 <button type="button" class="btn-field-action btn-ai-save" onclick="aiSaveField('${key}')">AI저장</button>
                                             </div>
                                         </div>
@@ -2048,9 +2517,11 @@
                                                     <input type="text" placeholder="검색..." onkeyup="filterStyleDropdown(this)">
                                                 </div>
                                                 <div class="style-options-list">
-                                                    ${(dropdownOptions[key] || []).map((option, idx) => 
-                                                        `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${option}</div>`
-                                                    ).join('')}
+                                                    ${(dropdownOptions[key] || []).map((option, idx) => {
+                                                        const translation = dropdownTranslations[option] || option;
+                                                        const displayText = translation !== option ? `${option} (${translation})` : option;
+                                                        return `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" data-value="${option}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${displayText}</div>`;
+                                                    }).join('')}
                                                 </div>
                                             </div>
                                         </div>
@@ -2712,27 +3183,46 @@
         });
         
         // 저장 버튼 클릭 시 변경요청 값을 변경반영으로 복사
-        function saveToApplied(key) {
-            // 현재 활성화된 드롭다운 컨테이너 찾기
-            const activeContainer = document.querySelector('.dropdown-container.active');
-            if (!activeContainer) return;
+        function saveToApplied(event, key) {
+            // 저장 버튼을 클릭한 드롭다운 컨테이너 찾기
+            // event.target에서 가장 가까운 dropdown-container를 찾는다
+            const button = event.target;
+            const container = button.closest('.dropdown-container');
+            
+            if (!container) {
+                // 만약 못 찾으면 활성화된 컨테이너에서 찾기
+                const activeContainer = document.querySelector('.dropdown-container.active');
+                if (activeContainer) {
+                    container = activeContainer;
+                } else {
+                    showToast('드롭다운을 먼저 열어주세요.', 'error');
+                    return;
+                }
+            }
             
             // 변경요청 입력 필드 찾기
-            const requestInput = activeContainer.querySelector(`input[data-key="${key}-request"]`);
-            const appliedInput = activeContainer.querySelector(`input[data-key="${key}-applied"]`);
+            const requestInput = container.querySelector(`input[data-key="${key}-request"]`);
+            const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
             
-            if (requestInput && appliedInput && requestInput.value.trim()) {
-                // 변경요청 값을 변경반영으로 복사
-                appliedInput.value = requestInput.value;
-                appliedInput.dispatchEvent(new Event('change'));
-                
-                // 토스트 메시지 표시
-                showToast('변경요청 내용이 변경반영으로 저장되었습니다.', 'success');
-                
-                // 옵션: 변경요청 필드 초기화
-                // requestInput.value = '';
-            } else if (!requestInput.value.trim()) {
-                showToast('변경요청 내용을 먼저 입력해주세요.', 'error');
+            if (requestInput && appliedInput) {
+                if (requestInput.value.trim()) {
+                    // 변경요청 값을 변경반영으로 복사
+                    appliedInput.value = requestInput.value;
+                    appliedInput.dispatchEvent(new Event('change'));
+                    
+                    // 토스트 메시지 표시
+                    showToast('변경요청 내용이 변경반영으로 저장되었습니다.', 'success');
+                } else {
+                    // 변경요청이 비어있으면 기존 내용을 복사
+                    const existingValue = window.imagePromptState?.[key] || '';
+                    if (existingValue) {
+                        appliedInput.value = existingValue;
+                        appliedInput.dispatchEvent(new Event('change'));
+                        showToast('기존 내용이 변경반영으로 복사되었습니다.', 'success');
+                    } else {
+                        showToast('변경요청 내용을 입력하거나 기존 내용이 있어야 합니다.', 'error');
+                    }
+                }
             }
         }
         
