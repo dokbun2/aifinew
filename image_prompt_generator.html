@@ -442,9 +442,9 @@
         
         /* 하위 탭 컨텐츠 스타일 */
         .sub-tab-contents {
-            min-height: 400px;
+            min-height: 0; /* 콘텐츠 높이에 맞춰 자동 */
             width: 100%;
-            padding-bottom: 50px; /* 하단 여백 추가 */
+            padding-bottom: 16px; /* 불필요한 여백 축소 */
         }
         
         .sub-tab-content {
@@ -753,13 +753,13 @@
         .dropdown-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease-out;
+            transition: max-height 0.25s ease-out;
             background: rgba(255, 255, 255, 0.02);
             position: relative;
         }
         
         .dropdown-container.active .dropdown-content {
-            max-height: 500px;
+            max-height: 420px;
             overflow: visible;
         }
         
@@ -905,11 +905,11 @@
 
         /* 구조별 카드 섹션 */
         .prompt-cards-section {
-            margin-top: var(--space-md);
-            margin-bottom: var(--space-md);
-            margin-left: calc(-1 * var(--space-md));
-            margin-right: calc(-1 * var(--space-md));
-            padding: var(--space-md);
+            margin-top: var(--space-sm);
+            margin-bottom: var(--space-sm);
+            margin-left: calc(-1 * var(--space-sm));
+            margin-right: calc(-1 * var(--space-sm));
+            padding: var(--space-sm);
             background: rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: visible; /* 내부 드롭다운이 넘쳐도 보이도록 */
@@ -1354,16 +1354,7 @@
                 <button class="btn copy-btn" id="copy-final-prompt-btn">📋 프롬프트 복사</button>
             </div>
         </div>
-        <!-- 생성된 프롬프트 출력 섹션 -->
-        <div class="section output-section" id="output-section">
-            <div class="section-header">
-                <h2 class="section-title">생성된 프롬프트</h2>
-            </div>
-            <div class="output-text" id="output-text"></div>
-            <button class="btn copy-btn" id="copy-prompt-btn">
-                📋 프롬프트 복사
-            </button>
-        </div>
+        
     </div>
 
     <!-- Toast Message -->
@@ -1379,9 +1370,7 @@
 
         // DOM 요소들
         const generateBtn = document.getElementById('generate-prompt-btn');
-        const outputSection = document.getElementById('output-section');
-        const outputText = document.getElementById('output-text');
-        const copyPromptBtn = document.getElementById('copy-prompt-btn');
+        // 기존 '생성된 프롬프트' 섹션 제거에 따라 관련 DOM 참조 삭제
         const finalPromptSection = document.getElementById('final-prompt-section');
         const finalPromptText = document.getElementById('final-prompt-text');
         const copyFinalPromptBtn = document.getElementById('copy-final-prompt-btn');
@@ -1422,12 +1411,30 @@
                 input: text,
                 output: prompt
             });
-
-            displayPrompt(prompt);
             saveToLocalStorage();
 
-            // 최종 프롬프트 섹션 업데이트
-            const finalText = structureToMultilineText(promptData.structuredPrompt || {}) || prompt;
+            // 최종 프롬프트 섹션 업데이트: 변경반영 > 기존내용 우선으로 수집
+            const resolvedStructure = { ...promptData.structuredPrompt };
+            // 활성 탭의 모든 dropdown-field를 순회하여 값을 수집
+            const scopeSelector = currentStructureTab === 'character' ? '.character-container' : '.general-container';
+            const scope = document.querySelector(scopeSelector);
+            if (scope) {
+                scope.querySelectorAll('.dropdown-container').forEach(container => {
+                    const key = container.dataset.key;
+                    if (!key) return;
+                    const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
+                    const existingInput = container.querySelector(`input[data-key="${key}"]`);
+                    const appliedVal = (appliedInput?.value || '').trim();
+                    const existingVal = (existingInput?.value || '').trim();
+                    // 변경반영이 있으면 우선, 없으면 기존내용, 둘 다 없으면 기존 구조 유지
+                    if (appliedVal) {
+                        resolvedStructure[key] = appliedVal;
+                    } else if (existingVal) {
+                        resolvedStructure[key] = existingVal;
+                    }
+                });
+            }
+            const finalText = structureToMultilineText(resolvedStructure) || prompt;
             finalPromptText.value = finalText || prompt;
             finalPromptSection.style.display = 'block';
         });
@@ -2848,8 +2855,8 @@
                                                 </div>
                                                 <div class="style-options-list">
                                                     ${(dropdownOptions[key] || []).map((option, idx) => {
-                                                        const translation = dropdownTranslations[option] || option;
-                                                        const displayText = translation !== option ? `${option} (${translation})` : option;
+                                                        const ko = dropdownTranslations[option];
+                                                        const displayText = ko && ko !== option ? `${ko} (${option})` : (ko || option);
                                                         return `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" data-value="${option}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${displayText}</div>`;
                                                     }).join('')}
                                                 </div>
@@ -3004,8 +3011,8 @@
                                                 </div>
                                                 <div class="style-options-list">
                                                     ${(dropdownOptions[key] || []).map((option, idx) => {
-                                                        const translation = dropdownTranslations[option] || option;
-                                                        const displayText = translation !== option ? `${option} (${translation})` : option;
+                                                        const ko = dropdownTranslations[option];
+                                                        const displayText = ko && ko !== option ? `${ko} (${option})` : (ko || option);
                                                         return `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" data-value="${option}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${displayText}</div>`;
                                                     }).join('')}
                                                 </div>
@@ -3071,25 +3078,7 @@
             card.classList.remove('editing');
         }
 
-        // 프롬프트 표시
-        function displayPrompt(prompt) {
-            outputText.textContent = prompt;
-            outputSection.classList.add('active');
-            
-            // 스크롤
-            outputSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        // 프롬프트 복사
-        copyPromptBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(outputText.textContent)
-                .then(() => {
-                    showToast('프롬프트가 클립보드에 복사되었습니다.', 'success');
-                })
-                .catch(() => {
-                    showToast('복사에 실패했습니다.', 'error');
-                });
-        });
+        // 최종 프롬프트 복사
 
         // 최종 프롬프트 복사
         copyFinalPromptBtn.addEventListener('click', () => {
@@ -3208,6 +3197,34 @@
             // localStorage에 데이터가 없으면 placeholder만 표시
             if (!promptData.textInput && !localStorage.getItem('imagePromptData')) {
                 // 기본값 설정 제거 - 사용자가 예시 프롬프트 버튼을 클릭해야만 로드
+            }
+            
+            // AI 수정을 위해 전달받은 프롬프트가 있는지 확인
+            const aiEditPrompt = localStorage.getItem('aiEditPrompt');
+            if (aiEditPrompt) {
+                // 프롬프트를 입력창에 설정
+                promptPreview.textContent = aiEditPrompt;
+                promptPreview.classList.add('has-content');
+                userEditingPreview = true;
+                
+                // promptData 업데이트
+                promptData.textInput = aiEditPrompt;
+                
+                // 구조화된 프롬프트인 경우 자동 파싱
+                if (aiEditPrompt.includes(':') && (aiEditPrompt.includes(';') || aiEditPrompt.includes('\n'))) {
+                    const parsedStructure = parsePrompt(aiEditPrompt);
+                    if (Object.keys(parsedStructure).length > 0) {
+                        promptData.structuredPrompt = parsedStructure;
+                        createPromptCards(parsedStructure);
+                        promptCardsSection.style.display = 'block';
+                    }
+                }
+                
+                // 사용 후 localStorage에서 제거
+                localStorage.removeItem('aiEditPrompt');
+                
+                // 토스트 메시지 표시
+                showToast('스토리보드에서 프롬프트를 가져왔습니다.', 'success');
             }
             
             // 프롬프트 미리보기에 기본값이 있으면 확인

@@ -822,6 +822,37 @@
         .edit-btn:active {
             transform: translateY(0);
         }
+        
+        .ai-edit-btn {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ai-edit-btn::before {
+            content: '✨';
+            position: absolute;
+            left: 0.5rem;
+            opacity: 0.7;
+        }
+        
+        .ai-edit-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+        }
+        
+        .ai-edit-btn:active {
+            transform: translateY(0);
+        }
 
         .prompt-text { 
             background: var(--bg-primary);

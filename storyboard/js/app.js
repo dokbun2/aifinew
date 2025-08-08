@@ -3328,6 +3328,9 @@ let aiSectionsHtml = '';
 									<button class="edit-btn" onclick="editImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${(translatedPrompt || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${(parameters || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" style="margin-left: 8px;">
 										프롬프트 수정
 									</button>
+									<button class="ai-edit-btn" onclick="aiEditImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}')" style="margin-left: 8px; background-color: #8b5cf6;">
+										AI 수정
+									</button>
 								</div>
 
 								<div style="margin-top: 15px;">
@@ -6152,4 +6155,29 @@ function addPromptEditModalStyles() {
 function getEditedPrompt(shotId, aiName, imageId) {
     const editKey = `${shotId}_${aiName}_${imageId}`;
     return editedPrompts[editKey];
+}
+
+// AI 수정 버튼 클릭 시 호출되는 함수
+function aiEditImagePrompt(shotId, aiName, imageId, originalPrompt) {
+    try {
+        // 수정된 프롬프트가 있는지 확인
+        const editedPrompt = getEditedPrompt(shotId, aiName, imageId);
+        let promptToTransfer = originalPrompt;
+        
+        if (editedPrompt && editedPrompt.originalPrompt) {
+            promptToTransfer = editedPrompt.originalPrompt;
+            console.log('수정된 프롬프트 사용:', promptToTransfer);
+        } else {
+            console.log('원본 프롬프트 사용:', promptToTransfer);
+        }
+        
+        // 프롬프트를 localStorage에 저장
+        localStorage.setItem('aiEditPrompt', promptToTransfer);
+        
+        // 이미지 프롬프트 생성기 페이지로 이동
+        window.location.href = '../image_prompt_generator.html';
+    } catch (error) {
+        console.error('AI 수정 버튼 처리 중 오류:', error);
+        showMessage('프롬프트 전달 중 오류가 발생했습니다.', 'error');
+    }
 }
