@@ -87,27 +87,10 @@
 
         /* 입력 영역 스타일 */
         .input-area {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-md);
+            display: block;
             margin-bottom: var(--space-md);
         }
         
-        /* 큰 화면에서 최적 비율 */
-        @media (min-width: 1400px) {
-            .input-area {
-                grid-template-columns: 1fr 1fr;
-                gap: var(--space-lg);
-            }
-        }
-        
-        /* 초대형 화면에서 더 넓은 레이아웃 */
-        @media (min-width: 1600px) {
-            .input-area {
-                grid-template-columns: 1.2fr 0.8fr;
-                gap: var(--space-xl);
-            }
-        }
 
         .input-section {
             background: rgba(255, 255, 255, 0.03);
@@ -1312,6 +1295,7 @@
                 justify-content: center;
             }
         }
+        
     </style>
 </head>
 <body class="dark-theme">
@@ -1348,18 +1332,8 @@
                 </button>
             </div>
 
-            <div class="input-area">
-                <!-- 텍스트 입력 영역 -->
-                <div class="input-section">
-                    <h3>텍스트 입력창</h3>
-                    <textarea 
-                        id="text-input" 
-                        class="text-input" 
-                        placeholder="생성하고 싶은 이미지에 대한 설명을 입력하세요..."
-                    ></textarea>
-                </div>
-
-                <!-- 이미지 업로드 영역 -->
+            <!-- 이미지 업로드 영역만 유지 -->
+            <div class="input-area" style="display: block;">
                 <div class="input-section">
                     <h3>파일 업로드</h3>
                     <div class="file-upload-area" id="file-upload-area">
@@ -1373,9 +1347,14 @@
 
             <!-- 프롬프트 보기 영역 -->
             <div class="prompt-preview-section">
-                <h3 class="preview-title">프롬프트 보기</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                    <h3 class="preview-title">프롬프트 보기</h3>
+                    <button class="btn btn-secondary" id="load-example-btn" onclick="loadExamplePrompt()" style="font-size: 0.85rem; padding: 8px 16px;">
+                        예시 프롬프트 불러오기
+                    </button>
+                </div>
                 <div class="prompt-preview" id="prompt-preview" contenteditable="true" spellcheck="false">
-                    <p class="preview-placeholder">텍스트를 입력하거나 이미지를 업로드하면 실시간으로 프롬프트가 생성됩니다.</p>
+                    <p class="preview-placeholder">여기에 프롬프트를 직접 입력하거나 예시 프롬프트를 불러올 수 있습니다.</p>
                 </div>
             </div>
 
@@ -1433,7 +1412,6 @@
         };
 
         // DOM 요소들
-        const textInput = document.getElementById('text-input');
         const fileInput = document.getElementById('file-input');
         const fileUploadArea = document.getElementById('file-upload-area');
         const generateBtn = document.getElementById('generate-prompt-btn');
@@ -1536,10 +1514,10 @@
 
         // 프롬프트 생성
         generateBtn.addEventListener('click', () => {
-            const text = textInput.value.trim();
+            const text = promptData.textInput || promptPreview.innerText.trim();
             
             if (!text && !promptData.imageFile) {
-                showToast('텍스트를 입력하거나 이미지를 업로드해주세요.', 'error');
+                showToast('프롬프트를 입력하거나 이미지를 업로드해주세요.', 'error');
                 return;
             }
 
@@ -1569,6 +1547,24 @@
             displayPrompt(prompt);
             saveToLocalStorage();
         });
+
+        // 예시 프롬프트 불러오기 함수
+        function loadExamplePrompt() {
+            const examplePrompt = `STYLE: 3D animation, Pixar/Disney style render; MEDIUM: CGI 3D animation; CAMERA: wide shot, eye level, professional studio scene; SUBJECT: stick figure character relaxing in director's chair, wearing oversized sunglasses holding whiskey glass, feet up on ottoman, confident relaxed pose; CHARACTER: simple stick figure with round head, thin black line body and limbs, comically oversized designer sunglasses, minimalist yet expressive, wearing suggested white shirt collar and dark pants through simple lines; FURNITURE: plush brown leather director's chair with rounded arms, matching ottoman footrest, luxurious vintage style; PROPS: crystal whiskey glass in stick hand, professional film cameras on tripods, C-stands with lights, reflectors, boom mics, cables on floor; AI ROBOTS: multiple cute robot assistants busily working around studio, one adjusting camera angle, another holding reflector, one operating boom mic, small wheeled robot managing cables, drone robot adjusting overhead light, all with glowing LED eyes and metallic finish; LIGHTING: dramatic studio lighting setup, warm key lights creating amber glow, cool blue fill lights for contrast, multiple light sources visible including softboxes and LED panels, professional photography setup; ENVIRONMENT: professional film studio with visible ceiling grid, white cyc wall, equipment cases, monitors showing footage, busy production atmosphere; ATMOSPHERE: humorous contrast between simple stick figure star and high-tech AI crew, behind-the-scenes movie production vibe, warm and cool color contrast; QUALITY: highly detailed 3D render, professional lighting, cinematic composition --ar 16:9 --v 6`;
+            
+            // 프롬프트 미리보기에 설정
+            promptPreview.textContent = examplePrompt;
+            promptPreview.classList.add('has-content');
+            promptData.textInput = examplePrompt;
+            
+            // 구조화된 프롬프트로 파싱하여 카드 생성
+            promptData.structuredPrompt = parsePrompt(examplePrompt);
+            createPromptCards(promptData.structuredPrompt);
+            promptCardsSection.style.display = 'block';
+            
+            // localStorage에 저장
+            saveToLocalStorage();
+        }
 
         // 프롬프트 파싱 함수 (세미콜론 기반과 줄바꿈 기반 모두 지원)
         function parsePrompt(text) {
@@ -2093,7 +2089,8 @@
                 
                 // 텍스트 복원
                 if (promptData.textInput) {
-                    textInput.value = promptData.textInput;
+                    promptPreview.textContent = promptData.textInput;
+                    promptPreview.classList.add('has-content');
                 }
                 
                 // 이미지 복원
@@ -2105,11 +2102,11 @@
 
         // 프롬프트 미리보기 업데이트 함수
         function updatePromptPreview() {
-            const text = textInput.value.trim();
+            const text = promptData.textInput || promptPreview.innerText.trim();
             
             if (!text && !promptData.imageFile && Object.keys(promptData.structuredPrompt).length === 0) {
                 if (!userEditingPreview) {
-                    promptPreview.innerHTML = '<p class="preview-placeholder">텍스트를 입력하거나 이미지를 업로드하면 실시간으로 프롬프트가 생성됩니다.</p>';
+                    promptPreview.innerHTML = '<p class="preview-placeholder">여기에 프롬프트를 직접 입력하거나 예시 프롬프트를 불러올 수 있습니다.</p>';
                 }
                 promptPreview.classList.remove('has-content');
                 promptCardsSection.style.display = 'none';
@@ -2150,31 +2147,34 @@
             promptPreview.classList.add('has-content');
         }
 
-        // 텍스트 입력 저장 및 미리보기 업데이트
-        textInput.addEventListener('input', () => {
-            promptData.textInput = textInput.value;
+        // 프롬프트 미리보기 직접 편집 기능
+        promptPreview.addEventListener('input', () => {
+            const text = promptPreview.innerText.trim();
+            promptData.textInput = text;
+            
+            // 구조화된 프롬프트인 경우 자동으로 파싱
+            if (text.includes(':') && text.includes(';')) {
+                promptData.structuredPrompt = parsePrompt(text);
+                createPromptCards(promptData.structuredPrompt);
+                promptCardsSection.style.display = 'block';
+            }
+            
             saveToLocalStorage();
-            updatePromptPreview();
         });
 
         // 페이지 로드 시 데이터 복원
         window.addEventListener('load', () => {
             loadFromLocalStorage();
             
-            // localStorage에 데이터가 없으면 예시 프롬프트 설정
+            // localStorage에 데이터가 없으면 placeholder만 표시
             if (!promptData.textInput && !localStorage.getItem('imagePromptData')) {
-                const examplePrompt = `STYLE: 3D animation, Pixar/Disney style render; MEDIUM: CGI 3D animation; CAMERA: wide shot, eye level, professional studio scene; SUBJECT: stick figure character relaxing in director's chair, wearing oversized sunglasses holding whiskey glass, feet up on ottoman, confident relaxed pose; CHARACTER: simple stick figure with round head, thin black line body and limbs, comically oversized designer sunglasses, minimalist yet expressive, wearing suggested white shirt collar and dark pants through simple lines; FURNITURE: plush brown leather director's chair with rounded arms, matching ottoman footrest, luxurious vintage style; PROPS: crystal whiskey glass in stick hand, professional film cameras on tripods, C-stands with lights, reflectors, boom mics, cables on floor; AI ROBOTS: multiple cute robot assistants busily working around studio, one adjusting camera angle, another holding reflector, one operating boom mic, small wheeled robot managing cables, drone robot adjusting overhead light, all with glowing LED eyes and metallic finish; LIGHTING: dramatic studio lighting setup, warm key lights creating amber glow, cool blue fill lights for contrast, multiple light sources visible including softboxes and LED panels, professional photography setup; ENVIRONMENT: professional film studio with visible ceiling grid, white cyc wall, equipment cases, monitors showing footage, busy production atmosphere; ATMOSPHERE: humorous contrast between simple stick figure star and high-tech AI crew, behind-the-scenes movie production vibe, warm and cool color contrast; QUALITY: highly detailed 3D render, professional lighting, cinematic composition --ar 16:9 --v 6`;
-                
-                textInput.value = examplePrompt;
-                promptData.textInput = examplePrompt;
+                // 기본값 설정 제거 - 사용자가 예시 프롬프트 버튼을 클릭해야만 로드
             }
             
-            // 텍스트 입력창에 기본값이 있으면 promptData에 저장
-            if (textInput.value.trim()) {
-                promptData.textInput = textInput.value.trim();
-                
+            // 프롬프트 미리보기에 기본값이 있으면 확인
+            if (promptData.textInput) {
                 // 구조화된 프롬프트인 경우 자동으로 파싱하여 카드 생성
-                const text = textInput.value.trim();
+                const text = promptData.textInput;
                 if (text.includes(':') && text.includes(';')) {
                     promptData.structuredPrompt = parsePrompt(text);
                     createPromptCards(promptData.structuredPrompt);
