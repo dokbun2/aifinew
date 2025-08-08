@@ -1844,13 +1844,49 @@
 			}
 		}
 
+        /* 모바일 터치 최적화 */
+        @media (hover: none) and (pointer: coarse) {
+            /* 터치 영역 최적화 */
+            .nav-item,
+            .btn,
+            .tab-button,
+            .ai-tab-button {
+                min-height: 44px; /* Apple HIG 권장 터치 타겟 크기 */
+                display: flex;
+                align-items: center;
+            }
+            
+            /* 터치 피드백 개선 */
+            .nav-item:active,
+            .btn:active,
+            .tab-button:active {
+                transform: scale(0.98);
+                opacity: 0.9;
+            }
+            
+            /* 스크롤 성능 최적화 */
+            .navigation,
+            .main-content,
+            .nav-content {
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+            }
+            
+            /* 호버 효과 제거 */
+            .nav-item:hover,
+            .btn:hover {
+                transform: none;
+            }
+        }
+        
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .navigation {
                 width: 100%;
                 height: auto;
                 position: relative;
-                margin-top: 0;
+                margin-top: 60px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
             
             .main-content {
@@ -1862,10 +1898,99 @@
             
             .container {
                 flex-direction: column;
+                padding-top: 0;
             }
             
             .header {
-                position: relative;
+                height: 60px;
+                padding: 0 1rem;
+            }
+            
+            .header-left {
+                gap: 0.75rem;
+            }
+            
+            .header-title {
+                font-size: 1.1rem;
+                white-space: nowrap;
+            }
+            
+            .home-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+            
+            .header-actions {
+                gap: 0.5rem;
+            }
+            
+            .header-actions .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            
+            .btn-danger {
+                display: none; /* 모바일에서 초기화 버튼 숨김 */
+            }
+            
+            /* 네비게이션 모바일 최적화 */
+            .nav-header {
+                padding: 1rem;
+            }
+            
+            .project-header h3 {
+                font-size: 1rem;
+            }
+            
+            .nav-controls {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .nav-controls .btn {
+                flex: 1;
+                min-width: 0;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            
+            .search-box {
+                margin-top: 0.5rem;
+            }
+            
+            .search-box input {
+                font-size: 0.875rem;
+                padding: 0.5rem;
+            }
+            
+            /* 네비게이션 아이템 모바일 최적화 */
+            .nav-item {
+                font-size: 0.875rem;
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .nav-item-content {
+                gap: 0.5rem;
+            }
+            
+            .nav-icon {
+                font-size: 1rem;
+            }
+            
+            /* 메인 콘텐츠 모바일 최적화 */
+            .content-header {
+                padding: 1rem;
+            }
+            
+            .content-title {
+                font-size: 1.25rem;
+            }
+            
+            .content-subtitle {
+                font-size: 0.875rem;
             }
 
             .ost-prompt-grid {
@@ -1885,6 +2010,53 @@
 
             .csv-info-grid {
                 grid-template-columns: 1fr;
+            }
+            /* 푸터 모바일 조정 */
+            footer {
+                font-size: 0.75rem;
+                padding: 8px;
+            }
+            
+            /* 빈 상태 메시지 */
+            .empty-state {
+                padding: 2rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .empty-state-icon {
+                font-size: 2rem;
+            }
+            
+            /* 메시지 컨테이너 */
+            .message-container {
+                bottom: 70px;
+                left: 1rem;
+                right: 1rem;
+            }
+            
+            /* 모달 모바일 최적화 */
+            .modal {
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-width: none;
+                padding: 1rem;
+            }
+            
+            .modal-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .modal-body {
+                font-size: 0.875rem;
+            }
+            
+            /* 툴팁 모바일 최적화 */
+            .tooltip {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
             }
         }
 		/* 영상 이미지 컨테이너 */
