@@ -4760,6 +4760,14 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 setTimeout(() => {
                     document.getElementById('api-model').value = config.model || '';
                 }, 100);
+            } else {
+                // 저장된 설정이 없으면 기본값 설정
+                document.getElementById('api-provider').value = 'gemini';
+                updateModelOptions();
+                setTimeout(() => {
+                    // Gemini 2.5 Flash를 기본값으로 설정
+                    document.getElementById('api-model').value = 'gemini-2.5-flash';
+                }, 100);
             }
         }
         
