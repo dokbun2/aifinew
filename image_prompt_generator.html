@@ -1738,7 +1738,13 @@
                 output: prompt
             });
             saveToLocalStorage();
-
+            
+            // 최종 프롬프트 표시 함수 호출
+            displayFinalPrompt(prompt);
+        });
+        
+        // 최종 프롬프트 표시 함수
+        function displayFinalPrompt(defaultPrompt) {
             // 최종 프롬프트 섹션 업데이트: 변경반영 > 기존내용 우선으로 수집
             const resolvedStructure = { ...promptData.structuredPrompt };
             // 활성 탭의 모든 dropdown-field를 순회하여 값을 수집
@@ -1760,10 +1766,13 @@
                     }
                 });
             }
-            const finalText = structureToMultilineText(resolvedStructure) || prompt;
-            finalPromptText.value = finalText || prompt;
+            const finalText = structureToMultilineText(resolvedStructure) || defaultPrompt || '';
+            finalPromptText.value = finalText;
             finalPromptSection.style.display = 'block';
-        });
+            
+            // 스크롤하여 결과 보여주기
+            finalPromptSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         // 예시 프롬프트 불러오기 함수
         function loadExamplePrompt() {
@@ -4329,12 +4338,38 @@
                 console.log('Provider:', provider);
                 console.log('Model:', model);
                 console.log('API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : '없음');
-            
+                
+                // 각 섹션별로 개별 최적화
+                const optimizedData = {};
+                
+                for (const [key, value] of Object.entries(data)) {
+                    if (!value || value.trim() === '') continue;
+                    
+                    console.log(`\n=== ${key} 섹션 최적화 시작 ===`);
+                    console.log('원본:', value);
+                    
+                    try {
+                        const optimizedText = await optimizeSinglePrompt(value, provider, apiKey, model);
+                        optimizedData[key] = optimizedText;
+                        console.log('최적화 결과:', optimizedText);
+                    } catch (error) {
+                        console.error(`${key} 최적화 실패:`, error);
+                        // 실패 시 원본 사용
+                        optimizedData[key] = value;
+                    }
+                }
+                
+                return optimizedData;
+            } catch (error) {
+                console.error('AI 최적화 초기화 실패:', error);
+                throw error;
+            }
+        }
+        
+        // 단일 프롬프트 최적화 함수
+        async function optimizeSinglePrompt(text, provider, apiKey, model) {
             // 수집된 데이터를 프롬프트 텍스트로 변환
-            let promptText = '';
-            if (data['prompt-preview']) {
-                // 프롬프트 프리뷰에서 직접 가져온 경우
-                promptText = data['prompt-preview'];
+            let promptText = text;
             } else {
                 // 구조화된 데이터인 경우
                 promptText = Object.entries(data)
@@ -4507,7 +4542,7 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 
                 return optimizedText;
             } catch (error) {
-                console.error('AI 최적화 실패:', error);
+                console.error('단일 프롬프트 최적화 실패:', error);
                 
                 // CORS 오류 감지
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
@@ -4521,16 +4556,46 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 
                 throw error;
             }
-            } catch (parseError) {
-                console.error('API 설정 파싱 오류:', parseError);
-                throw new Error('API 설정을 읽을 수 없습니다.');
-            }
         }
         
         // 최적화된 프롬프트를 기존 내용과 병합
-        function mergeOptimizedPrompt(optimizedPrompt) {
+        function mergeOptimizedPrompt(optimizedData) {
             console.log('=== mergeOptimizedPrompt 함수 호출 ===');
-            console.log('최적화된 프롬프트:', optimizedPrompt);
+            console.log('최적화된 데이터:', optimizedData);
+            
+            // 1. 각 섹션의 변경 반영 텍스트창에 최적화된 결과 업데이트
+            for (const [key, value] of Object.entries(optimizedData)) {
+                // 변경 반영 input 찾기
+                const appliedInput = document.querySelector(`input[data-key="${key}-applied"]`);
+                if (appliedInput) {
+                    console.log(`${key} 변경 반영 필드 업데이트:`, value);
+                    appliedInput.value = value;
+                    // 이벤트 트리거 (변경 사항 추적을 위해)
+                    appliedInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            
+            // 2. 모든 변경 반영 데이터로 프롬프트 생성 (일반 프롬프트 생성과 동일한 로직)
+            console.log('최종 프롬프트 표시 함수 호출');
+            
+            // displayFinalPrompt 함수가 존재하는지 확인
+            if (typeof displayFinalPrompt === 'function') {
+                displayFinalPrompt();
+            } else {
+                console.error('displayFinalPrompt 함수를 찾을 수 없습니다.');
+                
+                // Fallback: 최종 프롬프트 셉션 직접 표시
+                const finalPromptSection = document.getElementById('final-prompt-section');
+                if (finalPromptSection) {
+                    finalPromptSection.style.display = 'block';
+                    finalPromptSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+            
+            return;
+            
+            // 기존 코드는 사용하지 않음
+            /*
             
             const promptPreview = document.getElementById('prompt-preview');
             const currentPrompt = promptPreview.textContent.trim();
@@ -4574,68 +4639,7 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 }
             }
             
-            // 최종 프롬프트 섹션 표시 (일반 프롬프트 생성 버튼과 동일하게)
-            const finalPromptSection = document.getElementById('final-prompt-section');
-            const finalPromptText = document.getElementById('final-prompt-text');
-            
-            if (finalPromptSection && finalPromptText) {
-                // 구조화된 데이터 수집 (일반 프롬프트 생성과 동일한 로직)
-                let resolvedStructure = {};
-                
-                // promptData와 structuredPrompt가 존재하는지 확인
-                if (typeof promptData !== 'undefined' && promptData && promptData.structuredPrompt) {
-                    resolvedStructure = { ...promptData.structuredPrompt };
-                }
-                
-                // currentStructureTab이 정의되어 있는지 확인
-                const currentTab = (typeof currentStructureTab !== 'undefined') ? currentStructureTab : 'character';
-                const scopeSelector = currentTab === 'character' ? '.character-container' : '.general-container';
-                const scope = document.querySelector(scopeSelector);
-                
-                if (scope) {
-                    scope.querySelectorAll('.dropdown-container').forEach(container => {
-                        const key = container.dataset.key;
-                        if (!key) return;
-                        const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
-                        const existingInput = container.querySelector(`input[data-key="${key}"]`);
-                        const appliedVal = (appliedInput?.value || '').trim();
-                        const existingVal = (existingInput?.value || '').trim();
-                        
-                        if (appliedVal) {
-                            resolvedStructure[key] = appliedVal;
-                        } else if (existingVal) {
-                            resolvedStructure[key] = existingVal;
-                        }
-                    });
-                }
-                
-                // 구조화된 텍스트로 변환하거나 AI 생성 프롬프트 사용
-                let finalText = mergedPrompt;
-                
-                // structureToMultilineText 함수가 존재하는지 확인
-                if (typeof structureToMultilineText === 'function' && Object.keys(resolvedStructure).length > 0) {
-                    try {
-                        const structuredText = structureToMultilineText(resolvedStructure);
-                        if (structuredText) {
-                            finalText = structuredText;
-                        }
-                    } catch (e) {
-                        console.error('구조화된 텍스트 변환 오류:', e);
-                    }
-                }
-                
-                // 최종 프롬프트 텍스트 설정
-                console.log('최종 프롬프트 텍스트 설정:', finalText);
-                finalPromptText.value = finalText;
-                
-                // 최종 프롬프트 섹션 표시
-                console.log('최종 프롬프트 섹션 표시');
-                finalPromptSection.style.display = 'block';
-                
-                // 스크롤하여 결과 보여주기
-                finalPromptSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                console.log('최종 프롬프트 섹션으로 스크롤 완료');
-            }
+            */
         }
         
         // AI 프롬프트 생성 버튼 이벤트 리스너 - DOM 로드 후 연결
