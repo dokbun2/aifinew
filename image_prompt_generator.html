@@ -26,10 +26,15 @@
         /* API 모달만 예외 처리 */
         #api-modal.modal-overlay {
             display: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         
         #api-modal.modal-overlay.show {
             display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
         
         /* 토스트는 기본적으로 숨김 */
@@ -1348,7 +1353,7 @@
         }
 
         .modal-overlay.show {
-            display: flex;
+            display: flex !important;
         }
 
         .modal-container {
@@ -1657,7 +1662,7 @@
                 <button class="btn btn-primary" id="generate-prompt-btn">
                     ✨ 프롬프트 생성
                 </button>
-                <button class="btn btn-primary" id="ai-generate-prompt-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <button class="btn btn-primary" id="ai-generate-prompt-btn" onclick="console.log('버튼 직접 클릭!'); if(window.generateAIPrompt) { window.generateAIPrompt(); } else { console.error('generateAIPrompt 함수가 아직 로드되지 않았습니다.'); }" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
                     🤖 AI 프롬프트 생성
                 </button>
             </div>
@@ -4098,29 +4103,40 @@
         window.aiSaveField = aiSaveField;
         window.filterStyleDropdown = filterStyleDropdown;
         window.filterStyleOptions = filterStyleOptions;
-        window.generateAIPrompt = generateAIPrompt;
-        window.openApiModal = openApiModal;
-        window.closeApiModal = closeApiModal;
         
-        // AI 프롬프트 생성 관련 함수들
+        // AI 프롬프트 생성 관련 함수들 - 먼저 정의
         async function generateAIPrompt() {
+            console.log('AI 프롬프트 생성 시작');
+            
             // API 설정 확인
             const config = localStorage.getItem('aiApiConfig');
             if (!config) {
+                console.log('API 설정이 없습니다. 모달을 엽니다.');
                 showToast('API 설정을 먼저 해주세요.', 'error');
                 openApiModal();
                 return;
             }
             
+            console.log('API 설정 확인:', JSON.parse(config));
+            
             // 모든 변경 반영 텍스트창의 내용 수집
             const collectedData = collectAllAppliedData();
+            console.log('수집된 데이터:', collectedData);
+            
             if (Object.keys(collectedData).length === 0) {
                 showToast('변경 반영된 내용이 없습니다.', 'error');
+                console.log('변경 반영된 내용이 없어서 종료합니다.');
                 return;
             }
             
             // 로딩 상태 표시
             const aiGenerateBtn = document.getElementById('ai-generate-prompt-btn');
+            if (!aiGenerateBtn) {
+                console.error('AI 프롬프트 생성 버튼을 찾을 수 없습니다.');
+                showToast('버튼을 찾을 수 없습니다.', 'error');
+                return;
+            }
+            
             const originalText = aiGenerateBtn.innerHTML;
             aiGenerateBtn.disabled = true;
             aiGenerateBtn.innerHTML = '🔄 AI 프롬프트 생성 중...';
@@ -4135,40 +4151,201 @@
                 showToast('AI 프롬프트가 생성되었습니다.', 'success');
             } catch (error) {
                 console.error('AI 프롬프트 생성 실패:', error);
-                showToast('AI 프롬프트 생성에 실패했습니다.', 'error');
+                // 더 자세한 오류 메시지 표시
+                let errorMessage = 'AI 프롬프트 생성에 실패했습니다.';
+                if (error.message.includes('CORS')) {
+                    errorMessage = 'CORS 오류: Chrome 확장 프로그램(Allow CORS)을 설치하거나 프록시 서버를 사용해주세요.';
+                } else if (error.message.includes('401')) {
+                    errorMessage = 'API 키가 유효하지 않습니다. 설정을 확인해주세요.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = '모델명이 잘못되었습니다. gemini-1.5-flash 또는 gemini-pro를 사용해보세요.';
+                } else if (error.message.includes('429')) {
+                    errorMessage = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+                }
+                showToast(errorMessage, 'error');
             } finally {
-                aiGenerateBtn.disabled = false;
-                aiGenerateBtn.innerHTML = originalText;
+                if (aiGenerateBtn) {
+                    aiGenerateBtn.disabled = false;
+                    aiGenerateBtn.innerHTML = originalText;
+                }
             }
         }
+        
+        // 함수를 즉시 window에 할당
+        window.generateAIPrompt = generateAIPrompt;
+        
+        // 디버깅을 위한 테스트 함수
+        window.testGeminiAPI = async function() {
+            console.log('=== Gemini API 디버깅 테스트 시작 ===');
+            const config = localStorage.getItem('aiApiConfig');
+            if (!config) {
+                console.error('API 설정이 없습니다. 먼저 API를 설정해주세요.');
+                return;
+            }
+            
+            const parsedConfig = JSON.parse(config);
+            console.log('현재 설정:', parsedConfig);
+            
+            if (parsedConfig.provider !== 'gemini') {
+                console.error('Gemini API가 설정되어 있지 않습니다.');
+                return;
+            }
+            
+            const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${parsedConfig.model}:generateContent?key=${parsedConfig.apiKey}`;
+            console.log('테스트 URL:', testUrl.replace(parsedConfig.apiKey, 'API_KEY_HIDDEN'));
+            
+            const testBody = {
+                contents: [{
+                    parts: [{
+                        text: "Hello, please respond with 'Hi' if you receive this message."
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 50
+                }
+            };
+            
+            console.log('요청 본문:', testBody);
+            
+            try {
+                console.log('API 호출 시작...');
+                const response = await fetch(testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testBody)
+                });
+                
+                console.log('응답 상태:', response.status, response.statusText);
+                console.log('응답 헤더:', Object.fromEntries(response.headers.entries()));
+                
+                const responseText = await response.text();
+                console.log('원본 응답:', responseText);
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    console.log('파싱된 응답:', data);
+                    
+                    if (data.candidates && data.candidates[0]) {
+                        console.log('✅ API 연결 성공!');
+                        console.log('응답 텍스트:', data.candidates[0].content.parts[0].text);
+                    } else if (data.error) {
+                        console.error('❌ API 오류:', data.error);
+                    }
+                } catch (e) {
+                    console.error('JSON 파싱 실패:', e);
+                }
+            } catch (error) {
+                console.error('❌ 네트워크 오류:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    console.error('💡 CORS 오류일 가능성이 높습니다.');
+                    console.error('해결 방법:');
+                    console.error('1. Chrome 확장 프로그램 "Allow CORS" 설치');
+                    console.error('2. https://cors-anywhere.herokuapp.com/ 프록시 사용');
+                    console.error('3. 백엔드 서버를 통한 API 호출');
+                }
+            }
+            
+            console.log('=== 테스트 종료 ===');
+        };
         
         // 모든 변경 반영 데이터 수집
         function collectAllAppliedData() {
             const collectedData = {};
+            console.log('collectAllAppliedData 함수 시작');
             
             // 모든 드롭다운 컨테이너에서 변경 반영 내용 수집
-            document.querySelectorAll('.dropdown-container').forEach(container => {
+            const containers = document.querySelectorAll('.dropdown-container');
+            console.log('찾은 드롭다운 컨테이너 수:', containers.length);
+            
+            containers.forEach((container, index) => {
                 const appliedInputs = container.querySelectorAll('input[data-key$="-applied"]');
+                console.log(`컨테이너 ${index}: 찾은 applied input 수:`, appliedInputs.length);
+                
                 appliedInputs.forEach(input => {
                     const value = input.value.trim();
+                    const key = input.getAttribute('data-key');
+                    console.log(`Input key: ${key}, value: ${value}`);
+                    
                     if (value) {
-                        const key = input.getAttribute('data-key').replace('-applied', '');
-                        collectedData[key] = value;
+                        const cleanKey = key.replace('-applied', '');
+                        collectedData[cleanKey] = value;
                     }
                 });
             });
             
+            // 대체 선택자로 시도
+            if (Object.keys(collectedData).length === 0) {
+                console.log('기본 선택자로 데이터를 찾지 못했습니다. 대체 방법 시도...');
+                
+                // 모든 input 요소 중에서 applied 관련 찾기
+                const allInputs = document.querySelectorAll('input[type="text"]');
+                console.log('전체 텍스트 입력 필드 수:', allInputs.length);
+                
+                allInputs.forEach(input => {
+                    const dataKey = input.getAttribute('data-key');
+                    const value = input.value.trim();
+                    
+                    if (dataKey && dataKey.includes('-applied') && value) {
+                        const cleanKey = dataKey.replace('-applied', '');
+                        collectedData[cleanKey] = value;
+                        console.log(`대체 방법으로 찾은 데이터: ${cleanKey} = ${value}`);
+                    }
+                });
+                
+                // 프롬프트 프리뷰에서 직접 가져오기
+                if (Object.keys(collectedData).length === 0) {
+                    console.log('applied 입력을 찾지 못했습니다. 프롬프트 프리뷰에서 직접 가져옵니다.');
+                    const promptPreview = document.getElementById('prompt-preview');
+                    if (promptPreview && promptPreview.textContent.trim()) {
+                        collectedData['prompt-preview'] = promptPreview.textContent.trim();
+                        console.log('프롬프트 프리뷰 내용:', collectedData['prompt-preview']);
+                    }
+                }
+            }
+            
+            console.log('최종 수집된 데이터:', collectedData);
             return collectedData;
         }
         
         // AI를 통한 프롬프트 최적화 및 영문 번역
         async function optimizePromptWithAI(data) {
-            const { provider, apiKey, model } = JSON.parse(localStorage.getItem('aiApiConfig'));
+            try {
+                const configStr = localStorage.getItem('aiApiConfig');
+                if (!configStr) {
+                    throw new Error('API 설정이 없습니다.');
+                }
+                
+                const config = JSON.parse(configStr);
+                if (!config || !config.provider || !config.apiKey || !config.model) {
+                    throw new Error('API 설정이 올바르지 않습니다.');
+                }
+                
+                const { provider, apiKey, model } = config;
+                
+                console.log('=== AI API 설정 ===');
+                console.log('Provider:', provider);
+                console.log('Model:', model);
+                console.log('API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : '없음');
             
             // 수집된 데이터를 프롬프트 텍스트로 변환
-            const promptText = Object.entries(data)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join(', ');
+            let promptText = '';
+            if (data['prompt-preview']) {
+                // 프롬프트 프리뷰에서 직접 가져온 경우
+                promptText = data['prompt-preview'];
+            } else {
+                // 구조화된 데이터인 경우
+                promptText = Object.entries(data)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(', ');
+            }
+            
+            console.log('=== 프롬프트 정보 ===');
+            console.log('입력 데이터:', data);
+            console.log('변환된 프롬프트 텍스트:', promptText);
+            console.log('텍스트 길이:', promptText.length);
             
             const systemPrompt = `You are an expert at creating optimal prompts for AI image generation. 
 Your task is to:
@@ -4183,29 +4360,103 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 let optimizedText;
                 
                 if (provider === 'gemini') {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const geminiBody = {
+                        contents: [{
+                            parts: [{
+                                text: `${systemPrompt}\n\nOptimize this Korean prompt for image generation: ${promptText}`
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.8,
+                            maxOutputTokens: 1000
+                        }
+                    };
+                    
+                    console.log('=== Gemini API 요청 ===');
+                    console.log('URL:', geminiUrl.replace(apiKey, 'API_KEY_HIDDEN'));
+                    console.log('Model:', model);
+                    console.log('Request Body:', JSON.stringify(geminiBody, null, 2));
+                    
+                    // 지원되는 모델 목록 표시
+                    console.log('💡 지원되는 Gemini 모델: gemini-1.5-flash, gemini-1.5-pro, gemini-pro');
+                    
+                    const response = await fetch(geminiUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [{
-                                    text: `${systemPrompt}\n\nOptimize this Korean prompt for image generation: ${promptText}`
-                                }]
-                            }],
-                            generationConfig: {
-                                temperature: 0.8,
-                                maxOutputTokens: 1000
-                            }
-                        })
+                        body: JSON.stringify(geminiBody)
                     });
                     
+                    console.log('=== Gemini API 응답 상태 ===');
+                    console.log('Status:', response.status);
+                    console.log('StatusText:', response.statusText);
+                    console.log('Headers:', response.headers);
+                    
+                    const responseText = await response.text();
+                    console.log('Raw Response:', responseText);
+                    
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('JSON 파싱 실패:', parseError);
+                        console.error('응답 텍스트:', responseText);
+                        throw new Error('API 응답을 파싱할 수 없습니다.');
+                    }
+                    
                     if (response.ok) {
-                        const data = await response.json();
-                        optimizedText = data.candidates[0].content.parts[0].text;
+                        console.log('Parsed Gemini API 응답:', JSON.stringify(data, null, 2));
+                        
+                        // 다양한 응답 구조 처리
+                        if (data && data.candidates && data.candidates.length > 0) {
+                            const candidate = data.candidates[0];
+                            if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+                                optimizedText = candidate.content.parts[0].text;
+                                console.log('Gemini 최적화된 텍스트:', optimizedText);
+                            } else if (candidate.text) {
+                                // 다른 가능한 응답 구조
+                                optimizedText = candidate.text;
+                                console.log('Gemini 최적화된 텍스트 (대체 구조):', optimizedText);
+                            } else {
+                                console.error('Candidate 구조가 예상과 다름:', candidate);
+                                throw new Error('응답에서 텍스트를 찾을 수 없습니다.');
+                            }
+                        } else if (data && data.error) {
+                            console.error('Gemini API 에러 응답:', data.error);
+                            const errorMessage = data.error.message || data.error.status || '알 수 없는 오류';
+                            const errorCode = data.error.code || 'UNKNOWN';
+                            throw new Error(`Gemini API 에러 [${errorCode}]: ${errorMessage}`);
+                        } else {
+                            console.error('예상치 못한 Gemini API 응답 구조:', data);
+                            throw new Error('Gemini API 응답 구조가 올바르지 않습니다.');
+                        }
                     } else {
-                        throw new Error('API 요청 실패');
+                        // 오류 응답 처리
+                        console.error('Gemini API 오류 응답:', data);
+                        if (data && data.error) {
+                            const errorMessage = data.error.message || data.error.status || '알 수 없는 오류';
+                            const errorCode = data.error.code || response.status;
+                            
+                            // 일반적인 오류 메시지 처리
+                            let userMessage = errorMessage;
+                            if (response.status === 400) {
+                                userMessage = 'API 요청이 잘못되었습니다. API 키와 모델명을 확인해주세요.';
+                            } else if (response.status === 401) {
+                                userMessage = 'API 키가 유효하지 않습니다. 설정을 확인해주세요.';
+                            } else if (response.status === 403) {
+                                userMessage = 'API 접근이 거부되었습니다. API 키 권한을 확인해주세요.';
+                            } else if (response.status === 429) {
+                                userMessage = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+                            } else if (response.status === 404) {
+                                userMessage = '잘못된 모델명입니다. gemini-1.5-flash 또는 gemini-1.5-pro를 사용해보세요.';
+                            }
+                            
+                            throw new Error(`[${errorCode}] ${userMessage}`);
+                        } else {
+                            throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+                        }
                     }
                 } else if (provider === 'openai') {
                     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -4233,23 +4484,58 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                     
                     if (response.ok) {
                         const data = await response.json();
-                        optimizedText = data.choices[0].message.content;
+                        console.log('OpenAI API 응답:', data);
+                        
+                        // 안전한 파싱
+                        if (data && data.choices && data.choices[0] && 
+                            data.choices[0].message && data.choices[0].message.content) {
+                            optimizedText = data.choices[0].message.content;
+                            console.log('OpenAI 최적화된 텍스트:', optimizedText);
+                        } else if (data && data.error) {
+                            console.error('OpenAI API 에러:', data.error);
+                            throw new Error(`OpenAI API 에러: ${data.error.message || '알 수 없는 오류'}`);
+                        } else {
+                            console.error('예상치 못한 OpenAI API 응답 구조:', data);
+                            throw new Error('OpenAI API 응답 구조가 올바르지 않습니다.');
+                        }
                     } else {
-                        throw new Error('API 요청 실패');
+                        const errorData = await response.json().catch(() => null);
+                        console.error('OpenAI API 요청 실패:', response.status, errorData);
+                        throw new Error(`API 요청 실패: ${response.status} ${errorData?.error?.message || ''}`);
                     }
                 }
                 
                 return optimizedText;
             } catch (error) {
                 console.error('AI 최적화 실패:', error);
+                
+                // CORS 오류 감지
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
+                    console.error('🚫 CORS 오류 감지됨!');
+                    console.error('해결 방법:');
+                    console.error('1. Chrome 확장 프로그램: "Allow CORS" 또는 "CORS Unblock" 설치');
+                    console.error('2. 프록시 서버 사용 (https://cors-anywhere.herokuapp.com/ 등)');
+                    console.error('3. 로컬 개발 서버에서 CORS 설정');
+                    throw new Error('CORS 오류: 브라우저에서 API 호출이 차단되었습니다. 위의 해결 방법을 참고해주세요.');
+                }
+                
                 throw error;
+            }
+            } catch (parseError) {
+                console.error('API 설정 파싱 오류:', parseError);
+                throw new Error('API 설정을 읽을 수 없습니다.');
             }
         }
         
         // 최적화된 프롬프트를 기존 내용과 병합
         function mergeOptimizedPrompt(optimizedPrompt) {
+            console.log('=== mergeOptimizedPrompt 함수 호출 ===');
+            console.log('최적화된 프롬프트:', optimizedPrompt);
+            
             const promptPreview = document.getElementById('prompt-preview');
             const currentPrompt = promptPreview.textContent.trim();
+            
+            console.log('현재 프롬프트 프리뷰 내용:', currentPrompt);
             
             // 기존 내용과 AI 최적화 내용을 병합
             let mergedPrompt = '';
@@ -4260,20 +4546,184 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
             }
             
             // 프롬프트 프리뷰에 표시
+            console.log('병합된 프롬프트를 프리뷰에 표시:', mergedPrompt);
             promptPreview.textContent = mergedPrompt;
             promptPreview.classList.add('has-content');
             
             // 프롬프트 구조 편집기로 가져오기
+            console.log('importPromptFromPreview 호출');
             importPromptFromPreview();
+            
+            // 프롬프트 데이터 저장 (일반 프롬프트 생성과 동일)
+            const text = currentPrompt || '사용자 입력';
+            
+            // promptData가 정의되어 있는지 확인
+            if (typeof promptData !== 'undefined' && promptData) {
+                if (!promptData.generatedPrompts) {
+                    promptData.generatedPrompts = [];
+                }
+                promptData.generatedPrompts.push({
+                    timestamp: new Date().toISOString(),
+                    input: text,
+                    output: mergedPrompt
+                });
+                
+                // saveToLocalStorage 함수가 존재하는지 확인
+                if (typeof saveToLocalStorage === 'function') {
+                    saveToLocalStorage();
+                }
+            }
+            
+            // 최종 프롬프트 섹션 표시 (일반 프롬프트 생성 버튼과 동일하게)
+            const finalPromptSection = document.getElementById('final-prompt-section');
+            const finalPromptText = document.getElementById('final-prompt-text');
+            
+            if (finalPromptSection && finalPromptText) {
+                // 구조화된 데이터 수집 (일반 프롬프트 생성과 동일한 로직)
+                let resolvedStructure = {};
+                
+                // promptData와 structuredPrompt가 존재하는지 확인
+                if (typeof promptData !== 'undefined' && promptData && promptData.structuredPrompt) {
+                    resolvedStructure = { ...promptData.structuredPrompt };
+                }
+                
+                // currentStructureTab이 정의되어 있는지 확인
+                const currentTab = (typeof currentStructureTab !== 'undefined') ? currentStructureTab : 'character';
+                const scopeSelector = currentTab === 'character' ? '.character-container' : '.general-container';
+                const scope = document.querySelector(scopeSelector);
+                
+                if (scope) {
+                    scope.querySelectorAll('.dropdown-container').forEach(container => {
+                        const key = container.dataset.key;
+                        if (!key) return;
+                        const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
+                        const existingInput = container.querySelector(`input[data-key="${key}"]`);
+                        const appliedVal = (appliedInput?.value || '').trim();
+                        const existingVal = (existingInput?.value || '').trim();
+                        
+                        if (appliedVal) {
+                            resolvedStructure[key] = appliedVal;
+                        } else if (existingVal) {
+                            resolvedStructure[key] = existingVal;
+                        }
+                    });
+                }
+                
+                // 구조화된 텍스트로 변환하거나 AI 생성 프롬프트 사용
+                let finalText = mergedPrompt;
+                
+                // structureToMultilineText 함수가 존재하는지 확인
+                if (typeof structureToMultilineText === 'function' && Object.keys(resolvedStructure).length > 0) {
+                    try {
+                        const structuredText = structureToMultilineText(resolvedStructure);
+                        if (structuredText) {
+                            finalText = structuredText;
+                        }
+                    } catch (e) {
+                        console.error('구조화된 텍스트 변환 오류:', e);
+                    }
+                }
+                
+                // 최종 프롬프트 텍스트 설정
+                console.log('최종 프롬프트 텍스트 설정:', finalText);
+                finalPromptText.value = finalText;
+                
+                // 최종 프롬프트 섹션 표시
+                console.log('최종 프롬프트 섹션 표시');
+                finalPromptSection.style.display = 'block';
+                
+                // 스크롤하여 결과 보여주기
+                finalPromptSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                console.log('최종 프롬프트 섹션으로 스크롤 완료');
+            }
         }
         
-        // AI 프롬프트 생성 버튼 이벤트 리스너
-        document.getElementById('ai-generate-prompt-btn').addEventListener('click', generateAIPrompt);
+        // AI 프롬프트 생성 버튼 이벤트 리스너 - DOM 로드 후 연결
+        function initializeAIPromptButton() {
+            const aiButton = document.getElementById('ai-generate-prompt-btn');
+            if (aiButton) {
+                // 기존 이벤트 리스너 제거 (중복 방지)
+                aiButton.removeEventListener('click', generateAIPrompt);
+                
+                // 새 이벤트 리스너 추가
+                aiButton.addEventListener('click', function(e) {
+                    console.log('AI 프롬프트 생성 버튼 클릭됨!');
+                    e.preventDefault();
+                    generateAIPrompt();
+                });
+                
+                console.log('AI 프롬프트 생성 버튼 초기화 완료');
+                console.log('버튼 요소:', aiButton);
+                console.log('버튼 ID:', aiButton.id);
+                console.log('버튼 onclick:', aiButton.onclick);
+                
+                // 버튼에 직접 onclick도 추가 (백업)
+                aiButton.onclick = function() {
+                    console.log('onclick 핸들러 실행됨');
+                    generateAIPrompt();
+                };
+            } else {
+                console.error('AI 프롬프트 생성 버튼을 찾을 수 없습니다.');
+                
+                // 1초 후 재시도
+                setTimeout(() => {
+                    console.log('버튼 찾기 재시도...');
+                    const retryButton = document.getElementById('ai-generate-prompt-btn');
+                    if (retryButton) {
+                        console.log('재시도에서 버튼 찾음!');
+                        initializeAIPromptButton();
+                    }
+                }, 1000);
+            }
+        }
+        
+        // DOM이 완전히 로드된 후 실행
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAIPromptButton);
+        } else {
+            // 이미 DOM이 로드된 경우 즉시 실행
+            initializeAIPromptButton();
+        }
+        
+        // 페이지 로드 완료 후 추가 확인
+        window.addEventListener('load', function() {
+            console.log('=== 페이지 완전 로드 완료 ===');
+            const aiBtn = document.getElementById('ai-generate-prompt-btn');
+            console.log('AI 버튼 존재 여부:', !!aiBtn);
+            if (aiBtn) {
+                console.log('버튼 텍스트:', aiBtn.textContent);
+                console.log('버튼 클릭 이벤트 리스너:', aiBtn.onclick);
+                console.log('window.generateAIPrompt 존재:', typeof window.generateAIPrompt);
+            }
+            
+            // 모든 버튼 확인
+            const allButtons = document.querySelectorAll('button');
+            console.log('전체 버튼 수:', allButtons.length);
+            allButtons.forEach((btn, idx) => {
+                if (btn.textContent.includes('AI')) {
+                    console.log(`버튼 ${idx}: ${btn.textContent.trim()}, ID: ${btn.id}`);
+                }
+            });
+        });
         
         // API 연동 관련 함수들
         function openApiModal() {
+            console.log('openApiModal 함수 호출됨');
             const modal = document.getElementById('api-modal');
+            if (!modal) {
+                console.error('API 모달 요소를 찾을 수 없습니다!');
+                return;
+            }
+            console.log('모달 찾음, show 클래스 추가 전:', modal.className);
             modal.classList.add('show');
+            console.log('show 클래스 추가 후:', modal.className);
+            
+            // 모달이 실제로 표시되는지 확인
+            setTimeout(() => {
+                const computedStyle = window.getComputedStyle(modal);
+                console.log('모달 display 상태:', computedStyle.display);
+                console.log('모달 visibility:', computedStyle.visibility);
+            }, 100);
             
             // 저장된 설정 불러오기
             const savedConfig = localStorage.getItem('aiApiConfig');
@@ -4287,13 +4737,30 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 }, 100);
             }
         }
+        
+        // 함수를 즉시 window에 할당
+        window.openApiModal = openApiModal;
 
         function closeApiModal() {
+            console.log('closeApiModal 함수 호출됨');
             const modal = document.getElementById('api-modal');
+            if (!modal) {
+                console.error('API 모달 요소를 찾을 수 없습니다!');
+                return;
+            }
             modal.classList.remove('show');
-            document.getElementById('connection-status').className = 'connection-status';
-            document.getElementById('connection-status').textContent = '';
+            console.log('모달 닫기 완료');
+            
+            // 연결 상태 초기화
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                statusElement.className = 'connection-status';
+                statusElement.textContent = '';
+            }
         }
+        
+        // 함수를 즉시 window에 할당
+        window.closeApiModal = closeApiModal;
 
         function updateModelOptions() {
             const provider = document.getElementById('api-provider').value;
@@ -4432,9 +4899,16 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
         }
 
         function saveApiConfig() {
+            console.log('=== saveApiConfig 함수 호출 ===');
+            
             const provider = document.getElementById('api-provider').value;
             const apiKey = document.getElementById('api-key').value;
             const model = document.getElementById('api-model').value;
+            
+            console.log('입력된 값들:');
+            console.log('Provider:', provider);
+            console.log('API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : '없음');
+            console.log('Model:', model);
             
             if (!provider || !apiKey || !model) {
                 showToast('모든 필드를 입력해주세요.', 'error');
@@ -4447,19 +4921,33 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 model: model
             };
             
+            console.log('저장할 설정:', config);
             localStorage.setItem('aiApiConfig', JSON.stringify(config));
+            
+            // 저장 확인
+            const savedConfig = localStorage.getItem('aiApiConfig');
+            console.log('저장된 설정 확인:', savedConfig);
+            
             showToast('API 설정이 저장되었습니다.', 'success');
             closeApiModal();
         }
 
         // AI를 통한 프롬프트 향상 함수
         async function enhancePromptWithAI(text) {
-            const config = localStorage.getItem('aiApiConfig');
-            if (!config) {
-                return enhancePrompt(text); // 기존 로직으로 폴백
-            }
-            
-            const { provider, apiKey, model } = JSON.parse(config);
+            try {
+                const configStr = localStorage.getItem('aiApiConfig');
+                if (!configStr) {
+                    console.log('API 설정이 없어서 기본 향상 함수 사용');
+                    return enhancePrompt(text); // 기존 로직으로 폴백
+                }
+                
+                const config = JSON.parse(configStr);
+                if (!config || !config.provider || !config.apiKey || !config.model) {
+                    console.log('API 설정이 불완전하여 기본 향상 함수 사용');
+                    return enhancePrompt(text); // 기존 로직으로 폴백
+                }
+                
+                const { provider, apiKey, model } = config;
             
             try {
                 let enhancedText;
@@ -4523,14 +5011,18 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 }
                 
                 return enhancedText || enhancePrompt(text);
-            } catch (error) {
-                console.error('AI 프롬프트 향상 실패:', error);
+            } catch (apiError) {
+                console.error('AI API 요청 실패:', apiError);
+                return enhancePrompt(text); // 기존 로직으로 폴백
+            }
+            } catch (parseError) {
+                console.error('API 설정 파싱 오류:', parseError);
                 return enhancePrompt(text); // 기존 로직으로 폴백
             }
         }
         
-        window.openApiModal = openApiModal;
-        window.closeApiModal = closeApiModal;
+        // 이미 위에서 정의된 window 함수들은 제거 (중복 방지)
+        // window.openApiModal은 이미 4107줄에서 정의됨
         window.updateModelOptions = updateModelOptions;
         window.testApiConnection = testApiConnection;
         window.saveApiConfig = saveApiConfig;
