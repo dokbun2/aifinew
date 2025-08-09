@@ -18,6 +18,31 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
     
     <style>
+        /* 큰 팝업 숨기기 - 외부 CSS 오버라이드 */
+        .popup, .modal, .overlay, .dialog, .popup-overlay, .modal-backdrop {
+            display: none !important;
+        }
+        
+        /* API 모달만 예외 처리 */
+        #api-modal.modal-overlay {
+            display: none;
+        }
+        
+        #api-modal.modal-overlay.show {
+            display: flex !important;
+        }
+        
+        /* 토스트는 기본적으로 숨김 */
+        #toast.toast {
+            display: none;
+        }
+        
+        #toast.toast.show {
+            display: flex !important;
+            opacity: 1 !important;
+            transform: translateX(0) !important;
+        }
+        
         /* 페이지 특화 스타일 */
         .main-container {
             max-width: 1800px;
@@ -1251,34 +1276,37 @@
         
         /* 토스트 메시지 - 컴팩트 스타일 */
         .toast {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            background: rgba(20, 20, 25, 0.95);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
+            position: fixed !important;
+            top: 16px !important;
+            right: 16px !important;
+            background: rgba(20, 20, 25, 0.95) !important;
+            backdrop-filter: blur(10px) !important;
+            color: white !important;
+            padding: 10px 16px !important;
+            border-radius: 12px !important;
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
             opacity: 0;
             transform: translateX(100px);
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 10000;
+            z-index: 10000 !important;
             box-shadow: 
                 0 4px 12px rgba(0, 0, 0, 0.15),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
             pointer-events: none;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 8px;
-            max-width: 320px;
-            min-height: 40px;
+            max-width: 320px !important;
+            min-height: 40px !important;
+            width: auto !important;
+            height: auto !important;
         }
 
         .toast.show {
-            opacity: 1;
-            transform: translateX(0);
+            display: flex !important;
+            opacity: 1 !important;
+            transform: translateX(0) !important;
             pointer-events: auto;
         }
         
@@ -1578,8 +1606,7 @@
         </div>
     </div>
 
-    <!-- Toast 메시지 -->
-    <div id="toast" class="toast"></div>
+    <!-- Toast 메시지 제거됨 -->
     
     <!-- Main Container -->
     <div class="main-container">
@@ -1646,8 +1673,7 @@
         
     </div>
 
-    <!-- Toast Message -->
-    <div id="toast" class="toast"></div>
+    <!-- Toast Message 제거됨 -->
 
     <script>
         // 데이터 저장용 객체
@@ -3389,34 +3415,10 @@
             openApiModal();
         });
 
-        // 토스트 메시지 표시
+        // 토스트 메시지 표시 - 비활성화됨
         function showToast(message, type = 'success') {
-            const icons = {
-                success: '✓',
-                error: '✕',
-                info: 'ℹ'
-            };
-            
-            toast.innerHTML = `<span style="font-size: 1rem; margin-right: 4px;">${icons[type] || icons.success}</span> ${message}`;
-            toast.className = 'toast show';
-            
-            if (type === 'error') {
-                toast.style.background = 'rgba(239, 68, 68, 0.95)';
-            } else if (type === 'info') {
-                toast.style.background = 'rgba(59, 130, 246, 0.95)';
-            } else {
-                toast.style.background = 'rgba(16, 185, 129, 0.95)';
-            }
-            
-            // 기존 타이머 제거
-            if (window.toastTimer) {
-                clearTimeout(window.toastTimer);
-            }
-            
-            // 새 타이머 설정
-            window.toastTimer = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            // 토스트 메시지를 표시하지 않음
+            console.log(`[${type}] ${message}`); // 콘솔에만 로그 출력
         }
 
         // 로컬 스토리지 저장
