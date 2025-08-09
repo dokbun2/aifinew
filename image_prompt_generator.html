@@ -1970,95 +1970,189 @@
             // 스타일 옵션 목록
         // 스타일 옵션 목록 (2025 Midjourney v7 최신 업데이트)
         const styleOptions = [
-            // 포토그래피 & 시네마틱
-            "Aerial", "Analog", "Cinematic", "Documentary", "Drone", "HDR", "High Key", 
-            "Infrared", "Light Painting", "Lo-fi", "Low Key", "Macro", "Nightscapes", 
-            "Noir", "Photorealistic", "Polaroid", "Portrait", "Vintage", "Film Noir",
-            "Anamorphic", "Split Toning", "Film Emulation", "Kodak Vision", "Fujifilm",
-            // 실전 MJ 최적화 포토 장르
-            "Studio Portrait", "Beauty Shot", "Fashion Editorial", "Product Photography",
-            "Street Photography", "Architectural Photography", "Landscape", "Food Photography",
-            "Still Life",
-            
-            // 2025 트렌드 미학
-            "Y2K Aesthetic", "McBling", "Dreamcore", "Weirdcore", "Liminal Space", 
-            "Dark Academia", "Cottagecore", "Vaporwave", "Synthwave", "Webcore",
-            "Glitchcore", "Traumacore", "Nostalgiacore", "Blobitecture",
-            
-            // V7 특화 스타일 (파라미터/품질 성격 제거)
-            "Hyperrealistic", "Hyperdetailed", "Photorealism",
-            
-            // 디지털 아트
-            "3D Render", "8-bit Art", "CGI", "Cyberpunk", "Digital Painting", 
-            "Fractal Art", "Generative Art", "Glitch Art", "Graffiti Art", "Isometric", 
-            "Low Poly", "Minimalism", "Neon Art", "Pixel Art", 
-            "Vector Art", "Voxel Art", "Flat Design", "Material Design",
-            
-            // 일러스트레이션
-            "Anime Style", "Cartoon", "Chibi", "Children's Book", "Comic Book", 
-            "Concept Art", "Disney Style", "Fantasy Illustration", "Graphic Novel", 
-            "Manga", "Pixar", "Studio Ghibli", "Sketch Style", "Papercut Illustration", 
-            "Line Art", "Whimsical", "Editorial Illustration",
-            
-            // 전통 예술
-            "Acrylic Painting", "Anatomical Drawing", "Charcoal", "Chinese Ink Painting", 
-            "Etching", "Gouache Painting", "Ink Drawing", "Korean Minhwa", "Oil Painting", 
-            "Pastel Drawing", "Pencil Sketch", "Persian Miniature", "Sumi-e", "Ukiyo-e", 
-            "Watercolor", "Fresco", "Tempera",
-            
-            // 예술 운동
-            "Abstract", "Art Deco", "Art Nouveau", "Baroque", "Bauhaus", "Brutalism",
-            "Cubism", "Dadaism", "Expressionism", "Fauvism", "Gothic", "Impressionism", 
-            "Minimalistic", "Neo-Expressionism", "Pointillism", "Pop Art", "Renaissance", 
-            "Rococo", "Romanticism", "Suprematism", "Surrealism", "Symbolism",
-            
-            // 특수 효과 & 기타
-            "Collage", "Dark Fantasy", "Double Exposure", "Fantasy", "Horror", 
-            "Installation", "Psychedelic", "Retro", "Retro-Futurism", "Sacred Geometry", 
-            "Sci-Fi", "Stained Glass", "Steampunk", "Technical Drawing"
+            "Abstract (추상)", 
+            "Aerial (항공)", 
+            "Analog (아날로그)", 
+            "Animated (애니메이션)", 
+            "Architectural Photography (건축 사진)", 
+            "Art Deco (아르데코)", 
+            "Art Nouveau (아르누보)", 
+            "Baroque (바로크)", 
+            "Bauhaus (바우하우스)", 
+            "Blobitecture (블로비텍처)", 
+            "Brutalism (브루탈리즘)", 
+            "Comic Book (만화책)", 
+            "Collage (콜라주)", 
+            "Concept Art (컨셉 아트)", 
+            "Cottagecore (코티지코어)", 
+            "Cubism (큐비즘)", 
+            "Cyberpunk (사이버펑크)", 
+            "Dadaism (다다이즘)", 
+            "Dark Academia (다크 아카데미아)", 
+            "Dark Fantasy (다크 판타지)", 
+            "Disney Style (디즈니 스타일)", 
+            "Documentary (다큐멘터리)", 
+            "Double Exposure (이중 노출)", 
+            "Dreamcore (드림코어)", 
+            "Expressionism (표현주의)", 
+            "Fantasy (판타지)", 
+            "Fantasy Illustration (판타지 일러스트레이션)", 
+            "Fashion Photography (패션 사진)", 
+            "Fauvism (포비즘)", 
+            "Film Noir (필름 느와르)", 
+            "Food Photography (푸드 사진)", 
+            "Fresco (프레스코)", 
+            "Glitchcore (글리치코어)", 
+            "Gothic (고딕)", 
+            "Graphic Novel (그래픽 노블)", 
+            "Horror (공포)", 
+            "Hyper-Detailed (하이퍼디테일)", 
+            "Hyperrealism (하이퍼리얼리즘)", 
+            "Impressionism (인상주의)", 
+            "Isometric (아이소메트릭)", 
+            "Landscape (풍경)", 
+            "Liminal Space (리미널 스페이스)", 
+            "Line Art (라인 아트)", 
+            "Low Poly (로우 폴리)", 
+            "Macro Photography (매크로 사진)", 
+            "Manga (망가)", 
+            "McBling (McBling)", 
+            "Minimalism (미니멀리즘)", 
+            "Neo-Expressionism (네오 표현주의)", 
+            "Neon Art (네온 아트)", 
+            "Night Photography (야간 사진)", 
+            "Nostalgiacore (노스탤지어코어)", 
+            "Paper Illustration (종이 일러스트레이션)", 
+            "Photorealism (포토리얼리즘)", 
+            "Pixar (픽사)", 
+            "Pixel Art (픽셀 아트)", 
+            "Pointillism (점묘법)", 
+            "Pop Art (팝 아트)", 
+            "Portrait (초상화)", 
+            "Psychedelic (사이키델릭)", 
+            "Renaissance (르네상스)", 
+            "Retro (레트로)", 
+            "Retro Futurism (레트로 퓨처리즘)", 
+            "Rococo (로코코)", 
+            "Romanticism (낭만주의)", 
+            "Sketch Style (스케치 스타일)", 
+            "Stained Glass (스테인드글라스)", 
+            "Steampunk (스팀펑크)", 
+            "Still Life (정물화)", 
+            "Street Photography (스트리트 사진)", 
+            "Studio Ghibli (스튜디오 지브리)", 
+            "Suprematism (절대주의)", 
+            "Surrealism (초현실주의)", 
+            "Symbolism (상징주의)", 
+            "Synthwave (신스웨이브)", 
+            "Technical Drawing (기술 도면)", 
+            "Tempera (템페라)", 
+            "Traumacore (트라우마코어)", 
+            "Vaporwave (베이퍼웨이브)", 
+            "Voxel Art (복셀 아트)", 
+            "Webcore (웹코어)", 
+            "Weirdcore (위어드코어)", 
+            "Whimsical (기발한)", 
+            "Y2K Aesthetic (Y2K 미학)"
         ];
 
         // 각 섹션별 드롭다운 옵션
         const dropdownOptions = {
             STYLE: styleOptions,
             MEDIUM: [
-                // V7 디지털 매체
-                "AI Generated", "Neural Art", "GAN Art", "Diffusion Model", "Stable Diffusion",
-                "Photorealistic Render", "Hyperrealistic CG", "Unreal Engine 5", "Unity HDRP", "Octane Render",
-                "Redshift Render", "V-Ray", "Arnold Render", "Cycles Render", "RTX Ray Tracing",
-                // 전통 매체
-                "Oil Painting", "Watercolor", "Acrylic", "Gouache", "Tempera", "Encaustic", "Fresco",
-                "Pencil Drawing", "Graphite", "Charcoal", "Conte", "Silverpoint", "Ink Drawing", "Pen and Ink",
-                "Pastel", "Oil Pastel", "Soft Pastel", "Chalk", "Crayon", "Colored Pencil",
-                // 사진 매체
-                "Digital Photography", "Film Photography", "35mm Film", "Medium Format", "Large Format",
-                "Instant Photography", "Polaroid", "Daguerreotype", "Cyanotype", "Tintype",
-                // 혼합 매체
-                "Mixed Media", "Collage", "Digital Collage", "Photo Manipulation", "Photobashing",
-                "3D Sculpture", "Digital Sculpture", "ZBrush", "Procedural Art", "Algorithmic Art",
-                // 특수 매체
-                "Holography", "VR Art", "AR Art", "NFT Art", "Generative Art", "Interactive Art",
-                "Video Art", "Projection Mapping", "Light Installation", "Sound Visualization"
+                "Photography (사진)",
+                "3D Modeling (3D 모델링)",
+                "Acrylic Painting (아크릴화)",
+                "Animation (애니메이션)",
+                "Concept Art (컨셉 아트)",
+                "Digital Art (디지털 아트)",
+                "Illustration (일러스트레이션)",
+                "Manga (만화)",
+                "Oil Painting (유화)",
+                "Painting (회화)",
+                "Pencil Sketch (연필 스케치)",
+                "Sketch (스케치)",
+                "Typography (타이포그래피)",
+                "Vector Graphics (벡터 그래픽)",
+                "Watercolor (수채화)",
+                "Ballpoint Pen Sketch (볼펜 스케치)",
+                "Chalk Art (분필 아트)",
+                "Charcoal Drawing (목탄화)",
+                "Colored Pencil (색연필)",
+                "Conte (콩테)",
+                "Encaustic Painting (왁스화)",
+                "Fresco (프레스코화)",
+                "Gouache Painting (과슈화)",
+                "Ink Drawing (잉크 드로잉)",
+                "Line Art (라인 아트)",
+                "Marker Art (마커 아트)",
+                "Pastel Drawing (파스텔화)",
+                "Pen and Ink (펜과 잉크)",
+                "Stippling (점묘화)",
+                "Sumi-e (수묵화)",
+                "Block Print (블록 프린트)",
+                "Calligraphy (캘리그래피)",
+                "Cyanotype (청사진 인화)",
+                "Etching (에칭)",
+                "Linocut (리노컷)",
+                "Lithography (석판화)",
+                "Poster Design (포스터 디자인)",
+                "Risograph (리소그래프)",
+                "Screen Printing (실크스크린 인쇄)",
+                "Woodcut (목판화)",
+                "Acrylic Pour (아크릴 붓기)",
+                "Airbrush (에어브러시)",
+                "Augmented Reality Art (증강현실 아트)",
+                "Blacklight Painting (블랙라이트 페인팅)",
+                "Collage (콜라주)",
+                "Comic Art (만화 아트)",
+                "Futuristic Digital (미래지향 디지털)",
+                "Generative Art (생성 아트)",
+                "Glitch Art (글리치 아트)",
+                "Graffiti (그래피티)",
+                "Holography (홀로그래피)",
+                "Isometric Art (아이소메트릭 아트)",
+                "Mixed Media (믹스드 미디어)",
+                "Neon Art (네온 아트)",
+                "Pixel Art (픽셀 아트)",
+                "Sci-Fi Art (SF 아트)",
+                "Spray Paint (스프레이 페인팅)",
+                "Stencil Art (스텐실 아트)",
+                "Street Art (스트리트 아트)",
+                "Batik (바틱)",
+                "Calligraphy (서예)",
+                "Cross Stitch (십자수)",
+                "Crochet (코바늘뜨기)",
+                "Embroidery (자수)",
+                "Mosaic (모자이크)",
+                "Origami (종이접기)",
+                "Paint by Numbers (페인트 바이 넘버)",
+                "Pointillism (점묘화)",
+                "Pressed Flower (압화)",
+                "Quilling (퀼링)",
+                "Sculpture (조각)",
+                "Textile Art (섬유 예술)",
+                "Ukiyo-e (우키요에)"
             ],
             'ERA/CULTURAL_REF': [
-                // 2025 트렌드 시대
-                "Y2K Revival", "2000s Nostalgia", "McBling Era", "Indie Sleaze", "2010s Tumblr Era",
-                "Vaporwave Era", "Synthwave Era", "Retrowave", "Outrun", "Dark Academia Period",
-                "Light Academia", "Cottagecore Era", "Goblincore", "Fairycore", "Angelcore",
-                // 역사적 시대
-                "Ancient Egypt", "Ancient Greece", "Ancient Rome", "Byzantine", "Medieval", "Renaissance",
-                "Baroque Period", "Rococo", "Victorian Era", "Edwardian Era", "Art Nouveau Era",
-                "Art Deco Era", "Roaring Twenties", "Great Depression", "World War II Era",
-                // 현대 시대
-                "1950s Americana", "1960s Mod", "1970s Disco", "1980s Neon", "1990s Grunge",
-                "2000s Digital", "2010s Minimalism", "2020s Post-Pandemic", "Contemporary", "Near Future",
-                // 대안 역사/미래
-                "Cyberpunk 2077", "Steampunk Victorian", "Dieselpunk", "Atompunk", "Biopunk",
-                "Solarpunk", "Lunarpunk", "Desertpunk", "Oceanpunk", "Forestpunk",
-                // 문화적 참조
-                "Japanese Edo Period", "Chinese Dynasty", "Korean Joseon", "Indian Mughal",
-                "Islamic Golden Age", "African Kingdoms", "Pre-Columbian", "Native American",
-                "Scandinavian Viking", "Celtic", "Slavic", "Mediterranean"
+                "Age of Exploration (대항해시대)",
+                "American Revolution (미국 독립 전쟁)",
+                "Crusade (십자군 전쟁)",
+                "Fall of the Roman Empire (로마 제국의 몰락)",
+                "French Revolution (프랑스 혁명)",
+                "Goryeo-Khitan War (고려-거란 전쟁)",
+                "Hundred Years' War (백년전쟁)",
+                "Industrial Revolution (산업 혁명)",
+                "Mongol Empire Conquests (몽골 제국의 정복)",
+                "Napoleonic Wars (나폴레옹 전쟁)",
+                "Native Americans and Colonization (아메리카 원주민과 식민화)",
+                "Renaissance era (르네상스 시대)",
+                "Russian Revolution (러시아 혁명)",
+                "Saigong the Great Era (세종대왕 시대)",
+                "Vietnam War (베트남 전쟁)",
+                "Warring States Period (전국 시대)",
+                "World War I (제1차 세계 대전)",
+                "World War II (제2차 세계 대전)"
             ],
             SCENE: [
                 "Daily Life", "Celebration", "Action Scene", "Quiet Moment", "Romantic Scene", 
@@ -2067,22 +2161,55 @@
                 "Indoor Scene", "Outdoor Scene", "Night Scene", "Day Scene", "Sunset/Sunrise Scene"
             ],
             COLOR_TONE: [
-                // V7 색상 팔레트
-                "Vibrant Colors", "Muted Colors", "Pastel Colors", "Neon Colors", "Fluorescent", "Bioluminescent",
-                "Monochromatic", "Duotone", "Tritone", "Multitone", "Black and White", "Grayscale",
-                // 색온도
-                "Warm Tones", "Cool Tones", "Neutral Tones", "Earth Tones", "Jewel Tones", "Candy Colors",
-                "Ice Colors", "Fire Colors", "Ocean Colors", "Forest Colors", "Desert Colors", "Sky Colors",
-                // 색상 조화
-                "Complementary Colors", "Analogous Colors", "Triadic Colors", "Tetradic Colors",
-                "Split Complementary", "Double Complementary", "Square Color Scheme", "Monochromatic Harmony",
-                // 특수 색상
-                "Metallic", "Gold", "Silver", "Bronze", "Copper", "Chrome", "Iridescent", "Holographic",
-                "Gradient", "Rainbow", "Prismatic", "Opalescent", "Pearlescent", "Luminescent",
-                // 콘트라스트
-                "High Contrast", "Low Contrast", "Medium Contrast", "Soft Contrast", "Hard Contrast",
-                // 빈티지 색상
-                "Sepia", "Vintage Film", "Faded Colors", "Retro Colors", "Kodachrome", "Technicolor"
+                "amber tones (호박색 톤)",
+                "amethyst colors (애수정라이트 색상)",
+                "azure (하늘색)",
+                "blue dominant (파란 위주)",
+                "blood red (블러드 레드)",
+                "bright highlights (밝은 하이라이트)",
+                "brightly colored (밝게 채색됨)",
+                "chrome colors (크롬 색상)",
+                "chromatic color grading (색채학적 색보정)",
+                "complementary colors (보색)",
+                "cool blue tones (차가운 파란 톤)",
+                "cool colors (차가운 색상)",
+                "dark colors (어두운 색상)",
+                "deep shadows (깊은 그림자)",
+                "desaturated colors (채도가 낮은 색상)",
+                "duotone colors (듀오톤 색상)",
+                "earthy tones (자연스러운 톤)",
+                "fiery colors (불같은 색상)",
+                "fluorescent colors (형광 색상)",
+                "golden tones (황금색 톤)",
+                "gradient colors (그레이디언트 색상)",
+                "greyscale (그레이스케일)",
+                "green dominant (초록 위주)",
+                "high contrast (고대비)",
+                "iridescent colors (무지개빛 색상)",
+                "jade tones (옥색 톤)",
+                "low contrast (저대비)",
+                "luminous colors (발광 색상)",
+                "metallic colors (메탈릭 색상)",
+                "monochrome colors (단색)",
+                "muted colors (차분한 색상)",
+                "neon colors (네온 색상)",
+                "pastel colors (파스텔 색상)",
+                "pearlescent colors (진주빛 색상)",
+                "pink tones (분홍 톤)",
+                "primary colors (원색)",
+                "psychedelic colors (사이키델릭 색상)",
+                "purple tones (보라 톤)",
+                "red dominant (빨간 위주)",
+                "saturated colors (채도 높은 색상)",
+                "sepia (세피아)",
+                "silver tones (은빛 톤)",
+                "subdued tones (차분한 톤)",
+                "teal tones (청록 톤)",
+                "translucent colors (반투명 색상)",
+                "vibrant colors (선명한 색상 (강한 색상))",
+                "vintage color grading (빈티지 색보정)",
+                "vivid colors (선명한 색상)",
+                "warm orange tones (따뜻한 주황 톤)"
             ],
             CHARACTER: [
                 "Main Character", "Supporting Character", "Background Character", "Hero", "Villain",
@@ -2144,24 +2271,41 @@
                 "Dramatic Pose", "Casual Pose", "Formal Pose", "Combat Stance", "Defensive Stance"
             ],
             CAMERA: [
-                // V7 카메라 앵글
-                "Eye Level", "High Angle", "Low Angle", "Dutch Angle", "Bird's Eye View", "Worm's Eye View",
-                "Aerial View", "Overhead Shot", "Ground Level", "Shoulder Level", "Hip Level", "Knee Level",
-                // 샷 타입
-                "Extreme Wide Shot", "Wide Shot", "Medium Wide Shot", "Medium Shot", "Medium Close-up",
-                "Close-up", "Extreme Close-up", "Macro Shot", "Detail Shot", "Insert Shot",
-                // 카메라 무브먼트
-                "Static Shot", "Pan Left", "Pan Right", "Tilt Up", "Tilt Down", "Tracking Shot",
-                "Dolly In", "Dolly Out", "Crane Shot", "Steadicam", "Handheld", "Gimbal Shot",
-                // 특수 샷
-                "Over the Shoulder", "Point of View (POV)", "Reverse Shot", "Two Shot", "Three Shot",
-                "Group Shot", "Establishing Shot", "Master Shot", "Cutaway", "Reaction Shot",
-                // 시네마틱 기법
-                "Split Screen", "Match Cut", "Cross-cutting", "Jump Cut", "Whip Pan", "Rack Focus",
-                "Pull Focus", "Deep Focus", "Shallow Focus", "Selective Focus",
-                // MJ에서 자주 쓰는 렌즈/거리감 키워드
-                "Ultra Wide", "Wide Angle", "Standard Lens", "Telephoto", "Macro",
-                "Close-up Portrait", "Headshot", "Full Body Shot"
+                "extreme close-up (익스트림 클로즈업)",
+                "close-up (클로즈업)",
+                "medium shot (미디엄 샷)",
+                "cowboy shot (카우보이 샷)",
+                "full shot (풀 샷)",
+                "wide shot (와이드 샷)",
+                "extreme wide shot (익스트림 와이드 샷)",
+                "eye level (아이 레벨 (보통의 높이))",
+                "low angle (로우 앵글 (아래에서 위로))",
+                "high angle (하이 앵글 (위에서 아래로))",
+                "bird's eye view (버드 아이 뷰 (조류 뷰))",
+                "overhead shot (오버헤드 샷 (머리 위))",
+                "dutch angle (더치 앵글 (기울어진))",
+                "worm's eye view (웜즈 아이 뷰 (지면에서))",
+                "ground level (그라운드 레벨 (지면))",
+                "side view (사이드 뷰 (측면))",
+                "back view (백 뷰 (후면))",
+                "3/4 view (3/4 뷰 (3/4 각도))",
+                "profile view (프로파일 뷰 (옆모습))",
+                "rear 3/4 view (리어 쓰리쿼터 뷰 (후면 3/4))",
+                "POV shot (POV 샷 (1인칭 시점))",
+                "over-the-shoulder shot (오버 더 숄더 샷 (어깨 너머))",
+                "two shot (투 샷 (2인 구도))",
+                "three shot (쓰리 샷 (3인 구도))",
+                "group shot (그룹 샷 (단체))",
+                "establishing shot (설정 샷 (장소/상황 소개))",
+                "master shot (마스터 샷 (전체 장면))",
+                "insert shot (인서트 샷)",
+                "rule of thirds (3분할 구도)",
+                "center composition (중앙 구도)",
+                "symmetrical shot (대칭 구도)",
+                "frame within frame (프레임 안 프레임 (액자 구도))",
+                "diagonal composition (대각선 구도)",
+                "layered shot (레이어드 샷 (층 구도))",
+                "negative space (네거티브 스페이스 (여백 구도))"
             ],
             CAMERA_EFFECTS: [
                 // V7 렌즈 효과
@@ -3188,8 +3332,10 @@
                                                 </div>
                                                 <div class="style-options-list">
                                                     ${(dropdownOptions[key] || []).map((option, idx) => {
-                                                        const ko = dropdownTranslations[option];
-                                                        const displayText = ko && ko !== option ? `${ko} (${option})` : (ko || option);
+                                                        // STYLE 섹션에서는 option이 이미 "English (한글)" 형태
+                                                        const isStyleSection = key === 'STYLE';
+                                                        const englishValue = isStyleSection ? option.split(' (')[0].trim() : option;
+                                                        const displayText = option; // 전체 텍스트 표시
                                                         return `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" data-value="${option}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${displayText}</div>`;
                                                     }).join('')}
                                                 </div>
@@ -3344,8 +3490,10 @@
                                                 </div>
                                                 <div class="style-options-list">
                                                     ${(dropdownOptions[key] || []).map((option, idx) => {
-                                                        const ko = dropdownTranslations[option];
-                                                        const displayText = ko && ko !== option ? `${ko} (${option})` : (ko || option);
+                                                        // STYLE 섹션에서는 option이 이미 "English (한글)" 형태
+                                                        const isStyleSection = key === 'STYLE';
+                                                        const englishValue = isStyleSection ? option.split(' (')[0].trim() : option;
+                                                        const displayText = option; // 전체 텍스트 표시
                                                         return `<div class="style-option" role="option" tabindex="-1" data-index="${idx}" data-value="${option}" onclick="event.stopPropagation(); selectStyleOption(this, '${option}', '${key}-request')">${displayText}</div>`;
                                                     }).join('')}
                                                 </div>
@@ -3801,10 +3949,14 @@
                 // 드롭다운 선택 상태 업데이트
                 wrapper.dropdownSelections = [];
                 options.forEach(option => {
-                    const optionValue = option.textContent.trim();
-                    if (currentValues.includes(optionValue)) {
+                    const optionFullText = option.textContent.trim();
+                    // 영문명만 추출
+                    const optionEnglishValue = optionFullText.split(' (')[0].trim();
+                    
+                    // 현재 입력값에 영문명이 포함되어 있는지 확인
+                    if (currentValues.includes(optionEnglishValue)) {
                         option.classList.add('selected');
-                        wrapper.dropdownSelections.push(optionValue);
+                        wrapper.dropdownSelections.push(optionEnglishValue);
                     } else {
                         option.classList.remove('selected');
                     }
@@ -3847,6 +3999,9 @@
             const wrapper = element.closest('.select-input-wrapper');
             const input = wrapper.querySelector('.dropdown-field-input');
             
+            // value에서 영문명만 추출 (괄호 앞부분만)
+            const englishValue = value.split(' (')[0].trim();
+            
             // 현재 입력값을 배열로 변환 (쉼표로 구분)
             let currentValues = input.value.trim() ? input.value.split(',').map(v => v.trim()).filter(v => v) : [];
             
@@ -3855,8 +4010,8 @@
                 wrapper.dropdownSelections = [];
             }
             
-            // 이미 드롭다운에서 선택된 값인지 확인
-            const dropdownIndex = wrapper.dropdownSelections.indexOf(value);
+            // 이미 드롭다운에서 선택된 값인지 확인 (영문명으로 비교)
+            const dropdownIndex = wrapper.dropdownSelections.indexOf(englishValue);
             
             if (dropdownIndex > -1) {
                 // 이미 선택된 경우 제거 (토글)
@@ -3864,22 +4019,22 @@
                 element.classList.remove('selected');
                 
                 // 전체 값에서도 제거
-                const valueIndex = currentValues.indexOf(value);
+                const valueIndex = currentValues.indexOf(englishValue);
                 if (valueIndex > -1) {
                     currentValues.splice(valueIndex, 1);
                 }
             } else {
                 // 선택되지 않은 경우 추가
-                wrapper.dropdownSelections.push(value);
+                wrapper.dropdownSelections.push(englishValue);
                 element.classList.add('selected');
                 
                 // 전체 값에 추가 (중복 확인)
-                if (!currentValues.includes(value)) {
-                    currentValues.push(value);
+                if (!currentValues.includes(englishValue)) {
+                    currentValues.push(englishValue);
                 }
             }
             
-            // 입력 필드에 업데이트
+            // 입력 필드에 업데이트 (영문명만)
             input.value = currentValues.join(', ');
             input.dispatchEvent(new Event('change'));
             
