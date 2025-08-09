@@ -1657,6 +1657,9 @@
                 <button class="btn btn-primary" id="generate-prompt-btn">
                     ✨ 프롬프트 생성
                 </button>
+                <button class="btn btn-primary" id="ai-generate-prompt-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                    🤖 AI 프롬프트 생성
+                </button>
             </div>
         </div>
 
@@ -4030,10 +4033,40 @@
             }
         }
         
-        // AI저장 버튼 기능 (추후 구현)
+        // AI저장 버튼 기능 - 저장 버튼과 동일한 동작
         function aiSaveField(key) {
-            // AI 기능은 추후 구현 예정
-            showToast('AI 저장 기능은 준비 중입니다.', 'info');
+            const dropdownContainer = document.querySelector('.dropdown-container.active');
+            if (!dropdownContainer) {
+                showToast('드롭다운을 먼저 열어주세요.', 'error');
+                return;
+            }
+            
+            const container = dropdownContainer.querySelector('.dropdown-content');
+            const requestInput = container.querySelector(`input[data-key="${key}-request"]`);
+            const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
+            const existingInput = container.querySelector(`input[data-key="${key}"]`);
+            
+            if (!appliedInput) return;
+            
+            const requestValue = (requestInput?.value || '').trim();
+            let valueToApply = requestValue;
+            
+            if (!valueToApply) {
+                // 요청값이 없으면 동일 카드의 기존내용 → 전역 상태 순으로 사용
+                valueToApply = (existingInput?.value || '').trim();
+                if (!valueToApply) {
+                    valueToApply = (promptData?.structuredPrompt?.[key] || '').trim();
+                }
+            }
+            
+            if (valueToApply) {
+                appliedInput.value = valueToApply;
+                // 구조 데이터 즉시 반영하여 프리뷰/저장 동기화
+                updateStructureValue(key, valueToApply);
+                console.log(`[AI 저장] ${key}: ${valueToApply}`);
+            } else {
+                console.log(`[AI 저장] ${key}: 비어있음`);
+            }
         }
         
         // window 전역 함수로 등록 (인라인 onclick용)
@@ -4054,6 +4087,174 @@
         window.aiSaveField = aiSaveField;
         window.filterStyleDropdown = filterStyleDropdown;
         window.filterStyleOptions = filterStyleOptions;
+        
+        // AI 프롬프트 생성 관련 함수들
+        async function generateAIPrompt() {
+            // API 설정 확인
+            const config = localStorage.getItem('aiApiConfig');
+            if (!config) {
+                showToast('API 설정을 먼저 해주세요.', 'error');
+                openApiModal();
+                return;
+            }
+            
+            // 모든 변경 반영 텍스트창의 내용 수집
+            const collectedData = collectAllAppliedData();
+            if (Object.keys(collectedData).length === 0) {
+                showToast('변경 반영된 내용이 없습니다.', 'error');
+                return;
+            }
+            
+            // 로딩 상태 표시
+            const aiGenerateBtn = document.getElementById('ai-generate-prompt-btn');
+            const originalText = aiGenerateBtn.innerHTML;
+            aiGenerateBtn.disabled = true;
+            aiGenerateBtn.innerHTML = '🔄 AI 프롬프트 생성 중...';
+            
+            try {
+                // AI API를 통한 프롬프트 최적화
+                const optimizedPrompt = await optimizePromptWithAI(collectedData);
+                
+                // 기존 프롬프트와 병합
+                mergeOptimizedPrompt(optimizedPrompt);
+                
+                showToast('AI 프롬프트가 생성되었습니다.', 'success');
+            } catch (error) {
+                console.error('AI 프롬프트 생성 실패:', error);
+                showToast('AI 프롬프트 생성에 실패했습니다.', 'error');
+            } finally {
+                aiGenerateBtn.disabled = false;
+                aiGenerateBtn.innerHTML = originalText;
+            }
+        }
+        
+        // 모든 변경 반영 데이터 수집
+        function collectAllAppliedData() {
+            const collectedData = {};
+            
+            // 모든 드롭다운 컨테이너에서 변경 반영 내용 수집
+            document.querySelectorAll('.dropdown-container').forEach(container => {
+                const appliedInputs = container.querySelectorAll('input[data-key$="-applied"]');
+                appliedInputs.forEach(input => {
+                    const value = input.value.trim();
+                    if (value) {
+                        const key = input.getAttribute('data-key').replace('-applied', '');
+                        collectedData[key] = value;
+                    }
+                });
+            });
+            
+            return collectedData;
+        }
+        
+        // AI를 통한 프롬프트 최적화 및 영문 번역
+        async function optimizePromptWithAI(data) {
+            const { provider, apiKey, model } = JSON.parse(localStorage.getItem('aiApiConfig'));
+            
+            // 수집된 데이터를 프롬프트 텍스트로 변환
+            const promptText = Object.entries(data)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+            
+            const systemPrompt = `You are an expert at creating optimal prompts for AI image generation. 
+Your task is to:
+1. Take the provided Korean text describing image elements
+2. Optimize it for AI image generation by adding relevant artistic details, style, lighting, mood, and technical specifications
+3. Translate everything to English while maintaining the artistic intent
+4. Output ONLY the optimized English prompt without any explanations or additional text
+
+Focus on creating vivid, detailed descriptions that will produce high-quality AI-generated images.`;
+            
+            try {
+                let optimizedText;
+                
+                if (provider === 'gemini') {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: `${systemPrompt}\n\nOptimize this Korean prompt for image generation: ${promptText}`
+                                }]
+                            }],
+                            generationConfig: {
+                                temperature: 0.8,
+                                maxOutputTokens: 1000
+                            }
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        optimizedText = data.candidates[0].content.parts[0].text;
+                    } else {
+                        throw new Error('API 요청 실패');
+                    }
+                } else if (provider === 'openai') {
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: systemPrompt
+                                },
+                                {
+                                    role: 'user',
+                                    content: `Optimize this Korean prompt for image generation: ${promptText}`
+                                }
+                            ],
+                            temperature: 0.8,
+                            max_tokens: 1000
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        optimizedText = data.choices[0].message.content;
+                    } else {
+                        throw new Error('API 요청 실패');
+                    }
+                }
+                
+                return optimizedText;
+            } catch (error) {
+                console.error('AI 최적화 실패:', error);
+                throw error;
+            }
+        }
+        
+        // 최적화된 프롬프트를 기존 내용과 병합
+        function mergeOptimizedPrompt(optimizedPrompt) {
+            const promptPreview = document.getElementById('prompt-preview');
+            const currentPrompt = promptPreview.textContent.trim();
+            
+            // 기존 내용과 AI 최적화 내용을 병합
+            let mergedPrompt = '';
+            if (currentPrompt) {
+                mergedPrompt = `${currentPrompt}\n\n[AI Enhanced]\n${optimizedPrompt}`;
+            } else {
+                mergedPrompt = optimizedPrompt;
+            }
+            
+            // 프롬프트 프리뷰에 표시
+            promptPreview.textContent = mergedPrompt;
+            promptPreview.classList.add('has-content');
+            
+            // 프롬프트 구조 편집기로 가져오기
+            importPromptFromPreview();
+        }
+        
+        // AI 프롬프트 생성 버튼 이벤트 리스너
+        document.getElementById('ai-generate-prompt-btn').addEventListener('click', generateAIPrompt);
         
         // API 연동 관련 함수들
         function openApiModal() {
