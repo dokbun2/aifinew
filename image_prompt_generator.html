@@ -1539,6 +1539,155 @@
             cursor: not-allowed;
             transform: none;
         }
+        
+        /* 측면 뷰 주의사항 버튼 스타일 */
+        .btn-side-view-warning {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px 6px;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 152, 0, 0.2) 100%);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 4px;
+            color: #ffc107;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+            font-family: 'Paperlogy', sans-serif;
+            letter-spacing: 0.3px;
+            text-transform: none;
+            line-height: 1;
+            vertical-align: middle;
+        }
+
+        .btn-side-view-warning:hover {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 152, 0, 0.3) 100%);
+            border-color: rgba(255, 193, 7, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+        }
+
+        .btn-side-view-warning:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(255, 193, 7, 0.2);
+        }
+        
+        /* 측면 뷰 모달 스타일 */
+        #sideViewModal {
+            display: none !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        #sideViewModal.show {
+            display: flex !important;
+        }
+
+        .side-view-modal {
+            background: linear-gradient(135deg, rgba(20, 20, 25, 0.98) 0%, rgba(30, 30, 35, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .side-view-modal .modal-header {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.15) 100%);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .side-view-modal .modal-header h3 {
+            margin: 0;
+            color: #ffc107;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .side-view-modal .modal-close {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .side-view-modal .modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .side-view-modal .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(85vh - 80px);
+            color: var(--text-primary);
+        }
+
+        .side-view-modal h4 {
+            color: #ffc107;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .side-view-modal ul {
+            margin-bottom: 20px;
+            padding-left: 24px;
+        }
+
+        .side-view-modal li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .side-view-modal .warning-note {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .side-view-modal .warning-note p {
+            margin: 0;
+            color: #ffc107;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
 
         .btn-cancel {
             background: rgba(255, 255, 255, 0.05);
@@ -1587,6 +1736,15 @@
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
         
     </style>
@@ -4683,7 +4841,7 @@
                                     </div>
                                     <div class="dropdown-field">
                                         <div class="dropdown-field-label-with-buttons">
-                                            <label class="dropdown-field-label">변경요청</label>
+                                            <label class="dropdown-field-label">변경요청${key === 'FACIAL_FEATURES' ? ' <button type="button" class="btn-side-view-warning" onclick="event.stopPropagation(); window.showSideViewWarning();" title="측면 뷰 주의사항">⚠️ 주의</button>' : ''}</label>
                                             <div class="field-action-buttons">
                                                 <button type="button" class="btn-field-action btn-save" onclick="saveToApplied(event, '${key}')">저장</button>
                                                 <button type="button" class="btn-field-action btn-ai-save" onclick="aiSaveField('${key}')">AI저장</button>
@@ -4841,7 +4999,7 @@
                                     </div>
                                     <div class="dropdown-field">
                                         <div class="dropdown-field-label-with-buttons">
-                                            <label class="dropdown-field-label">변경요청</label>
+                                            <label class="dropdown-field-label">변경요청${key === 'FACIAL_FEATURES' ? ' <button type="button" class="btn-side-view-warning" onclick="event.stopPropagation(); window.showSideViewWarning();" title="측면 뷰 주의사항">⚠️ 주의</button>' : ''}</label>
                                             <div class="field-action-buttons">
                                                 <button type="button" class="btn-field-action btn-save" onclick="saveToApplied(event, '${key}')">저장</button>
                                                 <button type="button" class="btn-field-action btn-ai-save" onclick="aiSaveField('${key}')">AI저장</button>
@@ -6354,6 +6512,37 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
         
         // 함수를 즉시 window에 할당
         window.closeApiModal = closeApiModal;
+        
+        // 측면 뷰 주의사항 모달 관련 함수
+        function showSideViewWarning() {
+            const modal = document.getElementById('sideViewModal');
+            if (modal) {
+                modal.classList.add('show');
+            }
+        }
+        
+        function closeSideViewModal() {
+            const modal = document.getElementById('sideViewModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+        
+        // 전역 함수로 등록
+        window.showSideViewWarning = showSideViewWarning;
+        window.closeSideViewModal = closeSideViewModal;
+        
+        // 모달 외부 클릭 시 닫기
+        document.addEventListener('DOMContentLoaded', function() {
+            const sideViewModal = document.getElementById('sideViewModal');
+            if (sideViewModal) {
+                sideViewModal.addEventListener('click', function(e) {
+                    if (e.target === sideViewModal) {
+                        closeSideViewModal();
+                    }
+                });
+            }
+        });
 
         function updateModelOptions() {
             const provider = document.getElementById('api-provider').value;
@@ -6658,6 +6847,72 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 <button class="btn btn-cancel" onclick="closeApiModal()">취소</button>
                 <button class="btn btn-test" onclick="testApiConnection()">연결 테스트</button>
                 <button id="save-api-btn" class="btn btn-save" onclick="saveApiConfig()" disabled>저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 측면 뷰 주의사항 모달 -->
+    <div id="sideViewModal" class="modal">
+        <div class="modal-content side-view-modal">
+            <div class="modal-header">
+                <h3>⚠️ 측면 뷰 선택 - 수정 필요 항목</h3>
+                <button class="modal-close" onclick="window.closeSideViewModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <h4 style="color: white; font-size: 1.2rem; margin-bottom: 24px;">측면 프로필 촬영 시:</h4>
+                
+                <div style="background: rgba(40, 40, 45, 0.6); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+                        <input type="checkbox" style="margin-top: 3px;" disabled>
+                        <div>
+                            <span style="color: #ff9800; font-weight: 600;">FACE_SHAPE</span>
+                            <span style="color: rgba(255, 255, 255, 0.9);"> - 삭제 권장 (정면 기준이므로)</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+                        <input type="checkbox" style="margin-top: 3px;" disabled>
+                        <div>
+                            <span style="color: #ff9800; font-weight: 600;">FACIAL_FEATURES</span>
+                            <span style="color: rgba(255, 255, 255, 0.9);"> - 측면용으로 수정</span>
+                            <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-top: 8px; padding-left: 4px;">
+                                예시: "defined nose bridge, strong jawline, visible eyelashes from side"
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <input type="checkbox" style="margin-top: 3px;" disabled>
+                        <div>
+                            <span style="color: #ff9800; font-weight: 600;">GAZE</span>
+                            <span style="color: rgba(255, 255, 255, 0.9);"> - "looking straight ahead" (완벽한 측면)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="warning-note" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(3, 169, 244, 0.1) 100%); border: 1px solid rgba(33, 150, 243, 0.3);">
+                    <p style="color: #2196f3; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.2rem;">💡</span>
+                        <strong>TIP:</strong> 측면에서는 코의 형태, 턱선, 입술 윤곽이 중요하므로 이를 중심으로 설명하세요.
+                    </p>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+                    <button onclick="window.closeSideViewModal()" style="
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 32px;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.3)';" 
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        확인
+                    </button>
+                </div>
             </div>
         </div>
     </div>
