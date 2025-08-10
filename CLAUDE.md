@@ -141,3 +141,6 @@ Each application maintains its own data schema:
 - Implement data migration if needed
 - Test backward compatibility with existing data
 - Update JSON export/import functions
+
+##  Notes
+- Always answer in korean.

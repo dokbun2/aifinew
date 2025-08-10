@@ -1688,6 +1688,14 @@
             font-size: 0.9rem;
             line-height: 1.5;
         }
+        
+        /* 최종 프롬프트 텍스트 영역 동적 높이 스타일 */
+        .final-prompt-text {
+            min-height: 150px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transition: height 0.3s ease;
+        }
 
         .btn-cancel {
             background: rgba(255, 255, 255, 0.05);
@@ -1829,7 +1837,7 @@
             <div class="section-header">
                 <h2 class="section-title">최종 프롬프트</h2>
             </div>
-            <textarea id="final-prompt-text" class="text-input" placeholder="최종 프롬프트가 여기 표시됩니다." readonly style="min-height:320px;"></textarea>
+            <textarea id="final-prompt-text" class="text-input final-prompt-text" placeholder="최종 프롬프트가 여기 표시됩니다." readonly></textarea>
             <div class="button-group" style="margin-top: 8px;">
                 <button class="btn copy-btn" id="copy-final-prompt-btn">📋 프롬프트 복사</button>
             </div>
@@ -1925,6 +1933,9 @@
             const finalText = structureToMultilineText(resolvedStructure) || defaultPrompt || '';
             finalPromptText.value = finalText;
             finalPromptSection.style.display = 'block';
+            
+            // 텍스트 영역 높이 자동 조정
+            autoResizeTextarea(finalPromptText);
             
             // 스크롤하여 결과 보여주기
             finalPromptSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -6513,6 +6524,19 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
         // 함수를 즉시 window에 할당
         window.closeApiModal = closeApiModal;
         
+        // 텍스트 영역 자동 크기 조정 함수
+        function autoResizeTextarea(textarea) {
+            // 축소 가능하도록 높이 초기화
+            textarea.style.height = 'auto';
+            
+            // 필요한 높이 계산
+            const scrollHeight = textarea.scrollHeight;
+            const maxHeight = window.innerHeight * 0.8; // 뷰포트의 80%
+            
+            // 새로운 높이 설정 (10px 여백 추가)
+            textarea.style.height = Math.min(scrollHeight + 10, maxHeight) + 'px';
+        }
+        
         // 측면 뷰 주의사항 모달 관련 함수
         function showSideViewWarning() {
             const modal = document.getElementById('sideViewModal');
@@ -6542,6 +6566,18 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                     }
                 });
             }
+            
+            // 윈도우 크기 변경 시 최종 프롬프트 텍스트 영역 크기 재조정
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    const finalPromptTextarea = document.getElementById('final-prompt-text');
+                    if (finalPromptTextarea && finalPromptTextarea.value) {
+                        autoResizeTextarea(finalPromptTextarea);
+                    }
+                }, 250);
+            });
         });
 
         function updateModelOptions() {
