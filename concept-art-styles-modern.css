@@ -296,11 +296,11 @@ header p {
 
 /* ===== Buttons ===== */
 .btn {
-    padding: var(--space-sm) var(--space-lg);
+    padding: 0.4rem 0.8rem;
     border: none;
     border-radius: var(--radius-md);
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: all var(--transition-base);
     position: relative;
@@ -493,7 +493,7 @@ header p {
 }
 
 .tab-button {
-    padding: var(--space-sm) var(--space-lg);
+    padding: 0.6rem 1rem;
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -550,7 +550,7 @@ header p {
 }
 
 .ai-tab-button {
-    padding: var(--space-xs) var(--space-md);
+    padding: 0.3rem 0.7rem;
     background: var(--bg-tertiary);
     border: 2px solid transparent;
     border-radius: var(--radius-full);
@@ -558,7 +558,7 @@ header p {
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-base);
-    font-size: 0.9rem;
+    font-size: 0.75rem;
 }
 
 .ai-tab-button:hover {
@@ -581,7 +581,7 @@ header p {
 }
 
 .variant-type-tab {
-    padding: var(--space-xs) var(--space-md);
+    padding: 0.3rem 0.7rem;
     background: rgba(168, 85, 247, 0.1);
     border: 1px solid rgba(168, 85, 247, 0.3);
     border-radius: var(--radius-md);

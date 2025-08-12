@@ -195,11 +195,11 @@
         }
 
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.4rem 0.8rem;
             border: none;
-            border-radius: 0.75rem;
+            border-radius: 0.5rem;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             transition: all var(--transition-base);
             position: relative;
@@ -248,8 +248,8 @@
         }
 
         .btn-small {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.75rem;
         }
 
         .btn-success {
@@ -334,8 +334,8 @@
         }
 
         .nav-controls .btn {
-            font-size: 0.8rem;
-            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            padding: 0.35rem 0.6rem;
         }
 
         .search-box {
@@ -670,11 +670,11 @@
         }
 
         .tab-button {
-            padding: 1rem 1.5rem;
+            padding: 0.6rem 1rem;
             background: transparent;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             font-weight: 600;
             transition: all var(--transition-base);
@@ -783,10 +783,10 @@
             background: var(--accent-green);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 0.4rem;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all var(--transition-base);
         }
@@ -805,9 +805,9 @@
             background: var(--accent-purple);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 500;
@@ -827,9 +827,9 @@
             background: #8b5cf6;
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s ease;
             font-weight: 500;
@@ -1231,10 +1231,10 @@
             background: var(--bg-tertiary);
             color: var(--text-primary);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
+            padding: 0.35rem 0.6rem;
+            border-radius: 0.4rem;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 600;
             transition: all var(--transition-base);
             margin-bottom: 1rem;
@@ -1284,10 +1284,10 @@
             background: var(--accent-blue);
             color: white;
             border: none;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.4rem;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             transition: all var(--transition-base);
             width: 100%;
@@ -1379,10 +1379,10 @@
         }
 
         .plan-tab {
-            padding: 0.75rem 1.5rem;
+            padding: 0.5rem 1rem;
             background: var(--bg-tertiary);
             border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.75rem;
+            border-radius: 0.5rem;
             cursor: pointer;
             transition: all var(--transition-base);
             flex: 1;
@@ -1859,8 +1859,8 @@
 			}
 
 			.header-actions .btn {
-				font-size: 0.8rem;
-				padding: 6px 12px;
+				font-size: 0.75rem;
+				padding: 0.35rem 0.6rem;
 			}
 		}
 
@@ -1957,8 +1957,8 @@
             }
             
             .header-actions .btn {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.75rem;
+                padding: 0.3rem 0.5rem;
+                font-size: 0.7rem;
                 white-space: nowrap;
             }
             
@@ -1984,8 +1984,8 @@
             .nav-controls .btn {
                 flex: 1;
                 min-width: 0;
-                padding: 0.4rem 0.8rem;
-                font-size: 0.75rem;
+                padding: 0.3rem 0.5rem;
+                font-size: 0.7rem;
             }
             
             .search-box {
