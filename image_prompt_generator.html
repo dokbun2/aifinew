@@ -5904,7 +5904,7 @@
                 } else if (error.message.includes('401')) {
                     errorMessage = 'API 키가 유효하지 않습니다. 설정을 확인해주세요.';
                 } else if (error.message.includes('404')) {
-                    errorMessage = '모델명이 잘못되었습니다. gemini-2.5-flash, gemini-1.5-flash 또는 gemini-pro를 사용해보세요.';
+                    errorMessage = '모델명이 잘못되었습니다. gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite 또는 gemini-1.5-flash를 사용해보세요.';
                 } else if (error.message.includes('429')) {
                     errorMessage = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
                 }
@@ -6603,6 +6603,7 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                 const geminiModels = [
                     { value: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (최신, 추천)' },
                     { value: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (고급)' },
+                    { value: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite (경량)' },
                     { value: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
                     { value: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
                     { value: 'gemini-pro', name: 'Gemini Pro' }
