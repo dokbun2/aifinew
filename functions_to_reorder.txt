@@ -1,0 +1,252 @@
+  6157	        // AI를 통한 프롬프트 최적화 및 영문 번역
+  6158	        async function optimizePromptWithAI(data) {
+  6159	            try {
+  6160	                const configStr = localStorage.getItem('aiApiConfig');
+  6161	                if (!configStr) {
+  6162	                    throw new Error('API 설정이 없습니다.');
+  6163	                }
+  6164	                
+  6165	                const config = JSON.parse(configStr);
+  6166	                if (!config || !config.provider || !config.apiKey || !config.model) {
+  6167	                    throw new Error('API 설정이 올바르지 않습니다.');
+  6168	                }
+  6169	                
+  6170	                const { provider, apiKey, model } = config;
+  6171	                
+  6172	                console.log('=== AI API 설정 ===');
+  6173	                console.log('Provider:', provider);
+  6174	                console.log('Model:', model);
+  6175	                console.log('API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : '없음');
+  6176	                
+  6177	                // 각 섹션별로 개별 최적화
+  6178	                const optimizedData = {};
+  6179	                
+  6180	                for (const [key, value] of Object.entries(data)) {
+  6181	                    if (!value || value.trim() === '') continue;
+  6182	                    
+  6183	                    console.log(`\n=== ${key} 섹션 최적화 시작 ===`);
+  6184	                    console.log('원본:', value);
+  6185	                    
+  6186	                    try {
+  6187	                        const optimizedText = await optimizeSinglePrompt(value, provider, apiKey, model);
+  6188	                        optimizedData[key] = optimizedText;
+  6189	                        console.log('최적화 결과:', optimizedText);
+  6190	                    } catch (error) {
+  6191	                        console.error(`${key} 최적화 실패:`, error);
+  6192	                        // 실패 시 원본 사용
+  6193	                        optimizedData[key] = value;
+  6194	                    }
+  6195	                }
+  6196	                
+  6197	                return optimizedData;
+  6198	            } catch (error) {
+  6199	                console.error('AI 최적화 초기화 실패:', error);
+  6200	                throw error;
+  6201	            }
+  6202	        }
+  6203	        
+  6204	        // 단일 프롬프트 최적화 함수 - optimizePromptWithAI보다 먼저 정의
+  6205	        async function optimizeSinglePrompt(text, provider, apiKey, model) {
+  6206	            // 수집된 데이터를 프롬프트 텍스트로 변환
+  6207	            let promptText = '';
+  6208	            if (typeof text === 'string') {
+  6209	                promptText = text;
+  6210	            } else if (text && typeof text === 'object') {
+  6211	                // 구조화된 데이터인 경우
+  6212	                promptText = Object.entries(text)
+  6213	                    .map(([key, value]) => `${key}: ${value}`)
+  6214	                    .join(', ');
+  6215	            } else {
+  6216	                promptText = String(text || '');
+  6217	            }
+  6218	            
+  6219	            console.log('=== 프롬프트 정보 ===');
+  6220	            console.log('입력 데이터:', text);
+  6221	            console.log('변환된 프롬프트 텍스트:', promptText);
+  6222	            console.log('텍스트 길이:', promptText.length);
+  6223	            
+  6224	            const systemPrompt = `You are a translator for AI image generation prompts.
+  6225	Your task is to:
+  6226	1. Identify Korean text in the input
+  6227	2. Translate ONLY the Korean parts to English
+  6228	3. Keep any existing English text exactly as is
+  6229	4. Do NOT combine or merge the translations with existing English
+  6230	5. Output ONLY the translated Korean parts without any explanations
+  6231	
+  6232	Examples:
+  6233	- Input: "빨간 드레스 red dress" → Output: "red dress"
+  6234	- Input: "긴 머리 woman with braids" → Output: "long hair"
+  6235	- Input: "blue eyes 파란 눈" → Output: "blue eyes"`;
+  6236	            
+  6237	            try {
+  6238	                let optimizedText;
+  6239	                
+  6240	                if (provider === 'gemini') {
+  6241	                    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  6242	                    const geminiBody = {
+  6243	                        contents: [{
+  6244	                            parts: [{
+  6245	                                text: `${systemPrompt}\n\nTranslate only Korean parts: ${promptText}`
+  6246	                            }]
+  6247	                        }],
+  6248	                        generationConfig: {
+  6249	                            temperature: 0.3,
+  6250	                            maxOutputTokens: 500
+  6251	                        }
+  6252	                    };
+  6253	                    
+  6254	                    console.log('=== Gemini API 요청 ===');
+  6255	                    console.log('URL:', geminiUrl.replace(apiKey, 'API_KEY_HIDDEN'));
+  6256	                    console.log('Model:', model);
+  6257	                    console.log('Request Body:', JSON.stringify(geminiBody, null, 2));
+  6258	                    
+  6259	                    // 지원되는 모델 목록 표시
+  6260	                    console.log('💡 요청한 모델:', model);
+  6261	                    console.log('💡 지원되는 Gemini 모델: gemini-2.5-flash, gemini-2.5-pro, gemini-1.5-flash, gemini-1.5-pro');
+  6262	                    
+  6263	                    const response = await fetch(geminiUrl, {
+  6264	                        method: 'POST',
+  6265	                        headers: {
+  6266	                            'Content-Type': 'application/json',
+  6267	                        },
+  6268	                        body: JSON.stringify(geminiBody)
+  6269	                    });
+  6270	                    
+  6271	                    console.log('=== Gemini API 응답 상태 ===');
+  6272	                    console.log('Status:', response.status);
+  6273	                    console.log('StatusText:', response.statusText);
+  6274	                    console.log('Headers:', response.headers);
+  6275	                    
+  6276	                    const responseText = await response.text();
+  6277	                    console.log('Raw Response:', responseText);
+  6278	                    
+  6279	                    let data;
+  6280	                    try {
+  6281	                        data = JSON.parse(responseText);
+  6282	                    } catch (parseError) {
+  6283	                        console.error('JSON 파싱 실패:', parseError);
+  6284	                        console.error('응답 텍스트:', responseText);
+  6285	                        throw new Error('API 응답을 파싱할 수 없습니다.');
+  6286	                    }
+  6287	                    
+  6288	                    if (response.ok) {
+  6289	                        console.log('Parsed Gemini API 응답:', JSON.stringify(data, null, 2));
+  6290	                        
+  6291	                        // 다양한 응답 구조 처리
+  6292	                        if (data && data.candidates && data.candidates.length > 0) {
+  6293	                            const candidate = data.candidates[0];
+  6294	                            if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+  6295	                                optimizedText = candidate.content.parts[0].text;
+  6296	                                console.log('Gemini 최적화된 텍스트:', optimizedText);
+  6297	                            } else if (candidate.text) {
+  6298	                                // 다른 가능한 응답 구조
+  6299	                                optimizedText = candidate.text;
+  6300	                                console.log('Gemini 최적화된 텍스트 (대체 구조):', optimizedText);
+  6301	                            } else {
+  6302	                                console.error('Candidate 구조가 예상과 다름:', candidate);
+  6303	                                throw new Error('응답에서 텍스트를 찾을 수 없습니다.');
+  6304	                            }
+  6305	                        } else if (data && data.error) {
+  6306	                            console.error('Gemini API 에러 응답:', data.error);
+  6307	                            const errorMessage = data.error.message || data.error.status || '알 수 없는 오류';
+  6308	                            const errorCode = data.error.code || 'UNKNOWN';
+  6309	                            throw new Error(`Gemini API 에러 [${errorCode}]: ${errorMessage}`);
+  6310	                        } else {
+  6311	                            console.error('예상치 못한 Gemini API 응답 구조:', data);
+  6312	                            throw new Error('Gemini API 응답 구조가 올바르지 않습니다.');
+  6313	                        }
+  6314	                    } else {
+  6315	                        // 오류 응답 처리
+  6316	                        console.error('Gemini API 오류 응답:', data);
+  6317	                        console.error('응답 상태 코드:', response.status);
+  6318	                        console.error('요청한 모델:', model);
+  6319	                        
+  6320	                        if (data && data.error) {
+  6321	                            const errorMessage = data.error.message || data.error.status || '알 수 없는 오류';
+  6322	                            const errorCode = data.error.code || response.status;
+  6323	                            console.error('에러 코드:', errorCode);
+  6324	                            console.error('에러 메시지:', errorMessage);
+  6325	                            
+  6326	                            // 일반적인 오류 메시지 처리
+  6327	                            let userMessage = errorMessage;
+  6328	                            if (response.status === 400) {
+  6329	                                userMessage = 'API 요청이 잘못되었습니다. API 키와 모델명을 확인해주세요.';
+  6330	                            } else if (response.status === 401) {
+  6331	                                userMessage = 'API 키가 유효하지 않습니다. 설정을 확인해주세요.';
+  6332	                            } else if (response.status === 403) {
+  6333	                                userMessage = 'API 접근이 거부되었습니다. API 키 권한을 확인해주세요.';
+  6334	                            } else if (response.status === 429) {
+  6335	                                userMessage = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+  6336	                            } else if (response.status === 404) {
+  6337	                                userMessage = '잘못된 모델명입니다. gemini-1.5-flash 또는 gemini-1.5-pro를 사용해보세요.';
+  6338	                            }
+  6339	                            
+  6340	                            throw new Error(`[${errorCode}] ${userMessage}`);
+  6341	                        } else {
+  6342	                            throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+  6343	                        }
+  6344	                    }
+  6345	                } else if (provider === 'openai') {
+  6346	                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  6347	                        method: 'POST',
+  6348	                        headers: {
+  6349	                            'Content-Type': 'application/json',
+  6350	                            'Authorization': `Bearer ${apiKey}`
+  6351	                        },
+  6352	                        body: JSON.stringify({
+  6353	                            model: model,
+  6354	                            messages: [
+  6355	                                {
+  6356	                                    role: 'system',
+  6357	                                    content: systemPrompt
+  6358	                                },
+  6359	                                {
+  6360	                                    role: 'user',
+  6361	                                    content: `Translate only Korean parts: ${promptText}`
+  6362	                                }
+  6363	                            ],
+  6364	                            temperature: 0.3,
+  6365	                            max_tokens: 500
+  6366	                        })
+  6367	                    });
+  6368	                    
+  6369	                    if (response.ok) {
+  6370	                        const data = await response.json();
+  6371	                        console.log('OpenAI API 응답:', data);
+  6372	                        
+  6373	                        // 안전한 파싱
+  6374	                        if (data && data.choices && data.choices[0] && 
+  6375	                            data.choices[0].message && data.choices[0].message.content) {
+  6376	                            optimizedText = data.choices[0].message.content;
+  6377	                            console.log('OpenAI 최적화된 텍스트:', optimizedText);
+  6378	                        } else if (data && data.error) {
+  6379	                            console.error('OpenAI API 에러:', data.error);
+  6380	                            throw new Error(`OpenAI API 에러: ${data.error.message || '알 수 없는 오류'}`);
+  6381	                        } else {
+  6382	                            console.error('예상치 못한 OpenAI API 응답 구조:', data);
+  6383	                            throw new Error('OpenAI API 응답 구조가 올바르지 않습니다.');
+  6384	                        }
+  6385	                    } else {
+  6386	                        const errorData = await response.json().catch(() => null);
+  6387	                        console.error('OpenAI API 요청 실패:', response.status, errorData);
+  6388	                        throw new Error(`API 요청 실패: ${response.status} ${errorData?.error?.message || ''}`);
+  6389	                    }
+  6390	                }
+  6391	                
+  6392	                return optimizedText;
+  6393	            } catch (error) {
+  6394	                console.error('단일 프롬프트 최적화 실패:', error);
+  6395	                
+  6396	                // CORS 오류 감지
+  6397	                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
+  6398	                    console.error('🚫 CORS 오류 감지됨!');
+  6399	                    console.error('해결 방법:');
+  6400	                    console.error('1. Chrome 확장 프로그램: "Allow CORS" 또는 "CORS Unblock" 설치');
+  6401	                    console.error('2. 프록시 서버 사용 (https://cors-anywhere.herokuapp.com/ 등)');
+  6402	                    console.error('3. 로컬 개발 서버에서 CORS 설정');
+  6403	                    throw new Error('CORS 오류: 브라우저에서 API 호출이 차단되었습니다. 위의 해결 방법을 참고해주세요.');
+  6404	                }
+  6405	                
+  6406	                throw error;
+  6407	            }
+  6408	        }
