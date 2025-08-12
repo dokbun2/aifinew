@@ -3270,7 +3270,7 @@ const imageAIs = [
     { id: 'midjourney', name: 'Midjourney' },
     { id: 'ideogram', name: 'Ideogram' },
     { id: 'leonardo', name: 'Leonardo' },
-    { id: 'imagefx', name: 'ImageFX' },
+    { id: 'imagefx', name: '' },
 			{ id: 'openart', name: 'OpenArt' }
 ];
 
