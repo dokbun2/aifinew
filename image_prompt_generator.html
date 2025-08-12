@@ -1884,12 +1884,8 @@
                                 <path d="M8 21H3v-5"/>
                             </svg>
                         </button>
-                        <button class="btn btn-sync" id="sync-prompt-btn" onclick="syncPromptFromStructure()" style="display: none; font-size: 0.8rem; padding: 4px 12px;">
-                            🔄 구조 동기화
-                        </button>
                     </div>
                 </div>
-                <span class="edit-mode-indicator" id="edit-mode-indicator" style="display: none;">✏️ 수동 편집 모드</span>
                 <div class="prompt-preview" id="prompt-preview" contenteditable="true" spellcheck="false"></div>
             </div>
 
@@ -5428,7 +5424,6 @@
             });
             promptPreview.addEventListener('input', () => {
                 userEditingPreview = true;
-                updateEditModeUI();
                 // placeholder가 있으면 제거
                 const placeholder = promptPreview.querySelector('.preview-placeholder');
                 if (placeholder) {
@@ -5445,11 +5440,9 @@
                     // 비워졌으면 상태 초기화 후 자동 미리보기 복구
                     promptData.structuredPrompt = {};
                     updatePromptPreview();
-                    updateEditModeUI();
-                    return;
+                            return;
                 }
-                updateEditModeUI();
-                if (manualText.includes(':') && (manualText.includes(';') || manualText.includes('\n'))) {
+                    if (manualText.includes(':') && (manualText.includes(';') || manualText.includes('\n'))) {
                     // 구조화 텍스트로 해석 (세미콜론 또는 줄바꿈 형식)
                     promptData.structuredPrompt = parsePrompt(manualText);
                     createPromptCards(promptData.structuredPrompt);
@@ -5989,37 +5982,11 @@
             if (promptPreview) {
                 promptPreview.textContent = '';
                 userEditingPreview = false;
-                updateEditModeUI();
                 showToast('프롬프트가 초기화되었습니다.', 'info');
             }
         }
         
-        // 구조에서 프롬프트 동기화 함수
-        function syncPromptFromStructure() {
-            userEditingPreview = false;
-            updateEditModeUI();
-            updatePromptPreview(true); // 강제 업데이트
-            showToast('구조 편집기의 내용이 프롬프트 입력창에 동기화되었습니다.', 'info');
-        }
         window.clearPromptInput = clearPromptInput;
-        window.syncPromptFromStructure = syncPromptFromStructure;
-        
-        // 편집 모드 UI 업데이트 함수
-        function updateEditModeUI() {
-            const syncBtn = document.getElementById('sync-prompt-btn');
-            const editIndicator = document.getElementById('edit-mode-indicator');
-            const preview = document.getElementById('prompt-preview');
-            
-            if (userEditingPreview) {
-                syncBtn.style.display = 'inline-block';
-                editIndicator.style.display = 'inline';
-                preview.classList.add('user-editing');
-            } else {
-                syncBtn.style.display = 'none';
-                editIndicator.style.display = 'none';
-                preview.classList.remove('user-editing');
-            }
-        }
         
         // AI 프롬프트 생성 관련 함수들 - 먼저 정의
         async function generateAIPrompt() {
@@ -6607,12 +6574,10 @@ Examples:
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 initializeAIPromptButton();
-                updateEditModeUI();
-            });
+                });
         } else {
             // 이미 DOM이 로드된 경우 즉시 실행
             initializeAIPromptButton();
-            updateEditModeUI();
         }
         
         // 페이지 로드 완료 후 추가 확인
