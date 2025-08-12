@@ -6194,14 +6194,18 @@
             console.log('변환된 프롬프트 텍스트:', promptText);
             console.log('텍스트 길이:', promptText.length);
             
-            const systemPrompt = `You are an expert at creating optimal prompts for AI image generation. 
+            const systemPrompt = `You are a translator for AI image generation prompts.
 Your task is to:
-1. Take the provided Korean text describing image elements
-2. Optimize it for AI image generation by adding relevant artistic details, style, lighting, mood, and technical specifications
-3. Translate everything to English while maintaining the artistic intent
-4. Output ONLY the optimized English prompt without any explanations or additional text
+1. Identify Korean text in the input
+2. Translate ONLY the Korean parts to English
+3. Keep any existing English text exactly as is
+4. Do NOT combine or merge the translations with existing English
+5. Output ONLY the translated Korean parts without any explanations
 
-Focus on creating vivid, detailed descriptions that will produce high-quality AI-generated images.`;
+Examples:
+- Input: "빨간 드레스 red dress" → Output: "red dress"
+- Input: "긴 머리 woman with braids" → Output: "long hair"
+- Input: "blue eyes 파란 눈" → Output: "blue eyes"`;
             
             try {
                 let optimizedText;
@@ -6211,12 +6215,12 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                     const geminiBody = {
                         contents: [{
                             parts: [{
-                                text: `${systemPrompt}\n\nOptimize this Korean prompt for image generation: ${promptText}`
+                                text: `${systemPrompt}\n\nTranslate only Korean parts: ${promptText}`
                             }]
                         }],
                         generationConfig: {
-                            temperature: 0.8,
-                            maxOutputTokens: 1000
+                            temperature: 0.3,
+                            maxOutputTokens: 500
                         }
                     };
                     
@@ -6321,11 +6325,11 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
                                 },
                                 {
                                     role: 'user',
-                                    content: `Optimize this Korean prompt for image generation: ${promptText}`
+                                    content: `Translate only Korean parts: ${promptText}`
                                 }
                             ],
-                            temperature: 0.8,
-                            max_tokens: 1000
+                            temperature: 0.3,
+                            max_tokens: 500
                         })
                     });
                     
