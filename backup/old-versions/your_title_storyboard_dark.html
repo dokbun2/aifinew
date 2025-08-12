@@ -6112,7 +6112,7 @@
                             for (const [character, urls] of Object.entries(audioUrls.dialogue)) {
                                 const url = Array.isArray(urls) ? urls[0] : urls; // 배열인 경우 첫 번째 URL 사용
                                 characterAudioHtml += `
-                                    <div class="character-audio-section" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                    <div class="character-audio-section" style="margin-bottom: 15px; padding: 10px; background: #1a1a1a; border-radius: 5px;">
                                         <h5 style="margin: 0 0 10px 0;">${character}</h5>
                                         <div class="audio-player-area">
                                             ${url ? 
