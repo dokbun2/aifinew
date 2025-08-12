@@ -1824,9 +1824,14 @@
             <div class="prompt-preview-section" style="position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
                     <h3 class="preview-title">프롬프트 입력</h3>
-                    <button class="btn btn-sync" id="sync-prompt-btn" onclick="syncPromptFromStructure()" style="display: none; font-size: 0.8rem; padding: 4px 12px;">
-                        🔄 구조 동기화
-                    </button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-secondary" id="clear-prompt-btn" onclick="clearPromptInput()" title="프롬프트 초기화" style="padding: 6px 12px; font-size: 0.8rem; min-width: auto;">
+                            ↻
+                        </button>
+                        <button class="btn btn-sync" id="sync-prompt-btn" onclick="syncPromptFromStructure()" style="display: none; font-size: 0.8rem; padding: 4px 12px;">
+                            🔄 구조 동기화
+                        </button>
+                    </div>
                 </div>
                 <span class="edit-mode-indicator" id="edit-mode-indicator" style="display: none;">✏️ 수동 편집 모드</span>
                 <div class="prompt-preview" id="prompt-preview" contenteditable="true" spellcheck="false"></div>
@@ -5922,6 +5927,17 @@
         window.filterStyleDropdown = filterStyleDropdown;
         window.filterStyleOptions = filterStyleOptions;
         
+        // 프롬프트 입력창 초기화 함수
+        function clearPromptInput() {
+            const promptPreview = document.getElementById('prompt-preview');
+            if (promptPreview) {
+                promptPreview.textContent = '';
+                userEditingPreview = false;
+                updateEditModeUI();
+                showToast('프롬프트가 초기화되었습니다.', 'info');
+            }
+        }
+        
         // 구조에서 프롬프트 동기화 함수
         function syncPromptFromStructure() {
             userEditingPreview = false;
@@ -5929,6 +5945,7 @@
             updatePromptPreview(true); // 강제 업데이트
             showToast('구조 편집기의 내용이 프롬프트 입력창에 동기화되었습니다.', 'info');
         }
+        window.clearPromptInput = clearPromptInput;
         window.syncPromptFromStructure = syncPromptFromStructure;
         
         // 편집 모드 UI 업데이트 함수

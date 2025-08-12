@@ -845,7 +845,12 @@ const promptManager = {
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label>프롬프트:</label>
+                            <label style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>프롬프트:</span>
+                                <button class="prompt-refresh-btn" onclick="promptManager.resetPromptField()" title="프롬프트 초기화">
+                                    ↻ 초기화
+                                </button>
+                            </label>
                             <textarea id="edit-prompt-text" class="prompt-textarea" rows="6">${editedPrompt}</textarea>
                         </div>
                     </div>
@@ -896,6 +901,14 @@ const promptManager = {
         const modal = document.getElementById('prompt-edit-modal');
         if (modal) {
             modal.remove();
+        }
+    },
+    
+    resetPromptField: function() {
+        const textArea = document.getElementById('edit-prompt-text');
+        if (textArea) {
+            textArea.value = '';
+            utils.showToast('프롬프트가 초기화되었습니다.');
         }
     },
     
@@ -988,6 +1001,30 @@ const promptManager = {
                 .prompt-textarea:focus {
                     outline: none;
                     border-color: var(--accent-purple, #a855f7);
+                }
+                
+                .prompt-refresh-btn {
+                    background: none;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: rgba(255, 255, 255, 0.6);
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    transition: all 0.2s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                
+                .prompt-refresh-btn:hover {
+                    border-color: rgba(255, 255, 255, 0.4);
+                    color: rgba(255, 255, 255, 0.9);
+                    background: rgba(255, 255, 255, 0.05);
+                }
+                
+                .prompt-refresh-btn:active {
+                    transform: scale(0.95);
                 }
                 
                 .modal-footer {
