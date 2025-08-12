@@ -975,6 +975,33 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
+        
+        .btn-sync {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+            transition: all var(--transition-base);
+        }
+
+        .btn-sync:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+        
+        /* 편집 모드 표시 스타일 */
+        .prompt-preview.user-editing {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: rgba(251, 191, 36, 0.05);
+        }
+        
+        .edit-mode-indicator {
+            position: absolute;
+            top: -20px;
+            right: 0;
+            font-size: 0.75rem;
+            color: #fbbf24;
+            font-weight: 500;
+        }
 
         .prompt-cards-grid {
             display: grid;
@@ -1794,10 +1821,14 @@
 
 
             <!-- 프롬프트 입력 영역 -->
-            <div class="prompt-preview-section">
+            <div class="prompt-preview-section" style="position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
                     <h3 class="preview-title">프롬프트 입력</h3>
+                    <button class="btn btn-sync" id="sync-prompt-btn" onclick="syncPromptFromStructure()" style="display: none; font-size: 0.8rem; padding: 4px 12px;">
+                        🔄 구조 동기화
+                    </button>
                 </div>
+                <span class="edit-mode-indicator" id="edit-mode-indicator" style="display: none;">✏️ 수동 편집 모드</span>
                 <div class="prompt-preview" id="prompt-preview" contenteditable="true" spellcheck="false"></div>
             </div>
 
@@ -5096,8 +5127,10 @@
             content.textContent = input.value;
             card.classList.remove('editing');
             
-            // 프롬프트 미리보기 업데이트
-            updatePromptPreview();
+            // 사용자가 프롬프트 입력창을 편집 중이 아닐 때만 업데이트
+            if (!userEditingPreview) {
+                updatePromptPreview();
+            }
             saveToLocalStorage();
         }
 
@@ -5167,7 +5200,13 @@
         }
 
         // 프롬프트 미리보기 업데이트 함수
-        function updatePromptPreview() {
+        function updatePromptPreview(forceUpdate = false) {
+            // 사용자가 직접 편집 중이면서 강제 업데이트가 아닌 경우 업데이트 스킵
+            if (userEditingPreview && !forceUpdate) {
+                console.log('사용자 편집 모드 - 프롬프트 미리보기 업데이트 스킵');
+                return;
+            }
+            
             const text = promptData.textInput || promptPreview.innerText.trim();
             
                 if (!text && Object.keys(promptData.structuredPrompt).length === 0) {
@@ -5301,6 +5340,7 @@
             });
             promptPreview.addEventListener('input', () => {
                 userEditingPreview = true;
+                updateEditModeUI();
                 // placeholder가 있으면 제거
                 const placeholder = promptPreview.querySelector('.preview-placeholder');
                 if (placeholder) {
@@ -5309,13 +5349,18 @@
             });
             promptPreview.addEventListener('blur', () => {
                 const manualText = (promptPreview.textContent || '').trim();
-                userEditingPreview = false;
-                if (!manualText) {
+                // 사용자가 내용을 입력했으면 편집 모드 유지
+                if (manualText) {
+                    userEditingPreview = true;
+                } else {
+                    userEditingPreview = false;
                     // 비워졌으면 상태 초기화 후 자동 미리보기 복구
                     promptData.structuredPrompt = {};
                     updatePromptPreview();
+                    updateEditModeUI();
                     return;
                 }
+                updateEditModeUI();
                 if (manualText.includes(':') && (manualText.includes(';') || manualText.includes('\n'))) {
                     // 구조화 텍스트로 해석 (세미콜론 또는 줄바꿈 형식)
                     promptData.structuredPrompt = parsePrompt(manualText);
@@ -5849,6 +5894,32 @@
         window.aiSaveField = aiSaveField;
         window.filterStyleDropdown = filterStyleDropdown;
         window.filterStyleOptions = filterStyleOptions;
+        
+        // 구조에서 프롬프트 동기화 함수
+        function syncPromptFromStructure() {
+            userEditingPreview = false;
+            updateEditModeUI();
+            updatePromptPreview(true); // 강제 업데이트
+            showToast('구조 편집기의 내용이 프롬프트 입력창에 동기화되었습니다.', 'info');
+        }
+        window.syncPromptFromStructure = syncPromptFromStructure;
+        
+        // 편집 모드 UI 업데이트 함수
+        function updateEditModeUI() {
+            const syncBtn = document.getElementById('sync-prompt-btn');
+            const editIndicator = document.getElementById('edit-mode-indicator');
+            const preview = document.getElementById('prompt-preview');
+            
+            if (userEditingPreview) {
+                syncBtn.style.display = 'inline-block';
+                editIndicator.style.display = 'inline';
+                preview.classList.add('user-editing');
+            } else {
+                syncBtn.style.display = 'none';
+                editIndicator.style.display = 'none';
+                preview.classList.remove('user-editing');
+            }
+        }
         
         // AI 프롬프트 생성 관련 함수들 - 먼저 정의
         async function generateAIPrompt() {
@@ -6424,10 +6495,14 @@ Focus on creating vivid, detailed descriptions that will produce high-quality AI
         
         // DOM이 완전히 로드된 후 실행
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeAIPromptButton);
+            document.addEventListener('DOMContentLoaded', () => {
+                initializeAIPromptButton();
+                updateEditModeUI();
+            });
         } else {
             // 이미 DOM이 로드된 경우 즉시 실행
             initializeAIPromptButton();
+            updateEditModeUI();
         }
         
         // 페이지 로드 완료 후 추가 확인
