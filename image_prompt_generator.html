@@ -1950,14 +1950,41 @@
                     const key = container.dataset.key;
                     if (!key) return;
                     const appliedInput = container.querySelector(`input[data-key="${key}-applied"]`);
+                    const requestInput = container.querySelector(`input[data-key="${key}-request"]`);
                     const existingInput = container.querySelector(`input[data-key="${key}"]`);
+                    
                     const appliedVal = (appliedInput?.value || '').trim();
+                    const requestVal = (requestInput?.value || '').trim();
                     const existingVal = (existingInput?.value || '').trim();
-                    // 변경반영이 있으면 우선, 없으면 기존내용, 둘 다 없으면 기존 구조 유지
+                    
+                    // 다중값 처리: 변경반영과 변경요청을 모두 포함
+                    let finalValue = '';
+                    
+                    // 변경반영 값이 있는 경우
                     if (appliedVal) {
-                        resolvedStructure[key] = appliedVal;
+                        finalValue = appliedVal;
+                        
+                        // 변경요청 값도 있으면 영문 부분만 추가
+                        if (requestVal && requestVal !== appliedVal) {
+                            // 변경요청에서 영문만 추출 (한글이 아닌 부분만)
+                            const englishOnly = requestVal.split(',').map(part => part.trim())
+                                .filter(part => !/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(part))
+                                .join(', ');
+                            
+                            if (englishOnly) {
+                                finalValue += ', ' + englishOnly;
+                            }
+                        }
+                    } else if (requestVal) {
+                        // 변경반영이 없고 변경요청만 있는 경우
+                        finalValue = requestVal;
                     } else if (existingVal) {
-                        resolvedStructure[key] = existingVal;
+                        // 둘 다 없으면 기존내용 사용
+                        finalValue = existingVal;
+                    }
+                    
+                    if (finalValue) {
+                        resolvedStructure[key] = finalValue;
                     }
                 });
             }
