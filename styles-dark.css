@@ -640,6 +640,31 @@ body.dark-theme {
     transform: translateY(-2px);
 }
 
+/* 개별 버튼 호버 효과 */
+.tool-btn[href*="cafe.naver.com"]:hover {
+    border-color: #4ade80;
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+    color: #4ade80 !important;
+}
+
+.tool-btn[href*="youtube.com"]:hover {
+    border-color: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    color: #ef4444 !important;
+}
+
+.tool-btn[href*="chatgpt.com"]:hover {
+    border-color: #eab308;
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+    color: #eab308 !important;
+}
+
+.tool-btn[href*="jsoneditoronline"]:hover {
+    border-color: #a855f7;
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+    color: #a855f7 !important;
+}
+
 .footer-info {
     text-align: center;
     color: var(--text-secondary);
