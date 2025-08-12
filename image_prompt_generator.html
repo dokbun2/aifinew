@@ -6257,7 +6257,8 @@ Examples:
                     console.log('Request Body:', JSON.stringify(geminiBody, null, 2));
                     
                     // 지원되는 모델 목록 표시
-                    console.log('💡 지원되는 Gemini 모델: gemini-1.5-flash, gemini-1.5-pro, gemini-pro');
+                    console.log('💡 요청한 모델:', model);
+                    console.log('💡 지원되는 Gemini 모델: gemini-2.5-flash, gemini-2.5-pro, gemini-1.5-flash, gemini-1.5-pro');
                     
                     const response = await fetch(geminiUrl, {
                         method: 'POST',
@@ -6313,9 +6314,14 @@ Examples:
                     } else {
                         // 오류 응답 처리
                         console.error('Gemini API 오류 응답:', data);
+                        console.error('응답 상태 코드:', response.status);
+                        console.error('요청한 모델:', model);
+                        
                         if (data && data.error) {
                             const errorMessage = data.error.message || data.error.status || '알 수 없는 오류';
                             const errorCode = data.error.code || response.status;
+                            console.error('에러 코드:', errorCode);
+                            console.error('에러 메시지:', errorMessage);
                             
                             // 일반적인 오류 메시지 처리
                             let userMessage = errorMessage;
