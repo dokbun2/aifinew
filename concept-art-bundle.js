@@ -104,7 +104,9 @@ const dataManager = {
             projectInfo: state.projectInfo,
             dataVersion: state.dataVersion,
             dataTimestamp: state.dataTimestamp,
-            conceptArtData: state.conceptArtData
+            conceptArtData: state.conceptArtData,
+            currentConceptType: state.currentConceptType,
+            currentConceptId: state.currentConceptId
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     },
@@ -118,6 +120,13 @@ const dataManager = {
                 state.dataVersion = parsed.dataVersion || "N/A";
                 state.dataTimestamp = parsed.dataTimestamp || "N/A";
                 state.conceptArtData = parsed.conceptArtData || { characters: {}, locations: {}, props: {} };
+                
+                // 선택된 컨셉 정보도 복원
+                if (parsed.currentConceptType && parsed.currentConceptId) {
+                    state.currentConceptType = parsed.currentConceptType;
+                    state.currentConceptId = parsed.currentConceptId;
+                }
+                
                 return true;
             } catch (error) {
                 console.error('localStorage 데이터 파싱 오류:', error);
@@ -449,7 +458,7 @@ const uiRenderer = {
                 
                 // 수정된 프롬프트 확인
                 const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-                const promptKey = `${concept.id}_${aiTool}_base`;
+                const promptKey = `${state.currentConceptId}_${aiTool}_base`;
                 const displayPrompt = editedPrompts[promptKey]?.prompt || prompt;
                 const isEdited = editedPrompts[promptKey] ? true : false;
                 
@@ -466,7 +475,12 @@ const uiRenderer = {
                     </div>
                     <div class="image-actions">
                         <button class="btn btn-secondary" onclick="imageManager.addImage('${aiTool}', 'base')">이미지 URL 추가</button>
-                        <button class="btn btn-secondary" onclick="imageManager.uploadImageFile('${aiTool}', 'base')">이미지 파일 업로드</button>
+                    </div>
+                    <div class="additional-images-section">
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">🖼️ 추가 이미지</h4>
+                        <div class="additional-images-grid">
+                            ${this.createAdditionalImageSlots(concept, aiTool)}
+                        </div>
                     </div>
                 `;
                 
@@ -479,6 +493,82 @@ const uiRenderer = {
         if (firstAITool) {
             this.showAITab(firstAITool, 'base');
         }
+    },
+
+    createAdditionalImageSlots: function(concept, aiTool) {
+        const conceptId = state.currentConceptId; // 현재 선택된 컨셉 ID 사용
+        console.log('createAdditionalImageSlots 호출:', { conceptId, aiTool });
+        console.log('현재 컨셉의 추가이미지 데이터:', concept.additional_images);
+        
+        let slotsHtml = '';
+        const additionalImages = concept.additional_images || {};
+        const aiAdditionalImages = additionalImages[aiTool] || [];
+        
+        console.log(`${aiTool}의 추가이미지 배열:`, aiAdditionalImages);
+        
+        // 3개의 슬롯 생성
+        for (let i = 0; i < 3; i++) {
+            const imageData = aiAdditionalImages[i] || { url: '', base64: '', description: '', type: 'reference' };
+            const uniqueId = `${conceptId}-${aiTool}-additional-${i}`;
+            
+            // 이미지 소스 결정 (URL 우선, 스토리보드와 동일한 방식)
+            let imageSrc = '';
+            let modalSrc = '';
+            
+            if (imageData.url) {
+                imageSrc = imageData.url;
+                modalSrc = imageData.url;
+                
+                // Google Drive URL 처리
+                if (imageData.url.includes('drive.google.com')) {
+                    const fileId = utils.extractGoogleDriveFileId(imageData.url);
+                    if (fileId) {
+                        imageSrc = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+                        modalSrc = imageSrc;
+                    }
+                }
+            } else if (imageData.base64) {
+                // URL이 없으면 base64 사용 (파일 업로드의 경우)
+                imageSrc = imageData.base64;
+                modalSrc = imageData.base64;
+            }
+            
+            slotsHtml += `
+                <div class="additional-image-slot">
+                    <div class="additional-image-preview" id="additional-preview-${uniqueId}">
+                        ${imageSrc ? 
+                            `<img src="${imageSrc}" alt="추가 이미지 ${i+1}" style="cursor: pointer;" onclick="imageManager.openImageModal('${modalSrc}')" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'no-image-placeholder\\'>로드 실패</div>';">` : 
+                            `<div class="no-image-placeholder">추가 이미지 ${i+1}</div>`
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">URL:</label>
+                        <input type="text" class="form-input" 
+                               value="${imageData.url || ''}" 
+                               placeholder="이미지 URL 입력" 
+                               onchange="imageManager.updateAdditionalImage('${conceptId}', '${aiTool}', ${i}, 'url', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">설명:</label>
+                        <textarea class="form-textarea" rows="2"
+                                  placeholder="이미지 설명 입력"
+                                  onchange="imageManager.updateAdditionalImage('${conceptId}', '${aiTool}', ${i}, 'description', this.value)">${imageData.description || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">유형:</label>
+                        <select class="form-select" 
+                                onchange="imageManager.updateAdditionalImage('${conceptId}', '${aiTool}', ${i}, 'type', this.value)">
+                            <option value="reference" ${imageData.type === 'reference' ? 'selected' : ''}>참조</option>
+                            <option value="style" ${imageData.type === 'style' ? 'selected' : ''}>스타일</option>
+                            <option value="mood" ${imageData.type === 'mood' ? 'selected' : ''}>분위기</option>
+                            <option value="detail" ${imageData.type === 'detail' ? 'selected' : ''}>디테일</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+        
+        return slotsHtml;
     },
 
     displayVariants: function(concept) {
@@ -529,7 +619,7 @@ const uiRenderer = {
                             variantDiv.className = 'variant-item';
                             // 수정된 프롬프트 확인
                             const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-                            const promptKey = `${concept.id}_${aiTool}_${variation.key}`;
+                            const promptKey = `${state.currentConceptId}_${aiTool}_${variation.key}`;
                             const displayPrompt = editedPrompts[promptKey]?.prompt || variation.prompt;
                             const isEdited = editedPrompts[promptKey] ? true : false;
                             
@@ -547,7 +637,6 @@ const uiRenderer = {
                                 </div>
                                 <div class="image-actions">
                                     <button class="btn btn-secondary" onclick="imageManager.addImage('${aiTool}', '${typeKey}', ${index})">이미지 URL 추가</button>
-                                    <button class="btn btn-secondary" onclick="imageManager.uploadImageFile('${aiTool}', '${typeKey}', ${index})">이미지 파일 업로드</button>
                                 </div>
                             `;
                             typeContent.appendChild(variantDiv);
@@ -559,7 +648,7 @@ const uiRenderer = {
                             permDiv.className = 'variant-item permutation';
                             // 수정된 프롬프트 확인
                             const editedPromptsP = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-                            const promptKeyP = `${concept.id}_${aiTool}_${permutationKey}`;
+                            const promptKeyP = `${state.currentConceptId}_${aiTool}_${permutationKey}`;
                             const displayPromptP = editedPromptsP[promptKeyP]?.prompt || variations[permutationKey];
                             const isEditedP = editedPromptsP[promptKeyP] ? true : false;
                             
@@ -790,7 +879,7 @@ const promptManager = {
         if (prompt) {
             // 수정된 프롬프트 확인
             const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-            const editKey = `${concept.id}_${aiTool}_${promptKey}`;
+            const editKey = `${state.currentConceptId}_${aiTool}_${promptKey}`;
             const promptToCopy = editedPrompts[editKey]?.prompt || prompt;
             
             utils.copyToClipboard(promptToCopy);
@@ -811,10 +900,10 @@ const promptManager = {
         
         if (type === 'base') {
             originalPrompt = concept.base_prompts?.[aiTool] || '';
-            promptKey = `${concept.id}_${aiTool}_base`;
+            promptKey = `${state.currentConceptId}_${aiTool}_base`;
         } else if (type.includes('_permutation')) {
             originalPrompt = concept.character_variations?.[aiTool]?.[type] || '';
-            promptKey = `${concept.id}_${aiTool}_${type}`;
+            promptKey = `${state.currentConceptId}_${aiTool}_${type}`;
         } else if (index !== null) {
             const baseKey = VARIATION_TYPES_MAP[type]?.schema_key_base;
             if (!baseKey) {
@@ -823,7 +912,7 @@ const promptManager = {
             }
             const variationKey = `${baseKey}_${index}`;
             originalPrompt = concept.character_variations?.[aiTool]?.[variationKey] || '';
-            promptKey = `${concept.id}_${aiTool}_${variationKey}`;
+            promptKey = `${state.currentConceptId}_${aiTool}_${variationKey}`;
         }
         
         if (!originalPrompt) {
@@ -877,7 +966,7 @@ const promptManager = {
         
         // 수정된 프롬프트 저장
         editedPrompts[promptKey] = {
-            conceptId: concept.id,
+            conceptId: state.currentConceptId,
             aiTool,
             type,
             index,
@@ -1054,7 +1143,7 @@ const promptManager = {
             if (concept.base_prompts && concept.base_prompts[aiTool]) {
                 // 수정된 프롬프트 확인
                 const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-                const promptKey = `${concept.id}_${aiTool}_base`;
+                const promptKey = `${state.currentConceptId}_${aiTool}_base`;
                 promptToTransfer = editedPrompts[promptKey]?.prompt || concept.base_prompts[aiTool];
             }
         } else if (concept.character_variations && concept.character_variations[aiTool]) {
@@ -1068,14 +1157,14 @@ const promptManager = {
                 if (typeInfo && variations[type]) {
                     const variationPrompt = variations[type][index];
                     if (variationPrompt) {
-                        const promptKey = `${concept.id}_${aiTool}_${variationPrompt.key}`;
+                        const promptKey = `${state.currentConceptId}_${aiTool}_${variationPrompt.key}`;
                         promptToTransfer = editedPrompts[promptKey]?.prompt || variationPrompt.prompt;
                     }
                 }
             } else {
                 // 퍼뮤테이션 프롬프트
                 if (variations[type]) {
-                    const promptKey = `${concept.id}_${aiTool}_${type}`;
+                    const promptKey = `${state.currentConceptId}_${aiTool}_${type}`;
                     promptToTransfer = editedPrompts[promptKey]?.prompt || variations[type];
                 }
             }
@@ -1096,6 +1185,112 @@ const promptManager = {
 
 // ===== imageManager.js 내용 =====
 const imageManager = {
+    updateAdditionalImage: async function(conceptId, aiTool, index, field, value) {
+        console.log('updateAdditionalImage 호출:', { conceptId, aiTool, index, field, value });
+        console.log('현재 state:', { currentConceptType: state.currentConceptType, currentConceptId: state.currentConceptId });
+        
+        // state.currentConceptType이 설정되지 않은 경우 대비
+        if (!state.currentConceptType) {
+            console.error('currentConceptType이 설정되지 않았습니다.');
+            utils.showToast('컨셉 타입이 선택되지 않았습니다.');
+            return;
+        }
+        
+        const concept = state.conceptArtData[state.currentConceptType][conceptId];
+        if (!concept) {
+            console.error('컨셉아트를 찾을 수 없습니다:', conceptId);
+            utils.showToast('컨셉아트를 찾을 수 없습니다.');
+            return;
+        }
+        
+        // additional_images 구조 초기화
+        if (!concept.additional_images) concept.additional_images = {};
+        if (!concept.additional_images[aiTool]) concept.additional_images[aiTool] = [];
+        
+        // 배열 크기 확인 및 초기화
+        while (concept.additional_images[aiTool].length <= index) {
+            concept.additional_images[aiTool].push({
+                url: '',
+                base64: '',
+                description: '',
+                type: 'reference'
+            });
+        }
+        
+        // URL 필드인 경우 처리
+        if (field === 'url' && value) {
+            value = this.convertDropboxUrl(value);
+            
+            // 스토리보드와 동일하게 URL을 직접 사용 (base64 변환 시도하지 않음)
+            // CORS 제한으로 인해 외부 URL의 base64 변환은 불가능
+            console.log('이미지 URL을 직접 사용합니다:', value);
+        }
+        
+        // 값 업데이트
+        concept.additional_images[aiTool][index][field] = value;
+        console.log('업데이트된 추가이미지 데이터:', concept.additional_images[aiTool][index]);
+        
+        // 저장
+        dataManager.saveToLocalStorage();
+        
+        // URL이 변경된 경우 미리보기 업데이트
+        if (field === 'url') {
+            this.updateImagePreview(conceptId, aiTool, index, concept.additional_images[aiTool][index]);
+        }
+        
+        utils.showToast(`추가 이미지 ${field}이(가) 업데이트되었습니다.`);
+    },
+
+    // URL을 base64로 변환하는 함수
+    convertUrlToBase64: async function(url) {
+        try {
+            // 이미 base64인 경우 그대로 반환
+            if (url.startsWith('data:')) {
+                return url;
+            }
+            
+            // CORS 제한으로 인해 외부 URL은 직접 변환이 어려움
+            // 사용자에게 로컬 파일 업로드를 권장
+            console.log('외부 URL의 경우 CORS 제한으로 직접 변환이 어려울 수 있습니다.');
+            return null;
+        } catch (error) {
+            console.error('URL to base64 변환 실패:', error);
+            return null;
+        }
+    },
+
+    // 이미지 미리보기 업데이트 함수
+    updateImagePreview: function(conceptId, aiTool, index, imageData) {
+        const uniqueId = `${conceptId}-${aiTool}-additional-${index}`;
+        const preview = document.getElementById(`additional-preview-${uniqueId}`);
+        
+        if (!preview) {
+            console.error('미리보기 요소를 찾을 수 없습니다:', `additional-preview-${uniqueId}`);
+            return;
+        }
+        
+        if (imageData.url) {
+            // URL을 우선 사용 (스토리보드와 동일한 방식)
+            let displayUrl = imageData.url;
+            
+            // Google Drive URL인 경우 썸네일로 변환
+            if (imageData.url.includes('drive.google.com')) {
+                const fileId = utils.extractGoogleDriveFileId(imageData.url);
+                if (fileId) {
+                    displayUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+                }
+            }
+            
+            preview.innerHTML = `<img src="${displayUrl}" alt="추가 이미지 ${index+1}" style="cursor: pointer;" onclick="imageManager.openImageModal('${displayUrl}')" onerror="this.onerror=null; this.src='${imageData.url}'; this.onerror=function(){this.style.display='none';this.parentElement.innerHTML='<div class=\\'no-image-placeholder\\'>로드 실패</div>';}">`;
+        } else if (imageData.base64) {
+            // URL이 없으면 base64 사용 (파일 업로드의 경우)
+            preview.innerHTML = `<img src="${imageData.base64}" alt="추가 이미지 ${index+1}" style="cursor: pointer;" onclick="imageManager.openImageModal('${imageData.base64}')">`;
+        } else {
+            preview.innerHTML = `<div class="no-image-placeholder">추가 이미지 ${index+1}</div>`;
+        }
+    },
+
+
     // 드롭박스 URL을 raw 형식으로 변환하는 함수
     convertDropboxUrl: function(url) {
         if (!url) return url;
@@ -1137,20 +1332,6 @@ const imageManager = {
         this.setImageUrl(aiTool, type, index, processedUrl, concept);
     },
 
-    uploadImageFile: function(aiTool, type, index = null) {
-        const concept = dataManager.getCurrentConcept();
-        if (!concept) {
-            utils.showToast('선택된 컨셉아트가 없습니다.');
-            return;
-        }
-        
-        if (!concept.generated_images) concept.generated_images = { base_prompts: {}, variations: {} };
-        if (type === 'base' && !concept.generated_images.base_prompts) concept.generated_images.base_prompts = {};
-        if (type !== 'base' && !concept.generated_images.variations) concept.generated_images.variations = {};
-        if (type !== 'base' && !concept.generated_images.variations[aiTool]) concept.generated_images.variations[aiTool] = {};
-        
-        this.selectLocalImageFile(aiTool, type, index, concept);
-    },
 
     setImageUrl: function(aiTool, type, index, imageUrl, concept) {
         if (type === 'base') {
@@ -1166,30 +1347,6 @@ const imageManager = {
         utils.showToast('이미지가 업데이트되었습니다.');
     },
 
-    selectLocalImageFile: function(aiTool, type, index, concept) {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.style.display = 'none';
-        
-        const self = this;
-        input.onchange = function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const dataUrl = event.target.result;
-                self.setImageUrl(aiTool, type, index, dataUrl, concept);
-            };
-            reader.readAsDataURL(file);
-            
-            document.body.removeChild(input);
-        };
-        
-        document.body.appendChild(input);
-        input.click();
-    },
 
     displayImage: function(aiTool, type, imageUrl) {
         const containerId = `image-${type}-${aiTool}`;
@@ -1242,14 +1399,15 @@ const imageManager = {
         
         galleryContent.innerHTML = '';
         
-        if (!concept?.generated_images) {
+        if (!concept?.generated_images && !concept?.additional_images) {
             galleryContent.innerHTML = '<div class="no-image-message">컨셉아트를 선택하고 이미지를 추가하면 갤러리가 표시됩니다.</div>';
             return;
         }
         
         const images = [];
         
-        if (concept.generated_images.base_prompts) {
+        // 기본 프롬프트 이미지들
+        if (concept.generated_images?.base_prompts) {
             for (const [aiTool, imageUrl] of Object.entries(concept.generated_images.base_prompts)) {
                 if (imageUrl) {
                     images.push({
@@ -1262,7 +1420,8 @@ const imageManager = {
             }
         }
         
-        if (concept.generated_images.variations) {
+        // 변형 프롬프트 이미지들
+        if (concept.generated_images?.variations) {
             for (const [aiTool, variations] of Object.entries(concept.generated_images.variations)) {
                 for (const [variationKey, imageUrl] of Object.entries(variations)) {
                     if (imageUrl) {
@@ -1275,6 +1434,24 @@ const imageManager = {
                         });
                     }
                 }
+            }
+        }
+        
+        // 추가 이미지들
+        if (concept.additional_images) {
+            for (const [aiTool, additionalImages] of Object.entries(concept.additional_images)) {
+                additionalImages.forEach((imageData, index) => {
+                    if (imageData.url) {
+                        images.push({
+                            url: imageData.url,
+                            aiTool: aiTool,
+                            type: '추가 이미지',
+                            title: `${aiTool.toUpperCase()} - 추가 이미지 ${index + 1}`,
+                            description: imageData.description || '',
+                            imageType: imageData.type || 'reference'
+                        });
+                    }
+                });
             }
         }
         
@@ -1316,11 +1493,25 @@ const imageManager = {
             }
         }
         
+        let cardInfo = `
+            <h4>${imageData.title}</h4>
+            <p>${imageData.type}</p>
+        `;
+        
+        // 추가 이미지인 경우 설명과 이미지 타입도 표시
+        if (imageData.description || imageData.imageType) {
+            if (imageData.imageType) {
+                cardInfo += `<p class="image-type">타입: ${imageData.imageType}</p>`;
+            }
+            if (imageData.description) {
+                cardInfo += `<p class="image-description">${imageData.description}</p>`;
+            }
+        }
+        
         card.innerHTML = `
             <img src="${displayUrl}" alt="${imageData.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y0ZjRmNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBOb3QgRm91bmQ8L3RleHQ+PC9zdmc+'">
             <div class="image-card-info">
-                <h4>${imageData.title}</h4>
-                <p>${imageData.type}</p>
+                ${cardInfo}
             </div>
         `;
         
@@ -1348,6 +1539,15 @@ const imageManager = {
 
     loadAndDisplayImages: function(concept) {
         if (!concept?.generated_images) return;
+        
+        // 추가 이미지도 로드
+        if (concept.additional_images) {
+            // 현재 활성화된 AI 탭 확인
+            const activeAITab = state.currentPromptsAITab;
+            if (activeAITab && concept.additional_images[activeAITab]) {
+                // 추가 이미지 미리보기 업데이트는 createAdditionalImageSlots에서 처리됨
+            }
+        }
         
         if (concept.generated_images.base_prompts) {
             for (const [aiTool, imageUrl] of Object.entries(concept.generated_images.base_prompts)) {
@@ -1401,6 +1601,16 @@ async function loadLocalJsonFile() {
         if (dataManager.loadFromLocalStorage()) {
             uiRenderer.updateProjectInfo();
             uiRenderer.renderSidebar();
+            
+            // 저장된 선택 상태 복원
+            if (state.currentConceptType && state.currentConceptId) {
+                const concept = state.conceptArtData[state.currentConceptType]?.[state.currentConceptId];
+                if (concept) {
+                    uiRenderer.displayConceptDetail();
+                    imageManager.loadAndDisplayImages(concept);
+                }
+            }
+            
             utils.showToast('저장된 데이터를 로드했습니다.');
         }
     }
@@ -1510,10 +1720,11 @@ window.copyCSV = promptManager.copyCSV.bind(promptManager);
 window.copyPrompt = promptManager.copyPrompt.bind(promptManager);
 window.copyVariantPrompt = promptManager.copyVariantPrompt.bind(promptManager);
 window.addImage = imageManager.addImage.bind(imageManager);
-window.uploadImageFile = imageManager.uploadImageFile.bind(imageManager);
 window.closeImageModal = imageManager.closeImageModal.bind(imageManager);
 window.showAITab = uiRenderer.showAITab.bind(uiRenderer);
 window.showVariantTypeTab = uiRenderer.showVariantTypeTab.bind(uiRenderer);
+window.promptManager = promptManager;
+window.imageManager = imageManager;
 window.selectConcept = function(type, id) {
     dataManager.selectConcept(type, id);
     uiRenderer.displayConceptDetail();
