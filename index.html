@@ -144,7 +144,7 @@
                 </div>
                 
                 <div class="stage-grid">
-                    <div class="stage-card" onclick="goToStoryboardWithImport()">
+                    <div class="stage-card" onclick="openIndividualStageModal(2)">
                         <div class="stage-number">2</div>
                         <div class="stage-content">
                             <h3 class="stage-name">STAGE 2</h3>
@@ -152,7 +152,7 @@
                         </div>
                     </div>
 
-                    <div class="stage-card" onclick="goToConceptArtWithStage4Import()">
+                    <div class="stage-card" onclick="openIndividualStageModal(4)">
                         <div class="stage-number">4</div>
                         <div class="stage-content">
                             <h3 class="stage-name">STAGE 4</h3>
@@ -160,7 +160,7 @@
                         </div>
                     </div>
 
-                    <div class="stage-card" onclick="goToStoryboardWithStage5Import()">
+                    <div class="stage-card" onclick="openIndividualStageModal(5)">
                         <div class="stage-number">5</div>
                         <div class="stage-content">
                             <h3 class="stage-name">STAGE 5</h3>
@@ -168,7 +168,7 @@
                         </div>
                     </div>
 
-                    <div class="stage-card" onclick="goToStoryboardWithStage6Import()">
+                    <div class="stage-card" onclick="openIndividualStageModal(6)">
                         <div class="stage-number">6</div>
                         <div class="stage-content">
                             <h3 class="stage-name">STAGE 6</h3>
@@ -176,7 +176,7 @@
                         </div>
                     </div>
 
-                    <div class="stage-card" onclick="goToStoryboardWithStage7Import()">
+                    <div class="stage-card" onclick="openIndividualStageModal(7)">
                         <div class="stage-number">7</div>
                         <div class="stage-content">
                             <h3 class="stage-name">STAGE 7</h3>
@@ -184,7 +184,7 @@
                         </div>
                     </div>
 
-                    <div class="stage-card" onclick="goToStoryboardWithStage8Import()">
+                    <div class="stage-card" onclick="openIndividualStageModal(8)">
                         <div class="stage-number">8</div>
                         <div class="stage-content">
                             <h3 class="stage-name">STAGE 8</h3>
@@ -349,6 +349,64 @@
                     <button class="modal-action-btn" id="modal-action-btn" onclick="handleModalAction()" style="display: none;">
                         스토리보드로 이동
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 개별 Stage 업로드 모달 -->
+        <div id="individual-stage-modal" class="individual-stage-modal">
+            <div class="modal-overlay" onclick="closeIndividualStageModal()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="individual-stage-title">Stage 업로드</h2>
+                    <button class="modal-close-btn" onclick="closeIndividualStageModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-options">
+                        <button class="upload-option-btn" onclick="selectFileUpload()">
+                            <span class="option-icon">📁</span>
+                            <span class="option-text">파일 업로드</span>
+                        </button>
+                        <button class="upload-option-btn" onclick="selectJsonInput()">
+                            <span class="option-icon">✏️</span>
+                            <span class="option-text">JSON 직접 입력</span>
+                        </button>
+                    </div>
+                    
+                    <!-- JSON 직접 입력 영역 -->
+                    <div id="individual-json-input-area" style="display: none;">
+                        <div class="json-input-container active">
+                            <div id="single-json-input" style="display: none;">
+                                <h4>JSON 데이터 입력</h4>
+                                <textarea id="individual-json-textarea" class="json-input-textarea" placeholder="JSON 데이터를 입력하세요..." rows="10"></textarea>
+                                <div class="json-input-actions">
+                                    <button class="json-save-btn" onclick="saveIndividualJson()">저장</button>
+                                    <button class="json-cancel-btn" onclick="backToOptions()">뒤로</button>
+                                </div>
+                            </div>
+                            
+                            <div id="multiple-json-input" style="display: none;">
+                                <div class="json-input-header">
+                                    <h4>JSON 데이터 입력</h4>
+                                    <button class="add-json-btn" onclick="addIndividualJsonField()">+ 항목 추가</button>
+                                </div>
+                                <div class="json-input-list" id="individual-json-list">
+                                    <!-- 첫 번째 입력 필드 -->
+                                    <div class="json-input-item" data-index="0">
+                                        <div class="json-input-item-header">
+                                            <span>항목 1</span>
+                                            <button class="remove-json-btn" onclick="removeIndividualJsonField(0)" style="display: none;">삭제</button>
+                                        </div>
+                                        <textarea class="json-input-textarea" id="individual-json-textarea-0" placeholder="JSON 데이터를 입력하세요..." rows="8"></textarea>
+                                    </div>
+                                </div>
+                                <div class="json-input-actions">
+                                    <button class="json-save-btn" onclick="saveMultipleIndividualJson()">모두 저장</button>
+                                    <button class="json-cancel-btn" onclick="backToOptions()">뒤로</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

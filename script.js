@@ -2146,3 +2146,457 @@ function restoreCompletedStages() {
     });
 }
 
+// ===== JSON 직접 입력 관련 함수들 =====
+
+// JSON 입력 영역 토글
+function toggleJsonInput(stage) {
+    const container = document.getElementById(`json-input-${stage}`);
+    if (!container) return;
+    
+    const isHidden = container.style.display === 'none';
+    container.style.display = isHidden ? 'block' : 'none';
+    
+    // 다중 항목 초기화 (Stage 5-8)
+    if (!isHidden && stage >= 5) {
+        resetJsonInputFields(stage);
+    }
+}
+
+// 단일 JSON 저장 (Stage 2, 4)
+function saveJsonDirectly(stage) {
+    const textarea = document.getElementById(`json-textarea-${stage}`);
+    if (!textarea) return;
+    
+    const jsonText = textarea.value.trim();
+    if (!jsonText) {
+        alert('JSON 데이터를 입력해주세요.');
+        return;
+    }
+    
+    try {
+        // JSON 유효성 검사
+        const jsonData = JSON.parse(jsonText);
+        
+        // localStorage에 저장
+        if (stage === 2) {
+            localStorage.setItem('stage2TempJson', jsonText);
+            localStorage.setItem('stage2TempFileName', 'direct_input.json');
+        } else if (stage === 4) {
+            localStorage.setItem('stage4TempJson', jsonText);
+            localStorage.setItem('stage4TempFileName', 'direct_input.json');
+        }
+        
+        // 성공 처리
+        showStageUploadComplete(stage);
+        completeStageUpload(stage);
+        
+        // 입력 영역 숨기기
+        toggleJsonInput(stage);
+        textarea.value = '';
+        
+        showUploadMessage(`Stage ${stage} JSON이 성공적으로 저장되었습니다.`, 'success');
+        
+    } catch (error) {
+        alert('올바른 JSON 형식이 아닙니다. 다시 확인해주세요.\n\n' + error.message);
+    }
+}
+
+// 다중 JSON 저장 (Stage 5-8)
+function saveMultipleJsonDirectly(stage) {
+    const container = document.getElementById(`json-input-list-${stage}`);
+    if (!container) return;
+    
+    const items = container.querySelectorAll('.json-input-item');
+    const jsonFiles = [];
+    let hasError = false;
+    
+    items.forEach((item, index) => {
+        const textarea = item.querySelector('.json-input-textarea');
+        const jsonText = textarea.value.trim();
+        
+        if (jsonText) {
+            try {
+                // JSON 유효성 검사
+                const jsonData = JSON.parse(jsonText);
+                jsonFiles.push({
+                    content: jsonText,
+                    name: `direct_input_${index + 1}.json`
+                });
+            } catch (error) {
+                hasError = true;
+                alert(`항목 ${index + 1}의 JSON 형식이 올바르지 않습니다.\n\n${error.message}`);
+            }
+        }
+    });
+    
+    if (hasError) return;
+    
+    if (jsonFiles.length === 0) {
+        alert('최소 하나 이상의 JSON 데이터를 입력해주세요.');
+        return;
+    }
+    
+    // localStorage에 저장
+    localStorage.setItem(`stage${stage}TempJsonFiles`, JSON.stringify(jsonFiles));
+    
+    // 성공 처리
+    showStageUploadComplete(stage);
+    completeStageUpload(stage);
+    
+    // 입력 영역 숨기기 및 초기화
+    toggleJsonInput(stage);
+    resetJsonInputFields(stage);
+    
+    showUploadMessage(`Stage ${stage}의 ${jsonFiles.length}개 JSON이 성공적으로 저장되었습니다.`, 'success');
+}
+
+// JSON 입력 필드 추가
+function addJsonInputField(stage) {
+    const container = document.getElementById(`json-input-list-${stage}`);
+    if (!container) return;
+    
+    const items = container.querySelectorAll('.json-input-item');
+    const newIndex = items.length;
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'json-input-item';
+    newItem.setAttribute('data-index', newIndex);
+    
+    newItem.innerHTML = `
+        <div class="json-input-item-header">
+            <span>항목 ${newIndex + 1}</span>
+            <button class="remove-json-btn" onclick="removeJsonInputField(${stage}, ${newIndex})">삭제</button>
+        </div>
+        <textarea class="json-input-textarea" id="json-textarea-${stage}-${newIndex}" 
+                  placeholder="JSON 데이터를 입력하세요..." rows="8"></textarea>
+    `;
+    
+    container.appendChild(newItem);
+    
+    // 첫 번째 항목의 삭제 버튼 표시
+    if (items.length === 1) {
+        items[0].querySelector('.remove-json-btn').style.display = 'inline-block';
+    }
+}
+
+// JSON 입력 필드 제거
+function removeJsonInputField(stage, index) {
+    const container = document.getElementById(`json-input-list-${stage}`);
+    if (!container) return;
+    
+    const item = container.querySelector(`[data-index="${index}"]`);
+    if (item) {
+        item.remove();
+    }
+    
+    // 인덱스 재정렬
+    const remainingItems = container.querySelectorAll('.json-input-item');
+    remainingItems.forEach((item, idx) => {
+        item.setAttribute('data-index', idx);
+        item.querySelector('.json-input-item-header span').textContent = `항목 ${idx + 1}`;
+        const textarea = item.querySelector('.json-input-textarea');
+        textarea.id = `json-textarea-${stage}-${idx}`;
+        const removeBtn = item.querySelector('.remove-json-btn');
+        removeBtn.setAttribute('onclick', `removeJsonInputField(${stage}, ${idx})`);
+    });
+    
+    // 하나만 남았을 때 삭제 버튼 숨기기
+    if (remainingItems.length === 1) {
+        remainingItems[0].querySelector('.remove-json-btn').style.display = 'none';
+    }
+}
+
+// JSON 입력 필드 초기화
+function resetJsonInputFields(stage) {
+    const container = document.getElementById(`json-input-list-${stage}`);
+    if (!container) return;
+    
+    // 첫 번째 항목만 남기고 나머지 제거
+    const items = container.querySelectorAll('.json-input-item');
+    items.forEach((item, index) => {
+        if (index === 0) {
+            item.querySelector('.json-input-textarea').value = '';
+            item.querySelector('.remove-json-btn').style.display = 'none';
+        } else {
+            item.remove();
+        }
+    });
+}
+
+// Stage 버튼 활성화 수정 (직접 입력 버튼도 활성화)
+const originalEnableStageButton = window.enableStageButton;
+window.enableStageButton = function(stageNumber) {
+    originalEnableStageButton(stageNumber);
+    
+    // 직접 입력 버튼도 활성화
+    const stageItem = document.querySelector(`.stage-upload-item[data-stage="${stageNumber}"]`);
+    if (stageItem) {
+        const inputBtn = stageItem.querySelector('.stage-input-btn');
+        if (inputBtn) {
+            inputBtn.disabled = false;
+        }
+    }
+};
+
+// 전역 함수로 등록
+window.toggleJsonInput = toggleJsonInput;
+window.saveJsonDirectly = saveJsonDirectly;
+window.saveMultipleJsonDirectly = saveMultipleJsonDirectly;
+window.addJsonInputField = addJsonInputField;
+window.removeJsonInputField = removeJsonInputField;
+
+// 개별 Stage 모달 관련 함수들
+let currentIndividualStage = null;
+
+// 개별 Stage 모달 열기
+function openIndividualStageModal(stage) {
+    currentIndividualStage = stage;
+    const modal = document.getElementById('individual-stage-modal');
+    const title = document.getElementById('individual-stage-title');
+    
+    // Stage 정보 설정
+    const stageInfo = {
+        2: 'Stage 2 - 시나리오 작성 단계',
+        4: 'Stage 4 - 컨셉아트 프롬프트 생성 단계',
+        5: 'Stage 5 - 장면 분할 단계',
+        6: 'Stage 6 - 샷이미지 프롬프트 생성 단계',
+        7: 'Stage 7 - 영상프롬프트 생성 단계',
+        8: 'Stage 8 - 오디오 프롬프트 생성 단계'
+    };
+    
+    title.textContent = stageInfo[stage] || `Stage ${stage}`;
+    
+    // 모달 표시
+    modal.classList.add('show');
+    
+    // 옵션 화면으로 초기화
+    backToOptions();
+}
+
+// 개별 Stage 모달 닫기
+function closeIndividualStageModal() {
+    const modal = document.getElementById('individual-stage-modal');
+    modal.classList.remove('show');
+    currentIndividualStage = null;
+    
+    // JSON 입력 영역 초기화
+    const jsonInputArea = document.getElementById('individual-json-input-area');
+    jsonInputArea.style.display = 'none';
+    
+    // 텍스트 영역 초기화
+    const singleTextarea = document.getElementById('individual-json-textarea');
+    if (singleTextarea) singleTextarea.value = '';
+    
+    // 다중 입력 필드 초기화
+    const multipleList = document.getElementById('individual-json-list');
+    if (multipleList) {
+        multipleList.innerHTML = `
+            <div class="json-input-item" data-index="0">
+                <div class="json-input-item-header">
+                    <span>항목 1</span>
+                    <button class="remove-json-btn" onclick="removeIndividualJsonField(0)" style="display: none;">삭제</button>
+                </div>
+                <textarea class="json-input-textarea" id="individual-json-textarea-0" placeholder="JSON 데이터를 입력하세요..." rows="8"></textarea>
+            </div>
+        `;
+    }
+}
+
+// 파일 업로드 선택
+function selectFileUpload() {
+    // 해당 Stage의 파일 입력 요소 클릭
+    const fileInput = document.getElementById(`stage${currentIndividualStage}-json-input`);
+    if (fileInput) {
+        fileInput.click();
+        closeIndividualStageModal();
+    }
+}
+
+// JSON 직접 입력 선택
+function selectJsonInput() {
+    const uploadOptions = document.querySelector('.upload-options');
+    const jsonInputArea = document.getElementById('individual-json-input-area');
+    const singleInput = document.getElementById('single-json-input');
+    const multipleInput = document.getElementById('multiple-json-input');
+    
+    // 업로드 옵션 숨기기
+    uploadOptions.style.display = 'none';
+    jsonInputArea.style.display = 'block';
+    
+    // Stage 2, 4는 단일 입력, 나머지는 다중 입력
+    if (currentIndividualStage === 2 || currentIndividualStage === 4) {
+        singleInput.style.display = 'block';
+        multipleInput.style.display = 'none';
+    } else {
+        singleInput.style.display = 'none';
+        multipleInput.style.display = 'block';
+    }
+}
+
+// 옵션 화면으로 돌아가기
+function backToOptions() {
+    const uploadOptions = document.querySelector('.upload-options');
+    const jsonInputArea = document.getElementById('individual-json-input-area');
+    
+    uploadOptions.style.display = 'grid';
+    jsonInputArea.style.display = 'none';
+}
+
+// 개별 JSON 저장 (단일)
+function saveIndividualJson() {
+    const textarea = document.getElementById('individual-json-textarea');
+    const jsonData = textarea.value.trim();
+    
+    if (!jsonData) {
+        alert('JSON 데이터를 입력해주세요.');
+        return;
+    }
+    
+    try {
+        // JSON 유효성 검사
+        JSON.parse(jsonData);
+        
+        // localStorage에 저장
+        if (currentIndividualStage === 2) {
+            localStorage.setItem('stage2TempJson', jsonData);
+            localStorage.setItem('stage2TempFileName', 'direct_input.json');
+            showStageUploadComplete(2);
+            
+            // 스토리보드로 이동
+            setTimeout(() => {
+                let url = 'storyboard/index.html?loadTempJson=true';
+                url = appendExistingStageParams(url);
+                window.location.href = url;
+            }, 1500);
+            
+        } else if (currentIndividualStage === 4) {
+            localStorage.setItem('stage4TempJson', jsonData);
+            localStorage.setItem('stage4TempFileName', 'direct_input.json');
+            showStageUploadComplete(4);
+            
+            // 컨셉아트 페이지로 이동
+            setTimeout(() => {
+                window.location.href = 'your_title_storyboard_v9.4_c.html?loadStage4Json=true';
+            }, 1500);
+        }
+        
+        closeIndividualStageModal();
+        
+    } catch (error) {
+        alert('올바른 JSON 형식이 아닙니다.\n' + error.message);
+    }
+}
+
+// 개별 다중 JSON 저장
+function saveMultipleIndividualJson() {
+    const items = document.querySelectorAll('#individual-json-list .json-input-item');
+    const fileContents = [];
+    const fileNames = [];
+    
+    let hasError = false;
+    
+    items.forEach((item, index) => {
+        const textarea = item.querySelector('.json-input-textarea');
+        const jsonData = textarea.value.trim();
+        
+        if (jsonData) {
+            try {
+                JSON.parse(jsonData);
+                fileContents.push(jsonData);
+                fileNames.push(`direct_input_${index + 1}.json`);
+            } catch (error) {
+                hasError = true;
+                alert(`항목 ${index + 1}의 JSON 형식이 올바르지 않습니다.\n${error.message}`);
+                return;
+            }
+        }
+    });
+    
+    if (hasError || fileContents.length === 0) {
+        if (fileContents.length === 0) {
+            alert('최소 하나 이상의 JSON 데이터를 입력해주세요.');
+        }
+        return;
+    }
+    
+    // localStorage에 저장
+    localStorage.setItem(`stage${currentIndividualStage}TempJsonFiles`, JSON.stringify(fileContents));
+    localStorage.setItem(`stage${currentIndividualStage}TempFileNames`, JSON.stringify(fileNames));
+    
+    // 처리 플래그 제거
+    localStorage.removeItem(`stage${currentIndividualStage}TempProcessed`);
+    
+    showStageUploadComplete(currentIndividualStage);
+    closeIndividualStageModal();
+    
+    // 스토리보드로 이동
+    setTimeout(() => {
+        let url = `storyboard/index.html?loadStage${currentIndividualStage}JsonMultiple=true`;
+        url = appendExistingStageParams(url);
+        window.location.href = url;
+    }, 1500);
+}
+
+// 개별 JSON 입력 필드 추가
+function addIndividualJsonField() {
+    const container = document.getElementById('individual-json-list');
+    const items = container.querySelectorAll('.json-input-item');
+    const newIndex = items.length;
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'json-input-item';
+    newItem.setAttribute('data-index', newIndex);
+    
+    newItem.innerHTML = `
+        <div class="json-input-item-header">
+            <span>항목 ${newIndex + 1}</span>
+            <button class="remove-json-btn" onclick="removeIndividualJsonField(${newIndex})">삭제</button>
+        </div>
+        <textarea class="json-input-textarea" id="individual-json-textarea-${newIndex}" placeholder="JSON 데이터를 입력하세요..." rows="8"></textarea>
+    `;
+    
+    container.appendChild(newItem);
+    
+    // 첫 번째 항목의 삭제 버튼 표시
+    if (items.length >= 1) {
+        items[0].querySelector('.remove-json-btn').style.display = 'inline-block';
+    }
+}
+
+// 개별 JSON 입력 필드 제거
+function removeIndividualJsonField(index) {
+    const container = document.getElementById('individual-json-list');
+    const itemToRemove = container.querySelector(`[data-index="${index}"]`);
+    
+    if (itemToRemove) {
+        itemToRemove.remove();
+    }
+    
+    // 인덱스 재정렬
+    const remainingItems = container.querySelectorAll('.json-input-item');
+    remainingItems.forEach((item, idx) => {
+        item.setAttribute('data-index', idx);
+        item.querySelector('span').textContent = `항목 ${idx + 1}`;
+        const textarea = item.querySelector('.json-input-textarea');
+        textarea.id = `individual-json-textarea-${idx}`;
+        const removeBtn = item.querySelector('.remove-json-btn');
+        removeBtn.setAttribute('onclick', `removeIndividualJsonField(${idx})`);
+    });
+    
+    // 하나만 남았을 때 삭제 버튼 숨기기
+    if (remainingItems.length === 1) {
+        remainingItems[0].querySelector('.remove-json-btn').style.display = 'none';
+    }
+}
+
+// 전역 함수로 등록
+window.openIndividualStageModal = openIndividualStageModal;
+window.closeIndividualStageModal = closeIndividualStageModal;
+window.selectFileUpload = selectFileUpload;
+window.selectJsonInput = selectJsonInput;
+window.backToOptions = backToOptions;
+window.saveIndividualJson = saveIndividualJson;
+window.saveMultipleIndividualJson = saveMultipleIndividualJson;
+window.addIndividualJsonField = addIndividualJsonField;
+window.removeIndividualJsonField = removeIndividualJsonField;
+
