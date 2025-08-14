@@ -964,7 +964,7 @@ function createTestData() {
 					const data = JSON.parse(fixedString);
 
 					// Stage 2 특수 처리: 잘못 배치된 캐릭터 데이터 수정
-					if (data.current_stage_name === 'narrative_development' && data.narrative_data) {
+					if ((data.current_stage_name === 'narrative_development' || data.current_stage_name === 'scenario_development') && (data.narrative_data || data.scenario_data)) {
 						const fixed = fixStage2Structure(data);
 						if (fixed.wasFixed) {
 							showMessage('Stage 2 JSON 구조를 자동으로 수정했습니다. (캐릭터 데이터 위치 조정)', 'info');
@@ -1445,7 +1445,7 @@ function createTestData() {
                      saveDataToLocalStorage();
 						}
             // 2.5 스테이지 2 (시나리오 구조) 처리
-           else if (newData.current_stage_name === 'narrative_development' && newData.narrative_data) {
+           else if ((newData.current_stage_name === 'narrative_development' || newData.current_stage_name === 'scenario_development') && (newData.narrative_data || newData.scenario_data)) {
                handleStage2Data(newData);
                event.target.value = '';
                return;
@@ -5251,7 +5251,7 @@ try {
                         let updated = false;
                         
                         // 기존 handleFileSelect 로직과 동일하게 처리
-                        if (newData.current_stage_name === 'narrative_development' && newData.narrative_data) {
+                        if ((newData.current_stage_name === 'narrative_development' || newData.current_stage_name === 'scenario_development') && (newData.narrative_data || newData.scenario_data)) {
                                          handleStage2Data(newData);
                         } else {
                             showMessage('Stage 2 형식의 JSON 파일이 아닙니다.', 'warning');
