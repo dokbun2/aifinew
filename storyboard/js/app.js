@@ -1653,6 +1653,17 @@ function createTestData() {
 			function handleStage2Data(jsonData) {
 
 				try {
+					// 광고 프레임워크 처리 추가 - scenario_data를 narrative_data로 매핑
+					if (jsonData.scenario_data && !jsonData.narrative_data) {
+						console.log('🎯 광고 프레임워크 데이터 감지 - 자동 변환 시작');
+						jsonData.narrative_data = jsonData.scenario_data;
+						
+						// screenplay_data를 scenario_data로 매핑
+						if (jsonData.narrative_data.screenplay_data && !jsonData.narrative_data.scenario_data) {
+							jsonData.narrative_data.scenario_data = jsonData.narrative_data.screenplay_data;
+						}
+					}
+					
 					// Stage 2 데이터 검증
 					if (!jsonData.narrative_data || !jsonData.narrative_data.treatment_data || !jsonData.narrative_data.scenario_data) {
 						throw new Error('Stage 2 데이터 구조가 올바르지 않습니다.');
