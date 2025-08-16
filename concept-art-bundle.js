@@ -540,7 +540,6 @@ const uiRenderer = {
         
         // CSV 탭 내용을 재구성 (블록 스타일 제목과 복사 버튼 제거)
         csvTab.innerHTML = `
-            <div class="section-block-title">블록화</div>
             <table class="csv-table" id="csv-data-table">
                 <thead><tr><th>ID</th><th>원본</th><th>번역본</th></tr></thead>
                 <tbody></tbody>
@@ -648,6 +647,7 @@ const uiRenderer = {
                     ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
                     <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('english')">영어 원본 복사</button>
                     <button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('english')" style="margin-left: 8px;">프롬프트 수정</button>
+                    <button class="btn btn-ai-edit" onclick="promptManager.aiEditUniversalPrompt('english')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
                 </div>
             `;
             contentArea.appendChild(englishContainer);
