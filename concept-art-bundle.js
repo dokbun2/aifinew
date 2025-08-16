@@ -238,7 +238,15 @@ const dataManager = {
                     generated_images: { base_prompts: {}, variations: {} }
                 };
                 
+                // csv_data 보존 - 중요!
+                if (item.csv_data) {
+                    convertedItem.csv_data = item.csv_data;
+                }
+                
                 if (item.prompts) {
+                    // 원본 prompts 객체 보존 (universal_translated 포함)
+                    convertedItem.prompts = item.prompts;
+                    
                     // 유연한 프롬프트 처리: JSON 구조에 따라 자동 대응
                     const aiTools = ['midjourney', 'leonardo', 'ideogram', 'imagefx', 'openart'];
                     
@@ -248,7 +256,7 @@ const dataManager = {
                     if (hasIndividualPrompts) {
                         // 개별 프롬프트가 있으면 각각 처리
                         for (const [aiTool, promptData] of Object.entries(item.prompts)) {
-                            // universal과 universal_translated는 건너뜀
+                            // universal과 universal_translated는 base_prompts에서는 건너뜀
                             if (aiTool === 'universal' || aiTool === 'universal_translated') continue;
                             
                             if (typeof promptData === 'string') {
@@ -299,9 +307,12 @@ const dataManager = {
     },
 
     processLoadedJSON: function(data) {
+        console.log('Processing loaded JSON:', data);
         if (data.concept_art_collection) {
-            if (data.stage === 4 || data.version === "1.2") {
+            if (data.stage === 4 || data.version === "3.0") {
+                console.log('Converting Stage 4 data...');
                 state.conceptArtData = this.convertStage4ToV12(data.concept_art_collection);
+                console.log('Converted data:', state.conceptArtData);
             } else {
                 state.conceptArtData = data.concept_art_collection;
             }
@@ -456,6 +467,21 @@ const uiRenderer = {
     },
     
     translateToKorean: function(englishPrompt, conceptId) {
+        // localStorage에서 수정된 번역 프롬프트 확인
+        const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
+        const translationKey = `${conceptId}_universal_translated`;
+        
+        if (editedTranslations[translationKey]) {
+            return editedTranslations[translationKey];
+        }
+        
+        // 현재 컨셉 아이템에서 universal_translated 값을 찾아 반환
+        const concept = dataManager.getCurrentConcept();
+        if (concept && concept.prompts && concept.prompts.universal_translated) {
+            return concept.prompts.universal_translated;
+        }
+        
+        // 기존 하드코딩된 번역들 (폴백용)
         // KAI 캐릭터에 대한 번역
         if (conceptId === 'KAI') {
             return "K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 인물 사진, 비주얼은 '블레이드 러너 2049'와 '사이버펑크 2077' 아트워크에서 영감을 받음. 마른 체형에 저항적인 태도를 지닌 20대 한국인 남성 래퍼, 분노와 공허함이 담긴 날카로운 눈매, 짧은 검은색 헤어. 그는 낡고 기능적인 테크웨어와 해진 스트리트 후드티를 입고 있으며, 한쪽 귀에는 낡은 무선 이어버드를 끼고 있음. 배경은 2324년, 하이테크 문명이 붕괴되고 한국 전통 유산의 폐허가 남은 시대. 그의 내면의 분노를 드러내는 미디엄 샷, 정면 뷰, Canon EOS R5 카메라와 85mm f/1.4 렌즈, CineStill 800T 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
@@ -486,8 +512,8 @@ const uiRenderer = {
             return "'블레이드 러너 2049'의 K-퓨처리즘 사이버펑크 누아르 스타일의 포토리얼리스틱 클로즈업 샷. 붉은 감시 센서를 가진 곤충형 비행 머신, 매끄러운 무광 검정 합금 재질. 날카롭고 위협적인 디자인, 작동 시 중앙 센서가 붉은 빛을 발함. 이 미래적 장치는 붕괴된 하이테크 문명의 잔해 속에서 작동. Leica SL2와 90mm f/2.8 매크로 렌즈, Kodak Ektachrome E100 필름으로 최대한의 디테일을 포착. 고도로 상세하고, 전문적이며, 8K 품질.";
         }
         
-        // 기본 번역 (다른 컨셉아트의 경우)
-        return "K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 인물 사진, 비주얼은 '블레이드 러너 2049'와 '사이버펑크 2077' 아트워크에서 영감을 받음. 마른 체형에 저항적인 태도를 지닌 20대 한국인 남성 래퍼, 분노와 공허함이 담긴 날카로운 눈매, 짧은 검은색 헤어. 그는 낡고 기능적인 테크웨어와 해진 스트리트 후드티를 입고 있으며, 한쪽 귀에는 낡은 무선 이어버드를 끼고 있음. 배경은 2324년, 하이테크 문명이 붕괴되고 한국 전통 유산의 폐허가 남은 시대. 그의 내면의 분노를 드러내는 미디엄 샷, 정면 뷰, Canon EOS R5 카메라와 85mm f/1.4 렌즈, CineStill 800T 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+        // 기본 번역 (다른 컨셉아트의 경우) - 이제는 영어 원본을 그대로 반환
+        return englishPrompt;
     },
 
     displayCSVData: function(concept) {
@@ -495,43 +521,41 @@ const uiRenderer = {
         const tbody = table.querySelector('tbody') || table;
         tbody.innerHTML = '';
         
-        // CSV 데이터 매핑 정의
-        const csvMapping = {
-            '101': () => {
-                // KAI의 경우 특별 포맷
-                if (state.currentConceptId === 'KAI') {
-                    return `PORTRAIT, K-퓨처리즘, 사이버펑크 누아르, 영화 '블레이드 러너 2049'의 비주얼 스타일, 게임 '사이버펑크 2077'의 아트워크`;
-                }
-                // 다른 캐릭터의 경우
-                return `PORTRAIT, ${concept.style || 'K-퓨처리즘, 사이버펑크 누아르'}`;
-            },
-            '102': () => concept.subcategory || '포트레이트스틱 (실사 느낌)',
-            '103': () => concept.humanAnimal || '인간',
-            '201': () => concept.description || '20대 한국인 남성 래퍼',
-            '202': () => concept.ethnicity || '한국 전통 유산이 폐허로 남은 2324년, 하이테크 문명이 붕괴된 잔해',
-            '204': () => concept.buildAge || '날고 기능적인 테크웨어, 해진 스트리트 후드티',
-            '206': () => concept.features || '분노와 공허함이 담긴 날카로운 눈매, 짧은 검은색 헤어',
-            '208': () => concept.additionalFeatures || '낡은 무선 이어버드 한 쪽',
-            '211': () => concept.studioType || '마른 체형, 저항적인 태도, 내면에 분노를 품은 모습',
-            '402': () => concept.shotType || '미디엄 샷 (Medium shot), 정면 뷰 (Front view)',
-            '403': () => 'Canon EOS R5',
-            '404': () => 'CineStill 800T',
-            '405': () => '85mm f/1.4',
-            '406': () => '1/125s',
-            '501': () => 'highly detailed, professional, 8K',
-            '502': () => '화면비율 16:9'
-        };
-        
         let hasData = false;
         
-        // CSV 매핑 순서대로 표시
-        for (const [id, getValue] of Object.entries(csvMapping)) {
-            const value = getValue();
-            if (value && value !== '') {
-                hasData = true;
-                const row = tbody.insertRow();
-                row.insertCell(0).textContent = id;
-                row.insertCell(1).textContent = value;
+        // concept.csv_data가 있으면 직접 사용 (JSON 파일에서 가져온 데이터)
+        if (concept.csv_data && typeof concept.csv_data === 'object') {
+            // csv_data의 모든 필드를 순회하며 표시 (빈 값도 포함)
+            for (const [fieldName, value] of Object.entries(concept.csv_data)) {
+                if (value !== undefined && value !== null) {
+                    hasData = true;
+                    const row = tbody.insertRow();
+                    // 필드명을 그대로 ID로 사용
+                    row.insertCell(0).textContent = fieldName;
+                    // 빈 값도 표시 (빈 문자열은 그대로 표시)
+                    row.insertCell(1).textContent = value;
+                }
+            }
+        } 
+        // 구버전 호환성을 위한 폴백 (csv_data가 없는 경우)
+        else {
+            // 기존 하드코딩된 매핑 (구버전 데이터용)
+            const legacyMapping = {
+                'STYLE': concept.style || '',
+                'MEDIUM': concept.subcategory || '',
+                'CHARACTER': concept.description || '',
+                'CAMERA': concept.shotType || '',
+                'QUALITY': 'highly detailed, professional, 8K',
+                'PARAMETERS': '--ar 16:9'
+            };
+            
+            for (const [id, value] of Object.entries(legacyMapping)) {
+                if (value && value !== '') {
+                    hasData = true;
+                    const row = tbody.insertRow();
+                    row.insertCell(0).textContent = id;
+                    row.insertCell(1).textContent = value;
+                }
             }
         }
         
@@ -583,8 +607,9 @@ const uiRenderer = {
                     <div class="prompt-section" style="margin-top: 2rem;">
                         <h4 style="margin-bottom: 1rem;">번역본 프롬프트</h4>
                         <div class="prompt-container">
-                            <div class="prompt-text">${koreanTranslation}</div>
+                            <div class="prompt-text" id="korean-translation-${aiTool}">${koreanTranslation}</div>
                             <button class="btn btn-primary" onclick="utils.copyToClipboard(\`${koreanTranslation.replace(/`/g, '\\`')}\`)">번역본 복사</button>
+                            <button class="btn btn-secondary" onclick="promptManager.editKoreanTranslation('${aiTool}')" style="margin-left: 8px;">번역 수정</button>
                         </div>
                     </div>
                     
@@ -837,9 +862,11 @@ const uiRenderer = {
     },
 
     buildAITabs: function() {
+        // 통합된 AI 탭 시스템 - 하나의 탭 세트로 모든 섹션 관리
         const baseTabsContainer = document.getElementById('base-prompt-ai-tabs');
         const variantTabsContainer = document.getElementById('variant-prompt-ai-tabs');
         
+        // 기본 프롬프트 탭
         if (baseTabsContainer) {
             baseTabsContainer.innerHTML = '';
             for (const [key, tool] of Object.entries(AI_TOOLS)) {
@@ -847,11 +874,12 @@ const uiRenderer = {
                 btn.className = 'ai-tab-button';
                 btn.textContent = tool.name;
                 btn.style.borderColor = tool.color;
-                btn.onclick = () => this.showAITab(key, 'base');
+                btn.onclick = () => this.showUnifiedAITab(key);
                 baseTabsContainer.appendChild(btn);
             }
         }
         
+        // 변형 프롬프트 탭 - 기본 프롬프트와 동기화
         if (variantTabsContainer) {
             variantTabsContainer.innerHTML = '';
             for (const [key, tool] of Object.entries(AI_TOOLS)) {
@@ -859,43 +887,63 @@ const uiRenderer = {
                 btn.className = 'ai-tab-button';
                 btn.textContent = tool.name;
                 btn.style.borderColor = tool.color;
-                btn.onclick = () => this.showAITab(key, 'variant');
+                btn.onclick = () => this.showUnifiedAITab(key);
                 variantTabsContainer.appendChild(btn);
             }
         }
     },
 
+    // 통합된 AI 탭 표시 함수 - 모든 섹션에서 동일한 AI 도구 선택
+    showUnifiedAITab: function(aiTool) {
+        // 상태 업데이트 - 모든 섹션에 동일한 AI 도구 적용
+        state.currentPromptsAITab = aiTool;
+        state.currentVariantsAITab = aiTool;
+        
+        // 기본 프롬프트 콘텐츠 업데이트
+        document.querySelectorAll('#base-prompt-ai-content-area .tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        const baseContent = document.getElementById(`base-${aiTool}-content`);
+        if (baseContent) {
+            baseContent.style.display = 'block';
+        }
+        
+        // 변형 프롬프트 콘텐츠 업데이트
+        document.querySelectorAll('#variant-prompt-ai-content-area .tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        const variantContent = document.getElementById(`variant-${aiTool}-content`);
+        if (variantContent) {
+            variantContent.style.display = 'block';
+        }
+        
+        // 모든 AI 탭 버튼 상태 업데이트
+        const aiToolIndex = Object.keys(AI_TOOLS).indexOf(aiTool) + 1;
+        
+        // 기본 프롬프트 탭 버튼 업데이트
+        document.querySelectorAll('#base-prompt-ai-tabs .ai-tab-button').forEach((btn, index) => {
+            btn.classList.remove('active');
+            btn.style.backgroundColor = '';
+            if (index + 1 === aiToolIndex) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = AI_TOOLS[aiTool].color + '20';
+            }
+        });
+        
+        // 변형 프롬프트 탭 버튼 업데이트
+        document.querySelectorAll('#variant-prompt-ai-tabs .ai-tab-button').forEach((btn, index) => {
+            btn.classList.remove('active');
+            btn.style.backgroundColor = '';
+            if (index + 1 === aiToolIndex) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = AI_TOOLS[aiTool].color + '20';
+            }
+        });
+    },
+    
+    // 기존 showAITab 함수를 위한 호환성 래퍼
     showAITab: function(aiTool, type) {
-        if (type === 'base') {
-            state.currentPromptsAITab = aiTool;
-            document.querySelectorAll('#base-prompt-ai-content-area .tab-content').forEach(tab => {
-                tab.style.display = 'none';
-            });
-            document.querySelectorAll('#base-prompt-ai-tabs .ai-tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-        } else if (type === 'variant') {
-            state.currentVariantsAITab = aiTool;
-            document.querySelectorAll('#variant-prompt-ai-content-area .tab-content').forEach(tab => {
-                tab.style.display = 'none';
-            });
-            document.querySelectorAll('#variant-prompt-ai-tabs .ai-tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-        }
-        
-        const contentId = `${type}-${aiTool}-content`;
-        const content = document.getElementById(contentId);
-        if (content) {
-            content.style.display = 'block';
-        }
-        
-        const tabsContainer = type === 'base' ? 'base-prompt-ai-tabs' : 'variant-prompt-ai-tabs';
-        const activeBtn = document.querySelector(`#${tabsContainer} .ai-tab-button:nth-child(${Object.keys(AI_TOOLS).indexOf(aiTool) + 1})`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-            activeBtn.style.backgroundColor = AI_TOOLS[aiTool].color + '20';
-        }
+        this.showUnifiedAITab(aiTool);
     },
 
     showVariantTypeTab: function(aiTool, typeKey) {
@@ -1260,6 +1308,114 @@ const promptManager = {
             `;
             document.head.appendChild(style);
         }
+    },
+    
+    editKoreanTranslation: function(aiTool) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        // 현재 번역 프롬프트 가져오기
+        const currentTranslation = uiRenderer.translateToKorean('', state.currentConceptId);
+        
+        // 다이얼로그 생성
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        `;
+        
+        dialog.innerHTML = `
+            <h3 style="margin-bottom: 15px; color: #fff;">번역 프롬프트 수정 (${concept.name || state.currentConceptId})</h3>
+            <textarea id="edit-korean-translation-text" 
+                      style="width: 100%; height: 300px; background: #1a1a1a; color: #fff; 
+                             border: 1px solid #444; border-radius: 4px; padding: 10px; 
+                             font-family: monospace; font-size: 14px;"
+                      placeholder="한국어 번역 프롬프트를 입력하세요">${currentTranslation}</textarea>
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="promptManager.resetKoreanTranslation()" 
+                        style="padding: 8px 16px; background: #6b7280; color: white; 
+                               border: none; border-radius: 4px; cursor: pointer;">
+                    원본으로 되돌리기
+                </button>
+                <button onclick="document.body.removeChild(this.parentElement.parentElement)" 
+                        style="padding: 8px 16px; background: #6b7280; color: white; 
+                               border: none; border-radius: 4px; cursor: pointer;">
+                    취소
+                </button>
+                <button onclick="promptManager.saveKoreanTranslation('${aiTool}')" 
+                        style="padding: 8px 16px; background: #3b82f6; color: white; 
+                               border: none; border-radius: 4px; cursor: pointer;">
+                    저장
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(dialog);
+    },
+    
+    saveKoreanTranslation: function(aiTool) {
+        const editedText = document.getElementById('edit-korean-translation-text').value;
+        const translationKey = `${state.currentConceptId}_universal_translated`;
+        
+        // localStorage에서 수정된 번역 가져오기
+        const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
+        
+        // 수정된 번역 저장
+        editedTranslations[translationKey] = editedText;
+        localStorage.setItem('editedKoreanTranslations', JSON.stringify(editedTranslations));
+        
+        // UI 업데이트
+        const translationElement = document.getElementById(`korean-translation-${aiTool}`);
+        if (translationElement) {
+            translationElement.textContent = editedText;
+        }
+        
+        // 다이얼로그 닫기
+        const dialog = document.getElementById('edit-korean-translation-text').parentElement.parentElement;
+        document.body.removeChild(dialog);
+        
+        utils.showToast('번역 프롬프트가 수정되었습니다.');
+    },
+    
+    resetKoreanTranslation: function() {
+        const translationKey = `${state.currentConceptId}_universal_translated`;
+        
+        // localStorage에서 수정된 번역 삭제
+        const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
+        delete editedTranslations[translationKey];
+        localStorage.setItem('editedKoreanTranslations', JSON.stringify(editedTranslations));
+        
+        // 원본 번역 가져오기
+        const concept = dataManager.getCurrentConcept();
+        let originalTranslation = '';
+        
+        if (concept && concept.prompts && concept.prompts.universal_translated) {
+            originalTranslation = concept.prompts.universal_translated;
+        } else {
+            // 하드코딩된 번역 확인 (폴백)
+            originalTranslation = uiRenderer.translateToKorean('', state.currentConceptId);
+        }
+        
+        // 텍스트 에리어 업데이트
+        const textArea = document.getElementById('edit-korean-translation-text');
+        if (textArea) {
+            textArea.value = originalTranslation;
+        }
+        
+        utils.showToast('원본 번역으로 되돌렸습니다.');
     },
     
     aiEditPrompt: function(aiTool, type, index = null) {
