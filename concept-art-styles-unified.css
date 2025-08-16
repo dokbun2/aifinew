@@ -782,6 +782,21 @@ select:focus {
     }
 }
 
+/* ===== Section Block Title Styles ===== */
+.section-block-title {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 /* ===== Additional Image Card Styles ===== */
 .image-card .image-type {
     font-size: 0.75rem;

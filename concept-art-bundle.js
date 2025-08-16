@@ -375,6 +375,9 @@ const dataManager = {
         state.currentPromptsAITab = null;
         state.currentVariantsAITab = null;
         state.currentVariantTypeTab = {};
+        
+        // 컨셉 상세 정보 표시
+        uiRenderer.displayConceptDetail();
     }
 };
 
@@ -440,9 +443,7 @@ const uiRenderer = {
         conceptTitle.textContent = name;
         
         this.displayCSVData(concept);
-        this.buildAITabs(); // AI 도구 탭 버튼 생성
         this.displayBasePrompts(concept);
-        this.displayVariants(concept);
         imageManager.updateImageGallery(concept);
         
         // 첫 번째 AI 도구 탭 자동 선택
@@ -517,11 +518,38 @@ const uiRenderer = {
     },
 
     displayCSVData: function(concept) {
-        const table = document.getElementById('csv-data-table');
-        const tbody = table.querySelector('tbody') || table;
-        tbody.innerHTML = '';
+        const csvTab = document.getElementById('csv-tab');
+        if (!csvTab) return;
+        
+        // CSV 탭 내용을 재구성 (블록 스타일 제목과 복사 버튼 제거)
+        csvTab.innerHTML = `
+            <div class="section-block-title">블록화</div>
+            <table class="csv-table" id="csv-data-table">
+                <thead><tr><th>ID</th><th>원본</th><th>번역본</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        `;
+        
+        const tbody = csvTab.querySelector('tbody');
+        if (!tbody) return;
         
         let hasData = false;
+        
+        // 영문 데이터 파싱 (prompts.universal에서 추출)
+        let englishData = {};
+        if (concept.prompts && concept.prompts.universal) {
+            const englishPrompt = concept.prompts.universal;
+            // 세미콜론으로 구분된 각 항목을 파싱
+            const items = englishPrompt.split(';');
+            items.forEach(item => {
+                const parts = item.trim().split(':');
+                if (parts.length >= 2) {
+                    const key = parts[0].trim();
+                    const value = parts.slice(1).join(':').trim();
+                    englishData[key] = value;
+                }
+            });
+        }
         
         // concept.csv_data가 있으면 직접 사용 (JSON 파일에서 가져온 데이터)
         if (concept.csv_data && typeof concept.csv_data === 'object') {
@@ -530,10 +558,20 @@ const uiRenderer = {
                 if (value !== undefined && value !== null) {
                     hasData = true;
                     const row = tbody.insertRow();
-                    // 필드명을 그대로 ID로 사용
+                    
+                    // ID 컬럼
                     row.insertCell(0).textContent = fieldName;
-                    // 빈 값도 표시 (빈 문자열은 그대로 표시)
-                    row.insertCell(1).textContent = value;
+                    
+                    // 원본 (영문) 컬럼
+                    const originalCell = row.insertCell(1);
+                    const englishValue = englishData[fieldName] || '';
+                    originalCell.textContent = englishValue;
+                    originalCell.style.color = '#aaa';
+                    
+                    // 번역본 (한글) 컬럼
+                    const translationCell = row.insertCell(2);
+                    translationCell.textContent = value;
+                    translationCell.style.color = '#fff';
                 }
             }
         } 
@@ -562,88 +600,141 @@ const uiRenderer = {
         if (!hasData) {
             const row = tbody.insertRow();
             const cell = row.insertCell(0);
-            cell.colSpan = 2;
+            cell.colSpan = 3;
             cell.textContent = 'CSV 데이터가 없습니다.';
         }
     },
 
     displayBasePrompts: function(concept) {
-        const contentArea = document.getElementById('base-prompt-ai-content-area');
+        const contentArea = document.getElementById('base-prompt-content');
+        if (!contentArea) return;
+        
         contentArea.innerHTML = '';
         
-        if (!concept.base_prompts || Object.keys(concept.base_prompts).length === 0) {
-            contentArea.innerHTML = '<div class="no-prompt-message">기본 프롬프트가 없습니다.</div>';
-            return;
+        // universal 프롬프트 사용 (영어와 한글)
+        const englishPrompt = concept.prompts?.universal || '';
+        const koreanPrompt = concept.prompts?.universal_translated || '';
+        
+        // 영어 프롬프트
+        if (englishPrompt) {
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            const promptKey = `${state.currentConceptId}_universal`;
+            const displayEnglish = editedPrompts[promptKey]?.prompt || englishPrompt;
+            const isEdited = editedPrompts[promptKey] ? true : false;
+            
+            const englishContainer = document.createElement('div');
+            englishContainer.className = 'prompt-section';
+            englishContainer.innerHTML = `
+                <h4 style="margin-bottom: 1rem;">영어 원본 프롬프트</h4>
+                <div class="prompt-container">
+                    <div class="prompt-text">${displayEnglish}</div>
+                    ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
+                    <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('english')">영어 원본 복사</button>
+                    <button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('english')" style="margin-left: 8px;">프롬프트 수정</button>
+                </div>
+            `;
+            contentArea.appendChild(englishContainer);
         }
         
-        for (const [aiTool, prompt] of Object.entries(concept.base_prompts)) {
-            if (AI_TOOLS[aiTool] && prompt) {
-                const promptDiv = document.createElement('div');
-                promptDiv.className = 'tab-content';
-                promptDiv.id = `base-${aiTool}-content`;
-                promptDiv.style.display = 'none';
-                
-                // 수정된 프롬프트 확인
-                const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-                const promptKey = `${state.currentConceptId}_${aiTool}_base`;
-                const displayPrompt = editedPrompts[promptKey]?.prompt || prompt;
-                const isEdited = editedPrompts[promptKey] ? true : false;
-                
-                // 한국어 번역 생성
-                const koreanTranslation = this.translateToKorean(displayPrompt, state.currentConceptId);
-                
-                promptDiv.innerHTML = `
-                    <div class="prompt-section">
-                        <h4 style="margin-bottom: 1rem;">영어 원본 프롬프트</h4>
-                        <div class="prompt-container">
-                            <div class="prompt-text">${displayPrompt}</div>
-                            ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
-                            <button class="btn btn-primary" onclick="promptManager.copyPrompt('${aiTool}', 'base')">영어 원본 복사</button>
-                            <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', 'base')" style="margin-left: 8px;">프롬프트 수정</button>
-                            <button class="btn btn-ai-edit" onclick="promptManager.aiEditPrompt('${aiTool}', 'base')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
-                        </div>
-                    </div>
-                    
-                    <div class="prompt-section" style="margin-top: 2rem;">
-                        <h4 style="margin-bottom: 1rem;">번역본 프롬프트</h4>
-                        <div class="prompt-container">
-                            <div class="prompt-text" id="korean-translation-${aiTool}">${koreanTranslation}</div>
-                            <button class="btn btn-primary" onclick="utils.copyToClipboard(\`${koreanTranslation.replace(/`/g, '\\`')}\`)">번역본 복사</button>
-                            <button class="btn btn-secondary" onclick="promptManager.editKoreanTranslation('${aiTool}')" style="margin-left: 8px;">번역 수정</button>
-                        </div>
-                    </div>
-                    
-                    <div class="image-container" id="image-base-${aiTool}">
-                        <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
-                    </div>
-                    <div class="image-url-section">
-                        <div class="image-url-input-group">
-                            <input type="text" 
-                                   class="image-url-input" 
-                                   id="image-url-input-base-${aiTool}"
-                                   placeholder="이미지 URL을 입력하세요"
-                                   onkeypress="if(event.key==='Enter') imageManager.applyImageUrl('${aiTool}', 'base')"
-                                   oninput="imageManager.previewImageUrl(this.value, 'base', '${aiTool}')">
-                            <button class="btn-apply-url" onclick="imageManager.applyImageUrl('${aiTool}', 'base')">적용</button>
-                        </div>
-                    </div>
-                    <div class="additional-images-section">
-                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">🖼️ 추가 이미지</h4>
-                        <div class="additional-images-grid">
-                            ${this.createAdditionalImageSlots(concept, aiTool)}
-                        </div>
-                    </div>
-                `;
-                
-                contentArea.appendChild(promptDiv);
-            }
+        // 한글 프롬프트
+        if (koreanPrompt) {
+            const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
+            const translationKey = `${state.currentConceptId}_universal_translated`;
+            const displayKorean = editedTranslations[translationKey] || koreanPrompt;
+            
+            const koreanContainer = document.createElement('div');
+            koreanContainer.className = 'prompt-section';
+            koreanContainer.style.marginTop = '2rem';
+            koreanContainer.innerHTML = `
+                <h4 style="margin-bottom: 1rem;">번역본 프롬프트</h4>
+                <div class="prompt-container">
+                    <div class="prompt-text" id="korean-translation-universal">${displayKorean}</div>
+                    <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('korean')">번역본 복사</button>
+                    <button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('korean')" style="margin-left: 8px;">번역 수정</button>
+                </div>
+            `;
+            contentArea.appendChild(koreanContainer);
         }
         
-        this.buildAITabs();
-        const firstAITool = Object.keys(concept.base_prompts).find(tool => AI_TOOLS[tool] && concept.base_prompts[tool]);
-        if (firstAITool) {
-            this.showAITab(firstAITool, 'base');
-        }
+        // 이미지 표시 섹션 (번역본 프롬프트 아래로 이동)
+        const imageSection = document.createElement('div');
+        imageSection.className = 'image-display-section';
+        imageSection.style.marginTop = '2rem';
+        imageSection.innerHTML = `
+            <div class="image-container">
+                ${concept.main_image_url ? 
+                    `<img src="${concept.main_image_url}" alt="${concept.name}" onclick="ConceptArtManager.openImageModal('${concept.main_image_url}')" />` : 
+                    '<div class="no-image-message">이미지를 추가하려면 아래 URL을 입력하세요</div>'}
+            </div>
+        `;
+        contentArea.appendChild(imageSection);
+        
+        // 이미지 URL 입력 섹션 (번역본 프롬프트 아래로 이동)
+        const imageUrlSection = document.createElement('div');
+        imageUrlSection.className = 'image-url-section';
+        imageUrlSection.innerHTML = `
+            <div class="image-url-input-group">
+                <input type="url" 
+                       class="image-url-input" 
+                       id="main-image-url-input" 
+                       placeholder="이미지 URL을 입력하세요 (예: https://example.com/image.jpg)" 
+                       value="${concept.main_image_url || ''}">
+                <button class="btn-apply-url" onclick="ConceptArtManager.applyMainImageUrl()">적용</button>
+            </div>
+        `;
+        contentArea.appendChild(imageUrlSection);
+        
+        // 추가 이미지 섹션
+        const additionalImagesSection = document.createElement('div');
+        additionalImagesSection.className = 'additional-images-section';
+        additionalImagesSection.innerHTML = `
+            <div class="additional-images-grid" id="additional-images-grid">
+                ${[1, 2, 3, 4].map(i => `
+                    <div class="additional-image-slot">
+                        <div class="additional-image-preview">
+                            ${concept.additional_images && concept.additional_images[`image_${i}`]?.url ? 
+                                `<img src="${concept.additional_images[`image_${i}`].url}" 
+                                      alt="추가 이미지 ${i}" 
+                                      onclick="ConceptArtManager.openImageModal('${concept.additional_images[`image_${i}`].url}')" />` : 
+                                '<div class="no-image-placeholder">이미지 없음</div>'}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">이미지 URL</label>
+                            <input type="url" 
+                                   class="form-input additional-image-url" 
+                                   data-index="${i}" 
+                                   placeholder="URL 입력" 
+                                   value="${concept.additional_images?.[`image_${i}`]?.url || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">설명</label>
+                            <textarea class="form-textarea additional-image-desc" 
+                                      data-index="${i}" 
+                                      placeholder="이미지 설명 입력">${concept.additional_images?.[`image_${i}`]?.description || ''}</textarea>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        contentArea.appendChild(additionalImagesSection);
+        
+        // 추가 이미지 URL 입력 이벤트 리스너
+        contentArea.querySelectorAll('.additional-image-url').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const index = e.target.dataset.index;
+                const url = e.target.value;
+                ConceptArtManager.updateAdditionalImage(index, 'url', url);
+            });
+        });
+        
+        // 추가 이미지 설명 입력 이벤트 리스너
+        contentArea.querySelectorAll('.additional-image-desc').forEach(textarea => {
+            textarea.addEventListener('change', (e) => {
+                const index = e.target.dataset.index;
+                const desc = e.target.value;
+                ConceptArtManager.updateAdditionalImage(index, 'description', desc);
+            });
+        });
     },
 
     createAdditionalImageSlots: function(concept, aiTool) {
@@ -862,42 +953,13 @@ const uiRenderer = {
     },
 
     buildAITabs: function() {
-        // 통합된 AI 탭 시스템 - 하나의 탭 세트로 모든 섹션 관리
-        const baseTabsContainer = document.getElementById('base-prompt-ai-tabs');
-        const variantTabsContainer = document.getElementById('variant-prompt-ai-tabs');
-        
-        // 기본 프롬프트 탭
-        if (baseTabsContainer) {
-            baseTabsContainer.innerHTML = '';
-            for (const [key, tool] of Object.entries(AI_TOOLS)) {
-                const btn = document.createElement('button');
-                btn.className = 'ai-tab-button';
-                btn.textContent = tool.name;
-                btn.style.borderColor = tool.color;
-                btn.onclick = () => this.showUnifiedAITab(key);
-                baseTabsContainer.appendChild(btn);
-            }
-        }
-        
-        // 변형 프롬프트 탭 - 기본 프롬프트와 동기화
-        if (variantTabsContainer) {
-            variantTabsContainer.innerHTML = '';
-            for (const [key, tool] of Object.entries(AI_TOOLS)) {
-                const btn = document.createElement('button');
-                btn.className = 'ai-tab-button';
-                btn.textContent = tool.name;
-                btn.style.borderColor = tool.color;
-                btn.onclick = () => this.showUnifiedAITab(key);
-                variantTabsContainer.appendChild(btn);
-            }
-        }
+        // AI 탭 시스템 제거됨 - 더 이상 사용하지 않음
     },
 
-    // 통합된 AI 탭 표시 함수 - 모든 섹션에서 동일한 AI 도구 선택
+    // AI 탭 표시 함수
     showUnifiedAITab: function(aiTool) {
-        // 상태 업데이트 - 모든 섹션에 동일한 AI 도구 적용
+        // 상태 업데이트
         state.currentPromptsAITab = aiTool;
-        state.currentVariantsAITab = aiTool;
         
         // 기본 프롬프트 콘텐츠 업데이트
         document.querySelectorAll('#base-prompt-ai-content-area .tab-content').forEach(tab => {
@@ -908,30 +970,11 @@ const uiRenderer = {
             baseContent.style.display = 'block';
         }
         
-        // 변형 프롬프트 콘텐츠 업데이트
-        document.querySelectorAll('#variant-prompt-ai-content-area .tab-content').forEach(tab => {
-            tab.style.display = 'none';
-        });
-        const variantContent = document.getElementById(`variant-${aiTool}-content`);
-        if (variantContent) {
-            variantContent.style.display = 'block';
-        }
-        
-        // 모든 AI 탭 버튼 상태 업데이트
+        // AI 탭 버튼 상태 업데이트
         const aiToolIndex = Object.keys(AI_TOOLS).indexOf(aiTool) + 1;
         
         // 기본 프롬프트 탭 버튼 업데이트
         document.querySelectorAll('#base-prompt-ai-tabs .ai-tab-button').forEach((btn, index) => {
-            btn.classList.remove('active');
-            btn.style.backgroundColor = '';
-            if (index + 1 === aiToolIndex) {
-                btn.classList.add('active');
-                btn.style.backgroundColor = AI_TOOLS[aiTool].color + '20';
-            }
-        });
-        
-        // 변형 프롬프트 탭 버튼 업데이트
-        document.querySelectorAll('#variant-prompt-ai-tabs .ai-tab-button').forEach((btn, index) => {
             btn.classList.remove('active');
             btn.style.backgroundColor = '';
             if (index + 1 === aiToolIndex) {
@@ -1011,6 +1054,99 @@ const promptManager = {
         utils.copyToClipboard(csvData.join('\n'));
     },
 
+    copyUniversalPrompt: function(language) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        let promptToCopy = '';
+        
+        if (language === 'english') {
+            // 수정된 프롬프트 확인
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            const promptKey = `${state.currentConceptId}_universal`;
+            promptToCopy = editedPrompts[promptKey]?.prompt || concept.prompts?.universal || '';
+        } else if (language === 'korean') {
+            // 수정된 한국어 번역 확인
+            const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
+            const translationKey = `${state.currentConceptId}_universal_translated`;
+            promptToCopy = editedTranslations[translationKey] || concept.prompts?.universal_translated || '';
+        }
+        
+        if (promptToCopy) {
+            utils.copyToClipboard(promptToCopy);
+        } else {
+            utils.showToast('복사할 프롬프트가 없습니다.');
+        }
+    },
+    
+    editUniversalPrompt: function(language) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        if (language === 'english') {
+            // 영어 프롬프트 수정
+            const originalPrompt = concept.prompts?.universal || '';
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            const promptKey = `${state.currentConceptId}_universal`;
+            const currentPrompt = editedPrompts[promptKey]?.prompt || originalPrompt;
+            
+            // 수정 모달 생성
+            const modalHtml = `
+                <div id="prompt-edit-modal" class="modal-overlay" onclick="promptManager.closeEditModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3>영어 프롬프트 수정</h3>
+                            <button class="modal-close-btn" onclick="promptManager.closeEditModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>프롬프트:</label>
+                                <textarea id="edit-prompt-text" class="prompt-textarea" rows="6">${currentPrompt}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="promptManager.closeEditModal()">취소</button>
+                            <button class="btn btn-primary" onclick="promptManager.saveUniversalPrompt('english')">저장</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            this.addPromptEditModalStyles();
+            
+        } else if (language === 'korean') {
+            // 한국어 번역 수정
+            promptManager.editKoreanTranslation('universal');
+        }
+    },
+    
+    saveUniversalPrompt: function(language) {
+        const editedText = document.getElementById('edit-prompt-text').value;
+        
+        if (language === 'english') {
+            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+            const promptKey = `${state.currentConceptId}_universal`;
+            
+            editedPrompts[promptKey] = {
+                conceptId: state.currentConceptId,
+                prompt: editedText,
+                editedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('editedConceptPrompts', JSON.stringify(editedPrompts));
+        }
+        
+        this.closeEditModal();
+        uiRenderer.displayConceptDetail();
+        utils.showToast('프롬프트가 수정되었습니다.');
+    },
+    
     copyPrompt: function(aiTool, type) {
         const concept = dataManager.getCurrentConcept();
         if (!concept) {
@@ -1740,14 +1876,47 @@ const imageManager = {
         
         galleryContent.innerHTML = '';
         
-        if (!concept?.generated_images && !concept?.additional_images) {
+        // 이미지가 있는지 확인
+        const hasMainImage = concept?.main_image_url;
+        const hasAdditionalImages = concept?.additional_images && Object.keys(concept.additional_images).length > 0;
+        const hasGeneratedImages = concept?.generated_images;
+        
+        if (!hasMainImage && !hasAdditionalImages && !hasGeneratedImages) {
             galleryContent.innerHTML = '<div class="no-image-message">컨셉아트를 선택하고 이미지를 추가하면 갤러리가 표시됩니다.</div>';
             return;
         }
         
         const images = [];
         
-        // 기본 프롬프트 이미지들
+        // 메인 이미지 추가
+        if (concept.main_image_url) {
+            images.push({
+                url: concept.main_image_url,
+                aiTool: 'main',
+                type: '메인 이미지',
+                title: '메인 이미지'
+            });
+        }
+        
+        // 추가 이미지들 (새로운 구조 - image_1, image_2, etc.)
+        if (concept.additional_images) {
+            for (let i = 1; i <= 4; i++) {
+                const imageKey = `image_${i}`;
+                const imageData = concept.additional_images[imageKey];
+                if (imageData && imageData.url) {
+                    images.push({
+                        url: imageData.url,
+                        aiTool: 'additional',
+                        type: '추가 이미지',
+                        title: `추가 이미지 ${i}`,
+                        description: imageData.description || '',
+                        imageType: imageData.type || 'reference'
+                    });
+                }
+            }
+        }
+        
+        // 기존 generated_images 구조도 지원 (하위 호환성)
         if (concept.generated_images?.base_prompts) {
             for (const [aiTool, imageUrl] of Object.entries(concept.generated_images.base_prompts)) {
                 if (imageUrl) {
@@ -1761,7 +1930,6 @@ const imageManager = {
             }
         }
         
-        // 변형 프롬프트 이미지들
         if (concept.generated_images?.variations) {
             for (const [aiTool, variations] of Object.entries(concept.generated_images.variations)) {
                 for (const [variationKey, imageUrl] of Object.entries(variations)) {
@@ -1775,24 +1943,6 @@ const imageManager = {
                         });
                     }
                 }
-            }
-        }
-        
-        // 추가 이미지들
-        if (concept.additional_images) {
-            for (const [aiTool, additionalImages] of Object.entries(concept.additional_images)) {
-                additionalImages.forEach((imageData, index) => {
-                    if (imageData.url) {
-                        images.push({
-                            url: imageData.url,
-                            aiTool: aiTool,
-                            type: '추가 이미지',
-                            title: `${aiTool.toUpperCase()} - 추가 이미지 ${index + 1}`,
-                            description: imageData.description || '',
-                            imageType: imageData.type || 'reference'
-                        });
-                    }
-                });
             }
         }
         
@@ -1917,6 +2067,126 @@ const imageManager = {
         }
         
         this.updateImageGallery(concept);
+    }
+};
+
+// ===== 탭 전환 함수 =====
+window.openTab = function(event, tabName) {
+    // 모든 탭 콘텐츠 숨기기
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(tab => {
+        tab.style.display = 'none';
+        tab.classList.remove('active');
+    });
+    
+    // 모든 탭 버튼의 active 클래스 제거
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // 선택된 탭 표시
+    const selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+        selectedTab.classList.add('active');
+    }
+    
+    // 클릭된 버튼에 active 클래스 추가
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+    
+    // 이미지 갤러리 탭이 선택되면 갤러리 업데이트
+    if (tabName === 'image-gallery-tab') {
+        const concept = dataManager.getCurrentConcept();
+        if (concept) {
+            imageManager.updateImageGallery(concept);
+        }
+    }
+};
+
+// ===== ConceptArtManager 글로벌 객체 =====
+window.ConceptArtManager = {
+    currentConcept: null,
+    
+    openImageModal: function(url) {
+        imageManager.openImageModal(url);
+    },
+    
+    applyMainImageUrl: function() {
+        const input = document.getElementById('main-image-url-input');
+        if (!input) return;
+        
+        const url = input.value.trim();
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) return;
+        
+        // 현재 컨셉에 메인 이미지 URL 저장
+        concept.main_image_url = url;
+        this.currentConcept = concept;
+        
+        // 이미지 컨테이너 업데이트
+        const imageContainer = document.querySelector('.image-container');
+        if (imageContainer) {
+            if (url) {
+                imageContainer.innerHTML = `<img src="${url}" alt="${concept.name}" onclick="ConceptArtManager.openImageModal('${url}')" />`;
+            } else {
+                imageContainer.innerHTML = '<div class="no-image-message">이미지를 추가하려면 아래 URL을 입력하세요</div>';
+            }
+        }
+        
+        // 로컬 스토리지에 저장
+        dataManager.saveToLocalStorage();
+        utils.showToast('이미지 URL이 적용되었습니다.');
+    },
+    
+    updateAdditionalImage: function(index, field, value) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) return;
+        
+        // additional_images 객체 초기화
+        if (!concept.additional_images) {
+            concept.additional_images = {};
+        }
+        
+        // 특정 이미지 슬롯 초기화
+        const imageKey = `image_${index}`;
+        if (!concept.additional_images[imageKey]) {
+            concept.additional_images[imageKey] = {};
+        }
+        
+        // 필드 업데이트
+        concept.additional_images[imageKey][field] = value;
+        
+        // URL이 변경된 경우 이미지 미리보기 업데이트
+        if (field === 'url') {
+            const previewDiv = document.querySelector(`.additional-image-slot:nth-child(${index}) .additional-image-preview`);
+            if (previewDiv) {
+                if (value) {
+                    previewDiv.innerHTML = `<img src="${value}" alt="추가 이미지 ${index}" onclick="ConceptArtManager.openImageModal('${value}')" />`;
+                } else {
+                    previewDiv.innerHTML = '<div class="no-image-placeholder">이미지 없음</div>';
+                }
+            }
+        }
+        
+        this.currentConcept = concept;
+        
+        // 로컬 스토리지에 저장
+        dataManager.saveToLocalStorage();
+    },
+    
+    saveData: function() {
+        dataManager.saveToLocalStorage();
+    },
+    
+    showToast: function(message) {
+        utils.showToast(message);
+    },
+    
+    copyToClipboard: function(text) {
+        utils.copyToClipboard(text);
     }
 };
 
