@@ -175,11 +175,28 @@ const dataManager = {
             });
         }
         
+        // 모든 컨셉의 이미지 구조 확인 및 보존
+        // main_image_url과 additional_images 구조가 있으면 그대로 유지
+        for (const [category, concepts] of Object.entries(exportDataCopy)) {
+            for (const [conceptId, concept] of Object.entries(concepts)) {
+                // main_image_url과 additional_images가 있으면 그대로 유지
+                // generated_images 구조도 함께 유지 (하위 호환성)
+                if (!concept.main_image_url && concept.generated_images?.base_prompts) {
+                    // 기존 generated_images에서 첫 번째 이미지를 main_image_url로 설정
+                    const firstImage = Object.values(concept.generated_images.base_prompts)[0];
+                    if (firstImage) {
+                        concept.main_image_url = firstImage;
+                    }
+                }
+            }
+        }
+        
         const exportData = {
             metadata: {
-                version: "1.2",
+                version: "1.3",  // 버전 업데이트
                 timestamp: new Date().toISOString(),
-                format: "concept_art_collection"
+                format: "concept_art_collection",
+                includes_new_image_structure: true  // 새로운 이미지 구조 포함 표시
             },
             project_info: {
                 ...state.projectInfo,
