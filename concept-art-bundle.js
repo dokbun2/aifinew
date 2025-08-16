@@ -409,28 +409,86 @@ const uiRenderer = {
         document.getElementById('image-gallery-content').innerHTML = 
             '<div class="no-image-message">컨셉아트를 선택하고 이미지를 추가하면 갤러리가 표시됩니다.</div>';
     },
+    
+    translateToKorean: function(englishPrompt, conceptId) {
+        // KAI 캐릭터에 대한 번역
+        if (conceptId === 'KAI') {
+            return "K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 인물 사진, 비주얼은 '블레이드 러너 2049'와 '사이버펑크 2077' 아트워크에서 영감을 받음. 마른 체형에 저항적인 태도를 지닌 20대 한국인 남성 래퍼, 분노와 공허함이 담긴 날카로운 눈매, 짧은 검은색 헤어. 그는 낡고 기능적인 테크웨어와 해진 스트리트 후드티를 입고 있으며, 한쪽 귀에는 낡은 무선 이어버드를 끼고 있음. 배경은 2324년, 하이테크 문명이 붕괴되고 한국 전통 유산의 폐허가 남은 시대. 그의 내면의 분노를 드러내는 미디엄 샷, 정면 뷰, Canon EOS R5 카메라와 85mm f/1.4 렌즈, CineStill 800T 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+        }
+        
+        // NURI 캐릭터에 대한 번역
+        if (conceptId === 'NURI') {
+            return "K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 인물 사진, 비주얼은 '블레이드 러너 2049'와 '사이버펑크 2077' 아트워크에서 영감을 받음. 신비롭고 반투명한 존재감을 발산하는 20대 한국인 여성 영매. 수수께끼 같고 깊은 눈과 길고 부드러운 은발을 가졌으며, 한복의 실루엣과 단청 문양을 현대적으로 재해석한 의상을 착용, 발광하는 반투명한 소재로 만들어진 옷과 옥 비녀를 착용. 세상을 관조하는 듯한 차분한 태도. 미디엄 샷, 정면 뷰, Sony A7R IV와 85mm f/1.4 렌즈, Kodak Portra 400 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+        }
+        
+        // 무너진 궁궐의 폐허에 대한 번역
+        if (conceptId === '무너진 궁궐의 폐허') {
+            return "'블레이드 러너 2049'의 K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 풍경. 전통 기와와 단청이 부서지고 방치된 폐허 궁궐 정원의 와이드 샷. 차가운 콘크리트 잔해 더미 위로 황금빛 이끼가 자라며, 잿빛 하늘과 대비되는 신비로운 분위기를 조성. 황혼 시간대, 맑은 날의 약하고 부드러운 자연광. Nikon D850과 16-35mm f/2.8 렌즈, Kodak Ektar 100 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+        }
+        
+        // 종로 3가 지하철역 폐허에 대한 번역
+        if (conceptId === '종로 3가 지하철역 폐허') {
+            return "'블레이드 러너 2049'의 K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 실내 공간. 어둡고 물이 고이고 낡은 지하철 터널의 와이드 샷, 깨진 타일과 녹슨 철골 구조물. 자연광이 없는 밤, 유일한 광원은 캐릭터의 손에서 나오는 생체발광으로 으스스한 빛을 장면에 비춤. Sony A7 III와 35mm f/1.4 렌즈, CineStill 800T 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+        }
+        
+        // 무너진 숭례문에 대한 번역
+        if (conceptId === '무너진 숭례문') {
+            return "'블레이드 러너 2049'의 K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 풍경 장면. 무너진 성곽 꼭대기에서 하이테크 폐허 도시를 내려다보는 와이드 공중 샷. 잿빛 도시 위로 새벽이 밝아오는 장엄한 광경, 주인공들의 몸에서 방출되는 거대한 황금빛 오라. 맑은 날씨, 점차 밝아지는 새벽빛. Canon EOS 5D Mark IV와 24mm f/2.8 렌즈, Fujichrome Velvia 50 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+        }
+        
+        // 감시 드론에 대한 번역
+        if (conceptId === '감시 드론') {
+            return "'블레이드 러너 2049'의 K-퓨처리즘 사이버펑크 누아르 스타일의 포토리얼리스틱 클로즈업 샷. 붉은 감시 센서를 가진 곤충형 비행 머신, 매끄러운 무광 검정 합금 재질. 날카롭고 위협적인 디자인, 작동 시 중앙 센서가 붉은 빛을 발함. 이 미래적 장치는 붕괴된 하이테크 문명의 잔해 속에서 작동. Leica SL2와 90mm f/2.8 매크로 렌즈, Kodak Ektachrome E100 필름으로 최대한의 디테일을 포착. 고도로 상세하고, 전문적이며, 8K 품질.";
+        }
+        
+        // 기본 번역 (다른 컨셉아트의 경우)
+        return "K-퓨처리즘과 사이버펑크 누아르 스타일의 포토리얼리스틱 인물 사진, 비주얼은 '블레이드 러너 2049'와 '사이버펑크 2077' 아트워크에서 영감을 받음. 마른 체형에 저항적인 태도를 지닌 20대 한국인 남성 래퍼, 분노와 공허함이 담긴 날카로운 눈매, 짧은 검은색 헤어. 그는 낡고 기능적인 테크웨어와 해진 스트리트 후드티를 입고 있으며, 한쪽 귀에는 낡은 무선 이어버드를 끼고 있음. 배경은 2324년, 하이테크 문명이 붕괴되고 한국 전통 유산의 폐허가 남은 시대. 그의 내면의 분노를 드러내는 미디엄 샷, 정면 뷰, Canon EOS R5 카메라와 85mm f/1.4 렌즈, CineStill 800T 필름으로 촬영. 고도로 상세하고, 전문적이며, 8K 품질.";
+    },
 
     displayCSVData: function(concept) {
         const table = document.getElementById('csv-data-table');
         const tbody = table.querySelector('tbody') || table;
         tbody.innerHTML = '';
         
-        const csvFields = [
-            { key: 'name_kr', label: '이름 (한글)' },
-            { key: 'name_en', label: '이름 (영문)' },
-            { key: 'description', label: '설명' },
-            { key: 'features', label: '특징' }
-        ];
+        // CSV 데이터 매핑 정의
+        const csvMapping = {
+            '101': () => {
+                // KAI의 경우 특별 포맷
+                if (state.currentConceptId === 'KAI') {
+                    return `PORTRAIT, K-퓨처리즘, 사이버펑크 누아르, 영화 '블레이드 러너 2049'의 비주얼 스타일, 게임 '사이버펑크 2077'의 아트워크`;
+                }
+                // 다른 캐릭터의 경우
+                return `PORTRAIT, ${concept.style || 'K-퓨처리즘, 사이버펑크 누아르'}`;
+            },
+            '102': () => concept.subcategory || '포트레이트스틱 (실사 느낌)',
+            '103': () => concept.humanAnimal || '인간',
+            '201': () => concept.description || '20대 한국인 남성 래퍼',
+            '202': () => concept.ethnicity || '한국 전통 유산이 폐허로 남은 2324년, 하이테크 문명이 붕괴된 잔해',
+            '204': () => concept.buildAge || '날고 기능적인 테크웨어, 해진 스트리트 후드티',
+            '206': () => concept.features || '분노와 공허함이 담긴 날카로운 눈매, 짧은 검은색 헤어',
+            '208': () => concept.additionalFeatures || '낡은 무선 이어버드 한 쪽',
+            '211': () => concept.studioType || '마른 체형, 저항적인 태도, 내면에 분노를 품은 모습',
+            '402': () => concept.shotType || '미디엄 샷 (Medium shot), 정면 뷰 (Front view)',
+            '403': () => 'Canon EOS R5',
+            '404': () => 'CineStill 800T',
+            '405': () => '85mm f/1.4',
+            '406': () => '1/125s',
+            '501': () => 'highly detailed, professional, 8K',
+            '502': () => '화면비율 16:9'
+        };
         
         let hasData = false;
-        csvFields.forEach(field => {
-            if (concept[field.key]) {
+        
+        // CSV 매핑 순서대로 표시
+        for (const [id, getValue] of Object.entries(csvMapping)) {
+            const value = getValue();
+            if (value && value !== '') {
                 hasData = true;
                 const row = tbody.insertRow();
-                row.insertCell(0).textContent = field.label;
-                row.insertCell(1).textContent = concept[field.key];
+                row.insertCell(0).textContent = id;
+                row.insertCell(1).textContent = value;
             }
-        });
+        }
         
         if (!hasData) {
             const row = tbody.insertRow();
@@ -462,14 +520,29 @@ const uiRenderer = {
                 const displayPrompt = editedPrompts[promptKey]?.prompt || prompt;
                 const isEdited = editedPrompts[promptKey] ? true : false;
                 
+                // 한국어 번역 생성
+                const koreanTranslation = this.translateToKorean(displayPrompt, state.currentConceptId);
+                
                 promptDiv.innerHTML = `
-                    <div class="prompt-container">
-                        <div class="prompt-text">${displayPrompt}</div>
-                        ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
-                        <button class="btn btn-primary" onclick="promptManager.copyPrompt('${aiTool}', 'base')">프롬프트 복사</button>
-                        <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', 'base')" style="margin-left: 8px;">프롬프트 수정</button>
-                        <button class="btn btn-ai-edit" onclick="promptManager.aiEditPrompt('${aiTool}', 'base')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
+                    <div class="prompt-section">
+                        <h4 style="margin-bottom: 1rem;">영어 원본 프롬프트</h4>
+                        <div class="prompt-container">
+                            <div class="prompt-text">${displayPrompt}</div>
+                            ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
+                            <button class="btn btn-primary" onclick="promptManager.copyPrompt('${aiTool}', 'base')">영어 원본 복사</button>
+                            <button class="btn btn-secondary" onclick="promptManager.editPrompt('${aiTool}', 'base')" style="margin-left: 8px;">프롬프트 수정</button>
+                            <button class="btn btn-ai-edit" onclick="promptManager.aiEditPrompt('${aiTool}', 'base')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
+                        </div>
                     </div>
+                    
+                    <div class="prompt-section" style="margin-top: 2rem;">
+                        <h4 style="margin-bottom: 1rem;">번역본 프롬프트</h4>
+                        <div class="prompt-container">
+                            <div class="prompt-text">${koreanTranslation}</div>
+                            <button class="btn btn-primary" onclick="utils.copyToClipboard(\`${koreanTranslation.replace(/`/g, '\\`')}\`)">번역본 복사</button>
+                        </div>
+                    </div>
+                    
                     <div class="image-container" id="image-base-${aiTool}">
                         <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
                     </div>
