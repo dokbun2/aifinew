@@ -107,13 +107,64 @@
             console.log(`${category} 카테고리 데이터:`, categoryData);
             
             Object.entries(categoryData).forEach(([conceptId, concept]) => {
-                // 기본 프롬프트 이미지
+                // 메인 이미지 (새로운 구조)
+                if (concept.main_image_url) {
+                    images.push({
+                        url: concept.main_image_url,
+                        conceptName: concept.name_kr || concept.name || conceptId,
+                        conceptId: conceptId,
+                        type: '메인 이미지',
+                        aiTool: 'main',
+                        description: concept.description || ''
+                    });
+                }
+                
+                // 추가 이미지 (새로운 구조 - image_1, image_2, etc.)
+                if (concept.additional_images) {
+                    // 새로운 구조 확인 (image_1, image_2, etc.)
+                    for (let i = 1; i <= 4; i++) {
+                        const imageKey = `image_${i}`;
+                        const imageData = concept.additional_images[imageKey];
+                        if (imageData && imageData.url) {
+                            images.push({
+                                url: imageData.url,
+                                conceptName: concept.name_kr || concept.name || conceptId,
+                                conceptId: conceptId,
+                                type: `추가 이미지 ${i}`,
+                                aiTool: 'additional',
+                                description: imageData.description || concept.description || '',
+                                imageType: imageData.type || 'reference'
+                            });
+                        }
+                    }
+                    
+                    // 구버전 호환성 (배열 구조)
+                    Object.entries(concept.additional_images).forEach(([aiTool, additionalImages]) => {
+                        if (Array.isArray(additionalImages)) {
+                            additionalImages.forEach((imageData, index) => {
+                                if (imageData.url) {
+                                    images.push({
+                                        url: imageData.url,
+                                        conceptName: concept.name_kr || concept.name || conceptId,
+                                        conceptId: conceptId,
+                                        type: `추가 이미지 ${index + 1}`,
+                                        aiTool: aiTool,
+                                        description: imageData.description || concept.description || '',
+                                        imageType: imageData.imageType || ''
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // 기존 generated_images 구조도 지원 (하위 호환성)
                 if (concept.generated_images?.base_prompts) {
                     Object.entries(concept.generated_images.base_prompts).forEach(([aiTool, imageUrl]) => {
                         if (imageUrl) {
                             images.push({
                                 url: imageUrl,
-                                conceptName: concept.name_kr || concept.name_en || conceptId,
+                                conceptName: concept.name_kr || concept.name || conceptId,
                                 conceptId: conceptId,
                                 type: '기본 프롬프트',
                                 aiTool: aiTool,
@@ -130,30 +181,11 @@
                             if (imageUrl) {
                                 images.push({
                                     url: imageUrl,
-                                    conceptName: concept.name_kr || concept.name_en || conceptId,
+                                    conceptName: concept.name_kr || concept.name || conceptId,
                                     conceptId: conceptId,
                                     type: getVariationTypeName(variationKey),
                                     aiTool: aiTool,
                                     description: concept.description || ''
-                                });
-                            }
-                        });
-                    });
-                }
-                
-                // 추가 이미지
-                if (concept.additional_images) {
-                    Object.entries(concept.additional_images).forEach(([aiTool, additionalImages]) => {
-                        additionalImages.forEach((imageData, index) => {
-                            if (imageData.url) {
-                                images.push({
-                                    url: imageData.url,
-                                    conceptName: concept.name_kr || concept.name_en || conceptId,
-                                    conceptId: conceptId,
-                                    type: `추가 이미지 ${index + 1}`,
-                                    aiTool: aiTool,
-                                    description: imageData.description || concept.description || '',
-                                    imageType: imageData.imageType || ''
                                 });
                             }
                         });
