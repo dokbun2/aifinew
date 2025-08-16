@@ -2130,6 +2130,17 @@
 				gap: 20px;
 				margin-top: 20px;
 			}
+			
+			/* AI 도구가 1개일 때 전체 너비 사용 */
+			.ai-prompts-grid-single {
+				display: block;
+				margin-top: 20px;
+			}
+			
+			.ai-prompts-grid-single .ai-prompt-grid-item {
+				width: 100%;
+				max-width: none;
+			}
 
 			.ai-prompt-grid-item {
 				background: var(--bg-secondary, #1a1a1a);
@@ -2154,11 +2165,16 @@
 				.ai-prompts-grid {
 					grid-template-columns: 1fr;
 				}
+				
+				.ai-prompts-grid-single {
+					/* 단일 항목은 이미 전체 너비 사용 */
+				}
 			}
 
 			/* 반응형: 모바일 */
 			@media (max-width: 768px) {
-				.ai-prompts-grid {
+				.ai-prompts-grid,
+				.ai-prompts-grid-single {
 					grid-template-columns: 1fr;
 					gap: 15px;
 				}

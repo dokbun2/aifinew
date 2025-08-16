@@ -3311,8 +3311,10 @@ let aiSectionsHtml = '';
 				});
 
 				// 프롬프트가 있는 AI 도구가 있을 때만 그리드 컨테이너 생성
+				// AI 도구 개수에 따라 동적 클래스 적용
 				if (validAIs.length > 0) {
-					aiSectionsHtml += '<div class="ai-prompts-grid">';
+					const gridClass = validAIs.length === 1 ? 'ai-prompts-grid-single' : 'ai-prompts-grid';
+					aiSectionsHtml += `<div class="${gridClass}">`;
 				}
 
 				// 프롬프트가 있는 AI 도구만 처리
@@ -6222,3 +6224,10 @@ function aiEditImagePrompt(shotId, aiName, imageId, originalPrompt) {
         showMessage('프롬프트 전달 중 오류가 발생했습니다.', 'error');
     }
 }
+
+// 전역 스코프에 함수들 등록
+window.copyImagePrompt = copyImagePrompt;
+window.editImagePrompt = editImagePrompt;
+window.aiEditImagePrompt = aiEditImagePrompt;
+window.closePromptEditModal = closePromptEditModal;
+window.saveEditedPrompt = saveEditedPrompt;
