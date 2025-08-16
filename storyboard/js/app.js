@@ -3,17 +3,24 @@ let currentData = null;
 let selectedType = null;
 let selectedId = null;
 let selectedSceneId = null;
-		let hasStage2Structure = false; // Stage 2 구조 로드 여부
-		
-		// 디버깅용 전역 변수 노출
-		window.debugData = {
-			getCurrentData: () => currentData,
-			updateNavigation: () => updateNavigation(),
-			checkSequences: () => {
-				return currentData?.breakdown_data?.sequences;
-			}
-		};
+let hasStage2Structure = false; // Stage 2 구조 로드 여부
+let editedPrompts = {}; // 프롬프트 수정 데이터 저장용
+
+// 디버깅용 전역 변수 노출
+window.debugData = {
+	getCurrentData: () => currentData,
+	updateNavigation: () => updateNavigation(),
+	checkSequences: () => {
+		return currentData?.breakdown_data?.sequences;
+	}
+};
 const IMAGE_AI_TOOLS = ['midjourney', 'ideogram', 'leonardo', 'imagefx', 'openart'];
+
+// 수정된 프롬프트 가져오기 함수 (초기 정의)
+function getEditedPrompt(shotId, aiName, imageId) {
+    const editKey = `${shotId}_${aiName}_${imageId}`;
+    return editedPrompts[editKey];
+}
 
 // 동적 파일명 관리
 function getProjectFileName() {
@@ -3289,8 +3296,27 @@ let aiSectionsHtml = '';
 
    // 선택된 플랜의 이미지들에 대해 처리
 			if (selectedPlanData && selectedPlanData.images) {
-				// AI별로 그룹화
-				imageAIs.forEach(ai => {
+				// 프롬프트가 있는 AI 도구만 필터링
+				const validAIs = imageAIs.filter(ai => {
+					return selectedPlanData.images.some(planImage => {
+						const imageId = planImage.id;
+						const imageStage6Data = shotStage6Data[imageId] || {};
+						const imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
+						const hasPrompt = imagePrompts.prompt || imagePrompts.main_prompt;
+						
+						// 수정된 프롬프트도 확인
+						const editedPromptExists = getEditedPrompt(shot.id, ai.name, imageId);
+						return hasPrompt || editedPromptExists;
+					});
+				});
+
+				// 프롬프트가 있는 AI 도구가 있을 때만 그리드 컨테이너 생성
+				if (validAIs.length > 0) {
+					aiSectionsHtml += '<div class="ai-prompts-grid">';
+				}
+
+				// 프롬프트가 있는 AI 도구만 처리
+				validAIs.forEach(ai => {
 					let aiHasContent = false;
 					let aiContentHtml = '';
 
@@ -3300,15 +3326,16 @@ let aiSectionsHtml = '';
 						const imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
 						const hasPrompt = imagePrompts.prompt || imagePrompts.main_prompt;
 
-						//if (!hasPrompt) return;
+						// 프롬프트가 없으면 건너뛰기
+						const editedPrompt = getEditedPrompt(shot.id, ai.name, imageId);
+						if (!hasPrompt && !editedPrompt) return;
 
 						aiHasContent = true;
 						let mainPrompt = imagePrompts.prompt || imagePrompts.main_prompt || '';
 						let translatedPrompt = imagePrompts.prompt_translated || imagePrompts.main_prompt_translated || '';
 						let parameters = imagePrompts.parameters || '';
 						
-						// 수정된 프롬프트가 있는지 확인
-						const editedPrompt = getEditedPrompt(shot.id, ai.name, imageId);
+						// 수정된 프롬프트가 있는지 확인 (이미 위에서 선언함)
 						if (editedPrompt) {
 							mainPrompt = editedPrompt.originalPrompt || mainPrompt;
 							translatedPrompt = editedPrompt.translatedPrompt || translatedPrompt;
@@ -3385,13 +3412,20 @@ let aiSectionsHtml = '';
 
 					if (aiHasContent) {
 						aiSectionsHtml += `
-							<div class="ai-image-section ${ai.id}" style="margin-bottom: 40px;">
-								<div class="ai-card-header">${ai.name}</div>
-								${aiContentHtml}
+							<div class="ai-prompt-grid-item">
+								<div class="ai-image-section ${ai.id}">
+									<div class="ai-card-header">${ai.name}</div>
+									${aiContentHtml}
+								</div>
 							</div>
 						`;
 					}
 				});
+				
+				// 그리드 컨테이너 닫기
+				if (validAIs.length > 0) {
+					aiSectionsHtml += '</div>';
+				}
 			}
 
 // 참조 이미지 섹션
@@ -5945,7 +5979,8 @@ try {
     console.log('✅ JavaScript 로딩 완료');
 
 // 프롬프트 수정 기능 관련 코드
-let editedPrompts = JSON.parse(localStorage.getItem('editedImagePrompts') || '{}');
+// localStorage에서 수정된 프롬프트 데이터 로드
+editedPrompts = JSON.parse(localStorage.getItem('editedImagePrompts') || '{}');
 
 // 프롬프트 수정 버튼 클릭 시 호출되는 함수
 function editImagePrompt(shotId, aiName, imageId, originalPrompt, translatedPrompt, parameters) {
@@ -6162,11 +6197,6 @@ function addPromptEditModalStyles() {
     }
 }
 
-// 수정된 프롬프트 가져오기
-function getEditedPrompt(shotId, aiName, imageId) {
-    const editKey = `${shotId}_${aiName}_${imageId}`;
-    return editedPrompts[editKey];
-}
 
 // AI 수정 버튼 클릭 시 호출되는 함수
 function aiEditImagePrompt(shotId, aiName, imageId, originalPrompt) {
