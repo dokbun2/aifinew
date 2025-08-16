@@ -1571,6 +1571,37 @@ const promptManager = {
         utils.showToast('원본 번역으로 되돌렸습니다.');
     },
     
+    aiEditUniversalPrompt: function(language) {
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        let promptToTransfer = '';
+        
+        // 영어 원본 프롬프트 가져오기
+        if (language === 'english' && concept.prompts && concept.prompts.universal) {
+            promptToTransfer = concept.prompts.universal;
+        }
+        
+        if (!promptToTransfer) {
+            utils.showToast('전달할 프롬프트가 없습니다.');
+            return;
+        }
+        
+        try {
+            // 프롬프트를 localStorage에 저장
+            localStorage.setItem('aiEditPrompt', promptToTransfer);
+            
+            // 이미지 프롬프트 생성기 페이지로 이동
+            window.location.href = 'image_prompt_generator.html';
+        } catch (error) {
+            console.error('AI 수정 처리 중 오류:', error);
+            utils.showToast('프롬프트 전달 중 오류가 발생했습니다.');
+        }
+    },
+    
     aiEditPrompt: function(aiTool, type, index = null) {
         const concept = dataManager.getCurrentConcept();
         if (!concept) {
