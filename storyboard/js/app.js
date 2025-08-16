@@ -4108,8 +4108,8 @@ try {
                     for (const [character, urls] of Object.entries(audioUrls.dialogue)) {
                         const url = Array.isArray(urls) ? urls[0] : urls; // 배열인 경우 첫 번째 URL 사용
                         characterAudioHtml += `
-                            <div class="character-audio-section" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-                                <h5 style="margin: 0 0 10px 0;">${character}</h5>
+                            <div class="character-audio-section" style="margin-bottom: 15px; padding: 10px; background: #242424; border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                <h5 style="margin: 0 0 10px 0; color: #fff;">${character}</h5>
                                 <div class="audio-player-area">
                                     ${url ? 
                                         `<audio controls style="width: 100%;" src="${processAudioUrl(url)}"></audio>` :
