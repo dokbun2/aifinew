@@ -111,6 +111,30 @@ const dataManager = {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     },
 
+    migrateAdditionalImages: function() {
+        // 모든 카테고리를 순회하며 추가 이미지를 3개로 제한
+        ['characters', 'locations', 'props'].forEach(type => {
+            const concepts = state.conceptArtData[type];
+            if (concepts) {
+                Object.keys(concepts).forEach(conceptId => {
+                    const concept = concepts[conceptId];
+                    if (concept.additional_images) {
+                        // image_4, image_5 등 4번째 이상의 이미지 제거
+                        const validKeys = ['image_1', 'image_2', 'image_3'];
+                        const currentKeys = Object.keys(concept.additional_images);
+                        
+                        currentKeys.forEach(key => {
+                            if (!validKeys.includes(key)) {
+                                console.log(`마이그레이션: ${conceptId}의 ${key} 이미지 제거`);
+                                delete concept.additional_images[key];
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    },
+    
     loadFromLocalStorage: function() {
         const savedData = localStorage.getItem(STORAGE_KEY);
         if (savedData) {
@@ -120,6 +144,9 @@ const dataManager = {
                 state.dataVersion = parsed.dataVersion || "N/A";
                 state.dataTimestamp = parsed.dataTimestamp || "N/A";
                 state.conceptArtData = parsed.conceptArtData || { characters: {}, locations: {}, props: {} };
+                
+                // 추가 이미지 데이터 마이그레이션 (4개 이상인 경우 3개로 제한)
+                this.migrateAdditionalImages();
                 
                 // 선택된 컨셉 정보도 복원
                 if (parsed.currentConceptType && parsed.currentConceptId) {
@@ -267,43 +294,70 @@ const dataManager = {
                     // 유연한 프롬프트 처리: JSON 구조에 따라 자동 대응
                     const aiTools = ['midjourney', 'leonardo', 'ideogram', 'imagefx', 'openart'];
                     
-                    // 1. 먼저 개별 AI 도구 프롬프트 확인
-                    const hasIndividualPrompts = aiTools.some(tool => item.prompts[tool]);
+                    // Stage 4 JSON 구조 처리 (각 AI 도구별로 prompt_english와 prompt_translated 포함)
+                    let hasProcessedPrompts = false;
                     
-                    if (hasIndividualPrompts) {
-                        // 개별 프롬프트가 있으면 각각 처리
-                        for (const [aiTool, promptData] of Object.entries(item.prompts)) {
-                            // universal과 universal_translated는 base_prompts에서는 건너뜀
-                            if (aiTool === 'universal' || aiTool === 'universal_translated') continue;
+                    for (const aiTool of aiTools) {
+                        if (item.prompts[aiTool]) {
+                            const promptData = item.prompts[aiTool];
                             
-                            if (typeof promptData === 'string') {
-                                convertedItem.base_prompts[aiTool] = promptData;
-                            } else if (promptData?.prompt_english) {
+                            // prompt_english를 base_prompts로 사용
+                            if (promptData.prompt_english) {
                                 convertedItem.base_prompts[aiTool] = promptData.prompt_english;
+                                hasProcessedPrompts = true;
+                            } else if (typeof promptData === 'string') {
+                                convertedItem.base_prompts[aiTool] = promptData;
+                                hasProcessedPrompts = true;
+                            }
+                            
+                            // prompt_translated를 universal로 사용 (첫 번째 도구의 번역만 사용)
+                            if (promptData.prompt_translated && !convertedItem.prompts.universal) {
+                                convertedItem.prompts.universal = promptData.prompt_english || '';
+                                convertedItem.prompts.universal_translated = promptData.prompt_translated;
                             }
                         }
+                    }
+                    
+                    // 다른 형식 처리 (기존 코드)
+                    if (!hasProcessedPrompts) {
+                        // 1. 먼저 개별 AI 도구 프롬프트 확인
+                        const hasIndividualPrompts = aiTools.some(tool => item.prompts[tool]);
                         
-                        // universal이 있고 특정 도구의 프롬프트가 없으면 universal 사용
-                        if (item.prompts.universal) {
-                            aiTools.forEach(tool => {
-                                if (!convertedItem.base_prompts[tool]) {
-                                    convertedItem.base_prompts[tool] = item.prompts.universal;
+                        if (hasIndividualPrompts) {
+                            // 개별 프롬프트가 있으면 각각 처리
+                            for (const [aiTool, promptData] of Object.entries(item.prompts)) {
+                                // universal과 universal_translated는 base_prompts에서는 건너뜀
+                                if (aiTool === 'universal' || aiTool === 'universal_translated') continue;
+                                
+                                if (typeof promptData === 'string') {
+                                    convertedItem.base_prompts[aiTool] = promptData;
+                                } else if (promptData?.prompt_english) {
+                                    convertedItem.base_prompts[aiTool] = promptData.prompt_english;
                                 }
+                            }
+                            
+                            // universal이 있고 특정 도구의 프롬프트가 없으면 universal 사용
+                            if (item.prompts.universal) {
+                                aiTools.forEach(tool => {
+                                    if (!convertedItem.base_prompts[tool]) {
+                                        convertedItem.base_prompts[tool] = item.prompts.universal;
+                                    }
+                                });
+                            }
+                        } else if (item.prompts.universal) {
+                            // universal만 있으면 모든 도구에 복사
+                            const universalPrompt = item.prompts.universal;
+                            aiTools.forEach(tool => {
+                                convertedItem.base_prompts[tool] = universalPrompt;
                             });
-                        }
-                    } else if (item.prompts.universal) {
-                        // universal만 있으면 모든 도구에 복사
-                        const universalPrompt = item.prompts.universal;
-                        aiTools.forEach(tool => {
-                            convertedItem.base_prompts[tool] = universalPrompt;
-                        });
-                    } else {
-                        // 기존 구조 지원 (prompt_english 등)
-                        for (const [aiTool, promptData] of Object.entries(item.prompts)) {
-                            if (typeof promptData === 'string') {
-                                convertedItem.base_prompts[aiTool] = promptData;
-                            } else if (promptData?.prompt_english) {
-                                convertedItem.base_prompts[aiTool] = promptData.prompt_english;
+                        } else {
+                            // 기존 구조 지원 (prompt_english 등)
+                            for (const [aiTool, promptData] of Object.entries(item.prompts)) {
+                                if (typeof promptData === 'string') {
+                                    convertedItem.base_prompts[aiTool] = promptData;
+                                } else if (promptData?.prompt_english) {
+                                    convertedItem.base_prompts[aiTool] = promptData.prompt_english;
+                                }
                             }
                         }
                     }
@@ -325,11 +379,32 @@ const dataManager = {
 
     processLoadedJSON: function(data) {
         console.log('Processing loaded JSON:', data);
-        if (data.concept_art_collection) {
-            if (data.stage === 4 || data.version === "3.0") {
-                console.log('Converting Stage 4 data...');
+        
+        // Stage 4 데이터 확인 (stage 필드로 판단)
+        if (data.stage === 4 || data.stage === "4") {
+            console.log('Stage 4 데이터 감지됨, 변환 시작...');
+            if (data.concept_art_collection) {
                 state.conceptArtData = this.convertStage4ToV12(data.concept_art_collection);
-                console.log('Converted data:', state.conceptArtData);
+                console.log('Stage 4 데이터 변환 완료:', state.conceptArtData);
+            } else {
+                throw new Error('Stage 4 JSON에 concept_art_collection이 없습니다.');
+            }
+            
+            state.projectInfo = data.project_info || { project_id: "N/A", total_concept_arts: 0 };
+            state.dataVersion = data.version || data.metadata?.version || "N/A";
+            state.dataTimestamp = data.timestamp || data.metadata?.timestamp || "N/A";
+            this.saveToLocalStorage();
+            console.log('Stage 4 데이터 저장 완료');
+            
+        } else if (data.concept_art_collection) {
+            // 일반 컨셉아트 데이터
+            console.log('일반 컨셉아트 데이터 로드');
+            
+            // 버전에 따른 변환 처리
+            if (data.version === "3.0") {
+                console.log('Version 3.0 데이터 감지됨, 변환 시작...');
+                state.conceptArtData = this.convertStage4ToV12(data.concept_art_collection);
+                console.log('Version 3.0 데이터 변환 완료');
             } else {
                 state.conceptArtData = data.concept_art_collection;
             }
@@ -338,8 +413,11 @@ const dataManager = {
             state.dataVersion = data.version || data.metadata?.version || "N/A";
             state.dataTimestamp = data.timestamp || data.metadata?.timestamp || "N/A";
             this.saveToLocalStorage();
+            console.log('컨셉아트 데이터 저장 완료');
+            
         } else {
-            throw new Error('유효하지 않은 JSON 형식입니다.');
+            console.error('유효하지 않은 JSON 구조:', data);
+            throw new Error('유효하지 않은 JSON 형식입니다. concept_art_collection이 없습니다.');
         }
     },
 
@@ -347,25 +425,48 @@ const dataManager = {
         const tempJson = localStorage.getItem('stage4TempJson');
         const tempFileName = localStorage.getItem('stage4TempFileName');
         
+        console.log('handleStage4TempData 호출됨', {
+            hasTempJson: !!tempJson,
+            hasTempFileName: !!tempFileName,
+            tempJsonLength: tempJson ? tempJson.length : 0
+        });
+        
         if (tempJson && tempFileName) {
             try {
-                console.log(`📁 Stage 4 임시 JSON 파일 로드: ${tempFileName}`);
+                console.log(`📁 Stage 4 임시 JSON 파일 로드 시작: ${tempFileName}`);
                 
                 const data = JSON.parse(tempJson);
+                console.log('Stage 4 JSON 파싱 성공:', data);
+                
+                // 데이터 처리
                 this.processLoadedJSON(data);
+                
+                // UI 업데이트
+                if (typeof uiRenderer !== 'undefined') {
+                    uiRenderer.updateProjectInfo();
+                    uiRenderer.renderSidebar();
+                    console.log('UI 업데이트 완료');
+                }
+                
                 utils.showToast(`${tempFileName} 파일을 성공적으로 로드했습니다.`);
                 
+                // 임시 데이터 삭제
                 localStorage.removeItem('stage4TempJson');
                 localStorage.removeItem('stage4TempFileName');
+                console.log('Stage 4 임시 데이터 삭제 완료');
                 
                 return true;
             } catch (error) {
                 console.error('Stage 4 임시 JSON 로드 오류:', error);
                 utils.showToast('임시 저장된 JSON 파일을 로드할 수 없습니다.');
+                
+                // 오류 발생 시에도 임시 데이터 삭제
                 localStorage.removeItem('stage4TempJson');
                 localStorage.removeItem('stage4TempFileName');
                 return false;
             }
+        } else {
+            console.log('Stage 4 임시 데이터가 없습니다.');
         }
         return false;
     },
@@ -623,55 +724,66 @@ const uiRenderer = {
 
     displayBasePrompts: function(concept) {
         const contentArea = document.getElementById('base-prompt-content');
-        if (!contentArea) return;
+        if (!contentArea) {
+            console.error('base-prompt-content 요소를 찾을 수 없습니다.');
+            return;
+        }
         
         contentArea.innerHTML = '';
         
+        console.log('displayBasePrompts - concept:', concept);
+        console.log('displayBasePrompts - concept.prompts:', concept.prompts);
+        
         // universal 프롬프트 사용 (영어와 한글)
-        const englishPrompt = concept.prompts?.universal || '';
-        const koreanPrompt = concept.prompts?.universal_translated || '';
+        let englishPrompt = '';
+        let koreanPrompt = '';
         
-        // 영어 프롬프트
-        if (englishPrompt) {
-            const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
-            const promptKey = `${state.currentConceptId}_universal`;
-            const displayEnglish = editedPrompts[promptKey]?.prompt || englishPrompt;
-            const isEdited = editedPrompts[promptKey] ? true : false;
+        // prompts 객체에서 universal과 universal_translated 확인
+        if (concept.prompts) {
+            englishPrompt = concept.prompts.universal || '';
+            koreanPrompt = concept.prompts.universal_translated || '';
             
-            const englishContainer = document.createElement('div');
-            englishContainer.className = 'prompt-section';
-            englishContainer.innerHTML = `
-                <h4 style="margin-bottom: 1rem;">영어 원본 프롬프트</h4>
-                <div class="prompt-container">
-                    <div class="prompt-text">${displayEnglish}</div>
-                    ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
-                    <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('english')">영어 원본 복사</button>
-                    <button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('english')" style="margin-left: 8px;">프롬프트 수정</button>
-                    <button class="btn btn-ai-edit" onclick="promptManager.aiEditUniversalPrompt('english')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>
-                </div>
-            `;
-            contentArea.appendChild(englishContainer);
+            console.log('영어 프롬프트:', englishPrompt);
+            console.log('한글 프롬프트:', koreanPrompt);
         }
         
-        // 한글 프롬프트
-        if (koreanPrompt) {
-            const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
-            const translationKey = `${state.currentConceptId}_universal_translated`;
-            const displayKorean = editedTranslations[translationKey] || koreanPrompt;
-            
-            const koreanContainer = document.createElement('div');
-            koreanContainer.className = 'prompt-section';
-            koreanContainer.style.marginTop = '2rem';
-            koreanContainer.innerHTML = `
-                <h4 style="margin-bottom: 1rem;">번역본 프롬프트</h4>
-                <div class="prompt-container">
-                    <div class="prompt-text" id="korean-translation-universal">${displayKorean}</div>
-                    <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('korean')">번역본 복사</button>
-                    <button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('korean')" style="margin-left: 8px;">번역 수정</button>
-                </div>
-            `;
-            contentArea.appendChild(koreanContainer);
-        }
+        // 영어 프롬프트가 없어도 기본 UI는 표시
+        const editedPrompts = JSON.parse(localStorage.getItem('editedConceptPrompts') || '{}');
+        const promptKey = `${state.currentConceptId}_universal`;
+        const displayEnglish = editedPrompts[promptKey]?.prompt || englishPrompt || '프롬프트가 없습니다.';
+        const isEdited = editedPrompts[promptKey] ? true : false;
+        
+        const englishContainer = document.createElement('div');
+        englishContainer.className = 'prompt-section';
+        englishContainer.innerHTML = `
+            <h4 style="margin-bottom: 1rem;">영어 원본 프롬프트</h4>
+            <div class="prompt-container">
+                <div class="prompt-text" style="white-space: pre-wrap; word-break: break-word;">${displayEnglish}</div>
+                ${isEdited ? '<span style="background: #4ade80; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;">수정됨</span>' : ''}
+                <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('english')">영어 원본 복사</button>
+                <button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('english')" style="margin-left: 8px;">프롬프트 수정</button>
+                ${englishPrompt ? `<button class="btn btn-ai-edit" onclick="promptManager.aiEditUniversalPrompt('english')" style="margin-left: 8px; background-color: #8b5cf6; color: white;">AI 수정</button>` : ''}
+            </div>
+        `;
+        contentArea.appendChild(englishContainer);
+        
+        // 한글 프롬프트도 기본 UI는 표시
+        const editedTranslations = JSON.parse(localStorage.getItem('editedKoreanTranslations') || '{}');
+        const translationKey = `${state.currentConceptId}_universal_translated`;
+        const displayKorean = editedTranslations[translationKey] || koreanPrompt || '번역된 프롬프트가 없습니다.';
+        
+        const koreanContainer = document.createElement('div');
+        koreanContainer.className = 'prompt-section';
+        koreanContainer.style.marginTop = '2rem';
+        koreanContainer.innerHTML = `
+            <h4 style="margin-bottom: 1rem;">번역본 프롬프트</h4>
+            <div class="prompt-container">
+                <div class="prompt-text" id="korean-translation-universal" style="white-space: pre-wrap; word-break: break-word;">${displayKorean}</div>
+                <button class="btn btn-primary" onclick="promptManager.copyUniversalPrompt('korean')">번역본 복사</button>
+                ${koreanPrompt ? `<button class="btn btn-secondary" onclick="promptManager.editUniversalPrompt('korean')" style="margin-left: 8px;">번역 수정</button>` : ''}
+            </div>
+        `;
+        contentArea.appendChild(koreanContainer);
         
         // 이미지 표시 섹션 (번역본 프롬프트 아래로 이동)
         const imageSection = document.createElement('div');
@@ -706,7 +818,7 @@ const uiRenderer = {
         additionalImagesSection.className = 'additional-images-section';
         additionalImagesSection.innerHTML = `
             <div class="additional-images-grid" id="additional-images-grid">
-                ${[1, 2, 3, 4].map(i => `
+                ${[1, 2, 3].map(i => `
                     <div class="additional-image-slot">
                         <div class="additional-image-preview">
                             ${concept.additional_images && concept.additional_images[`image_${i}`]?.url ? 
@@ -2159,70 +2271,129 @@ window.ConceptArtManager = {
     currentConcept: null,
     
     openImageModal: function(url) {
-        imageManager.openImageModal(url);
+        if (url && typeof imageManager !== 'undefined' && imageManager.openImageModal) {
+            imageManager.openImageModal(url);
+        } else {
+            console.error('imageManager.openImageModal을 사용할 수 없습니다.');
+        }
     },
     
     applyMainImageUrl: function() {
-        const input = document.getElementById('main-image-url-input');
-        if (!input) return;
-        
-        const url = input.value.trim();
-        const concept = dataManager.getCurrentConcept();
-        if (!concept) return;
-        
-        // 현재 컨셉에 메인 이미지 URL 저장
-        concept.main_image_url = url;
-        this.currentConcept = concept;
-        
-        // 이미지 컨테이너 업데이트
-        const imageContainer = document.querySelector('.image-container');
-        if (imageContainer) {
-            if (url) {
-                imageContainer.innerHTML = `<img src="${url}" alt="${concept.name}" onclick="ConceptArtManager.openImageModal('${url}')" />`;
-            } else {
-                imageContainer.innerHTML = '<div class="no-image-message">이미지를 추가하려면 아래 URL을 입력하세요</div>';
+        try {
+            const input = document.getElementById('main-image-url-input');
+            if (!input) {
+                console.error('main-image-url-input 요소를 찾을 수 없습니다.');
+                utils.showToast('입력 필드를 찾을 수 없습니다.');
+                return;
             }
+            
+            const url = input.value.trim();
+            const concept = dataManager.getCurrentConcept();
+            if (!concept) {
+                console.error('선택된 컨셉이 없습니다.');
+                utils.showToast('선택된 컨셉아트가 없습니다.');
+                return;
+            }
+            
+            // URL 유효성 검사
+            if (url && !utils.isValidUrl(url)) {
+                utils.showToast('올바른 URL 형식이 아닙니다.');
+                return;
+            }
+            
+            // 현재 컨셉에 메인 이미지 URL 저장
+            concept.main_image_url = url;
+            this.currentConcept = concept;
+            
+            // 이미지 컨테이너 업데이트
+            const imageContainer = document.querySelector('.image-container');
+            if (imageContainer) {
+                if (url) {
+                    // 드롭박스 URL 변환
+                    let displayUrl = url;
+                    if (url.includes('dropbox.com')) {
+                        displayUrl = imageManager.convertDropboxUrl(url);
+                    }
+                    imageContainer.innerHTML = `<img src="${displayUrl}" alt="${concept.name_kr || concept.name || 'Image'}" onclick="ConceptArtManager.openImageModal('${displayUrl}')" onerror="this.onerror=null; this.src='${url}'; this.style.border='1px solid red';" />`;
+                } else {
+                    imageContainer.innerHTML = '<div class="no-image-message">이미지를 추가하려면 아래 URL을 입력하세요</div>';
+                }
+            }
+            
+            // 로컬 스토리지에 저장
+            dataManager.saveToLocalStorage();
+            utils.showToast('이미지 URL이 적용되었습니다.');
+        } catch (error) {
+            console.error('메인 이미지 URL 적용 중 오류:', error);
+            utils.showToast('이미지 적용 중 오류가 발생했습니다.');
         }
-        
-        // 로컬 스토리지에 저장
-        dataManager.saveToLocalStorage();
-        utils.showToast('이미지 URL이 적용되었습니다.');
     },
     
     updateAdditionalImage: function(index, field, value) {
-        const concept = dataManager.getCurrentConcept();
-        if (!concept) return;
-        
-        // additional_images 객체 초기화
-        if (!concept.additional_images) {
-            concept.additional_images = {};
-        }
-        
-        // 특정 이미지 슬롯 초기화
-        const imageKey = `image_${index}`;
-        if (!concept.additional_images[imageKey]) {
-            concept.additional_images[imageKey] = {};
-        }
-        
-        // 필드 업데이트
-        concept.additional_images[imageKey][field] = value;
-        
-        // URL이 변경된 경우 이미지 미리보기 업데이트
-        if (field === 'url') {
-            const previewDiv = document.querySelector(`.additional-image-slot:nth-child(${index}) .additional-image-preview`);
-            if (previewDiv) {
-                if (value) {
-                    previewDiv.innerHTML = `<img src="${value}" alt="추가 이미지 ${index}" onclick="ConceptArtManager.openImageModal('${value}')" />`;
-                } else {
-                    previewDiv.innerHTML = '<div class="no-image-placeholder">이미지 없음</div>';
+        try {
+            const concept = dataManager.getCurrentConcept();
+            if (!concept) {
+                console.error('선택된 컨셉이 없습니다.');
+                utils.showToast('선택된 컨셉아트가 없습니다.');
+                return;
+            }
+            
+            // 인덱스가 3을 초과하면 무시 (1, 2, 3만 허용)
+            if (parseInt(index) > 3) {
+                console.log('추가 이미지는 3개까지만 지원됩니다.');
+                return;
+            }
+            
+            // additional_images 객체 초기화
+            if (!concept.additional_images) {
+                concept.additional_images = {};
+            }
+            
+            // 특정 이미지 슬롯 초기화
+            const imageKey = `image_${index}`;
+            if (!concept.additional_images[imageKey]) {
+                concept.additional_images[imageKey] = {
+                    url: '',
+                    description: '',
+                    type: 'reference'
+                };
+            }
+            
+            // URL 유효성 검사
+            if (field === 'url' && value && !utils.isValidUrl(value)) {
+                utils.showToast('올바른 URL 형식이 아닙니다.');
+                return;
+            }
+            
+            // 필드 업데이트
+            concept.additional_images[imageKey][field] = value;
+            
+            // URL이 변경된 경우 이미지 미리보기 업데이트
+            if (field === 'url') {
+                const previewDiv = document.querySelector(`.additional-image-slot:nth-child(${index}) .additional-image-preview`);
+                if (previewDiv) {
+                    if (value) {
+                        // 드롭박스 URL 변환
+                        let displayUrl = value;
+                        if (value.includes('dropbox.com')) {
+                            displayUrl = imageManager.convertDropboxUrl(value);
+                        }
+                        previewDiv.innerHTML = `<img src="${displayUrl}" alt="추가 이미지 ${index}" onclick="ConceptArtManager.openImageModal('${displayUrl}')" onerror="this.onerror=null; this.src='${value}'; this.style.border='1px solid red';" />`;
+                    } else {
+                        previewDiv.innerHTML = '<div class="no-image-placeholder">이미지 없음</div>';
+                    }
                 }
             }
+            
+            this.currentConcept = concept;
+            
+            // 로컬 스토리지에 저장
+            dataManager.saveToLocalStorage();
+            utils.showToast(`추가 이미지 ${field === 'url' ? 'URL' : '설명'}이(가) 업데이트되었습니다.`);
+        } catch (error) {
+            console.error('추가 이미지 업데이트 중 오류:', error);
+            utils.showToast('이미지 업데이트 중 오류가 발생했습니다.');
         }
-        
-        this.currentConcept = concept;
-        
-        // 로컬 스토리지에 저장
-        dataManager.saveToLocalStorage();
     },
     
     saveData: function() {
@@ -2276,6 +2447,32 @@ async function loadLocalJsonFile() {
 }
 
 function initialize() {
+    console.log('컨셉아트 매니저 초기화 시작...');
+    
+    // 먼저 localStorage에서 데이터 로드 시도
+    try {
+        const hasData = dataManager.loadFromLocalStorage();
+        if (hasData) {
+            console.log('localStorage에서 데이터 로드 성공');
+            uiRenderer.updateProjectInfo();
+            uiRenderer.renderSidebar();
+            
+            // 이전에 선택했던 컨셉 복원
+            if (state.currentConceptType && state.currentConceptId) {
+                const concept = state.conceptArtData[state.currentConceptType][state.currentConceptId];
+                if (concept) {
+                    console.log('이전 선택 컨셉 복원:', state.currentConceptType, state.currentConceptId);
+                    dataManager.selectConcept(state.currentConceptType, state.currentConceptId);
+                }
+            }
+        } else {
+            console.log('localStorage에 저장된 데이터가 없습니다.');
+        }
+    } catch (error) {
+        console.error('데이터 로드 중 오류:', error);
+        utils.showToast('데이터 로드 중 오류가 발생했습니다.');
+    }
+    
     // 이벤트 리스너 설정 - 헤더 버튼과 기존 버튼 모두 지원
     const exportBtns = ['export-json-btn', 'header-export-json-btn'];
     const importBtns = ['import-json-btn', 'header-import-json-btn'];
@@ -2285,6 +2482,7 @@ function initialize() {
     exportBtns.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
+            console.log(`Export 버튼 등록: ${id}`);
             btn.addEventListener('click', () => dataManager.exportToJSON());
         }
     });
@@ -2293,30 +2491,43 @@ function initialize() {
     importBtns.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
+            console.log(`Import 버튼 등록: ${id}`);
             btn.addEventListener('click', () => {
-                document.getElementById('import-json-input').click();
+                const importInput = document.getElementById('import-json-input');
+                if (importInput) {
+                    importInput.click();
+                } else {
+                    console.error('import-json-input 요소를 찾을 수 없습니다.');
+                    utils.showToast('파일 선택 요소를 찾을 수 없습니다.');
+                }
             });
         }
     });
     
     // Import 파일 선택
-    document.getElementById('import-json-input').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        dataManager.importFromJSON(file)
-            .then(() => {
-                uiRenderer.updateProjectInfo();
-                uiRenderer.renderSidebar();
-                utils.showToast('JSON 파일을 성공적으로 가져왔습니다.');
-            })
-            .catch(error => {
-                console.error('JSON 가져오기 오류:', error);
-                utils.showToast('JSON 파일을 가져올 수 없습니다: ' + error.message);
-            });
-        
-        event.target.value = '';
-    });
+    const importInput = document.getElementById('import-json-input');
+    if (importInput) {
+        importInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            console.log('JSON 파일 가져오기 시작:', file.name);
+            dataManager.importFromJSON(file)
+                .then(() => {
+                    uiRenderer.updateProjectInfo();
+                    uiRenderer.renderSidebar();
+                    utils.showToast('JSON 파일을 성공적으로 가져왔습니다.');
+                })
+                .catch(error => {
+                    console.error('JSON 가져오기 오류:', error);
+                    utils.showToast('JSON 파일을 가져올 수 없습니다: ' + error.message);
+                });
+            
+            event.target.value = '';
+        });
+    } else {
+        console.error('import-json-input 요소를 찾을 수 없습니다.');
+    }
     
     // Reset 버튼들
     resetBtns.forEach(id => {
@@ -2348,26 +2559,34 @@ function initialize() {
     const urlParams = new URLSearchParams(window.location.search);
     
     if (urlParams.get('loadStage4Json') === 'true') {
-        console.log('🔄 Stage 4 임시 저장된 JSON 파일 자동 로드 실행...');
+        console.log('🔄 URL 파라미터로 Stage 4 JSON 로드 요청 감지');
         setTimeout(() => {
-            if (dataManager.handleStage4TempData()) {
-                uiRenderer.updateProjectInfo();
-                uiRenderer.renderSidebar();
+            console.log('Stage 4 데이터 로드 시작...');
+            const success = dataManager.handleStage4TempData();
+            if (success) {
+                console.log('Stage 4 데이터 로드 성공, UI 업데이트는 handleStage4TempData에서 처리됨');
+            } else {
+                console.log('Stage 4 데이터 로드 실패');
             }
-        }, 1000);
+        }, 500); // 타이밍 단축
     } else {
+        // URL 파라미터가 없을 때도 Stage 4 데이터 확인
         const tempJson = localStorage.getItem('stage4TempJson');
         const tempFileName = localStorage.getItem('stage4TempFileName');
         
         if (tempJson && tempFileName) {
             console.log('🔄 localStorage에서 Stage 4 데이터 발견, 자동 로드 실행...');
             setTimeout(() => {
-                if (dataManager.handleStage4TempData()) {
-                    uiRenderer.updateProjectInfo();
-                    uiRenderer.renderSidebar();
+                console.log('Stage 4 데이터 로드 시작 (localStorage에서 발견)...');
+                const success = dataManager.handleStage4TempData();
+                if (success) {
+                    console.log('Stage 4 데이터 로드 성공');
+                } else {
+                    console.log('Stage 4 데이터 로드 실패');
                 }
-            }, 1000);
+            }, 500); // 타이밍 단축
         } else {
+            console.log('Stage 4 임시 데이터 없음, 로컬 JSON 파일 로드 시도...');
             loadLocalJsonFile();
         }
     }

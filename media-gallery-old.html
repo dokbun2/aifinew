@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미디어 갤러리 - 이미지 & 영상</title>
+    
+    <!-- CSS 파일 링크 -->
+    <link rel="stylesheet" href="design-system.css">
+    <link rel="stylesheet" href="concept-art-styles-modern.css">
+    <link rel="stylesheet" href="concept-art-styles-unified.css">
+    
+    <!-- SEO -->
+    <meta name="description" content="프로젝트의 모든 이미지와 영상을 한 곳에서 볼 수 있는 미디어 갤러리">
+    <meta name="keywords" content="미디어 갤러리, 이미지, 영상, 스토리보드, 컨셉아트">
+    
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    
+    <style>
+        /* 탭 네비게이션 스타일 */
+        .tab-container {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            margin-bottom: var(--space-xl);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-nav {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .tab-btn {
+            padding: var(--space-md) var(--space-xl);
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(168, 85, 247, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+        }
+        
+        .tab-btn .count {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-left: 8px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 갤러리 그리드 스타일 */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-lg);
+            padding: var(--space-md);
+        }
+        
+        .gallery-item {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-purple);
+        }
+        
+        .gallery-item-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
+        
+        .gallery-item-video {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-secondary);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-play-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--bg-primary);
+            position: absolute;
+            transition: all var(--transition-base);
+        }
+        
+        .gallery-item:hover .video-play-btn {
+            transform: scale(1.1);
+            background: white;
+        }
+        
+        .gallery-item-info {
+            padding: var(--space-md);
+        }
+        
+        .gallery-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .gallery-item-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* 라이트박스 스타일 */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .lightbox.active {
+            display: flex;
+        }
+        
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: var(--radius-lg);
+        }
+        
+        .lightbox-video {
+            width: 80vw;
+            height: 80vh;
+            border-radius: var(--radius-lg);
+            background: black;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .lightbox-prev {
+            left: -60px;
+        }
+        
+        .lightbox-next {
+            right: -60px;
+        }
+        
+        /* 필터 바 */
+        .filter-bar {
+            background: var(--bg-secondary);
+            padding: var(--space-md);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-xl);
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .filter-select {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .filter-select:hover {
+            border-color: var(--accent-purple);
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+        }
+        
+        /* 빈 상태 메시지 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-3xl);
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-lg);
+            opacity: 0.5;
+        }
+        
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+        }
+        
+        .empty-state-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        /* 로딩 상태 */
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(168, 85, 247, 0.2);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-3xl);
+            gap: var(--space-md);
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: var(--space-md);
+            }
+            
+            .tab-nav {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                width: 100%;
+            }
+            
+            .lightbox-nav {
+                display: none;
+            }
+            
+            .lightbox-video {
+                width: 95vw;
+                height: 50vh;
+            }
+        }
+        
+        /* 백 투 탑 버튼 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            opacity: 0;
+            visibility: hidden;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+            z-index: 1000;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- Gradient Mesh Background -->
+    <div class="gradient-mesh-bg"></div>
+    
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="index.html" class="home-btn">🏠 홈</a>
+                <h2 class="header-title">미디어 갤러리</h2>
+            </div>
+            <div class="header-right">
+                <div class="header-buttons">
+                    <a href="storyboard/index.html" class="header-btn">스토리보드</a>
+                    <a href="your_title_storyboard_v9.4_c.html" class="header-btn">컨셉아트</a>
+                    <a href="concept-art-gallery.html" class="header-btn">컨셉아트 갤러리</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 메인 컨테이너 -->
+    <div class="container">
+        <!-- 탭 컨테이너 -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="storyboard">
+                    🎬 스토리보드 갤러리
+                    <span class="count" id="storyboard-count">0</span>
+                </button>
+                <button class="tab-btn" data-tab="conceptart">
+                    🎨 컨셉아트 갤러리
+                    <span class="count" id="conceptart-count">0</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 스토리보드 갤러리 탭 -->
+        <div id="storyboard-tab" class="tab-content active">
+            <!-- 필터 바 -->
+            <div class="filter-bar">
+                <span class="filter-label">타입:</span>
+                <select class="filter-select" id="storyboard-type-filter">
+                    <option value="all">전체</option>
+                    <option value="images">이미지</option>
+                    <option value="videos">영상</option>
+                </select>
+                
+                <span class="filter-label">카테고리:</span>
+                <select class="filter-select" id="storyboard-category-filter">
+                    <option value="all">전체</option>
+                    <option value="sequence">시퀀스</option>
+                    <option value="scene">씬</option>
+                    <option value="shot">샷</option>
+                </select>
+                
+                <span class="filter-label">정렬:</span>
+                <select class="filter-select" id="storyboard-sort-filter">
+                    <option value="newest">최신순</option>
+                    <option value="oldest">오래된순</option>
+                    <option value="name">이름순</option>
+                </select>
+            </div>
+            
+            <!-- 스토리보드 그리드 -->
+            <div id="storyboard-gallery" class="gallery-grid">
+                <!-- 이미지 아이템들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            
+            <!-- 빈 상태 메시지 -->
+            <div id="storyboard-empty-state" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🎬</div>
+                <div class="empty-state-title">스토리보드 미디어가 없습니다</div>
+                <div class="empty-state-text">아직 등록된 스토리보드 이미지나 영상이 없습니다.</div>
+            </div>
+        </div>
+        
+        <!-- 컨셉아트 갤러리 탭 -->
+        <div id="conceptart-tab" class="tab-content">
+            <!-- 필터 바 -->
+            <div class="filter-bar">
+                <span class="filter-label">카테고리:</span>
+                <select class="filter-select" id="conceptart-category-filter">
+                    <option value="all">전체</option>
+                    <option value="characters">캐릭터</option>
+                    <option value="locations">장소</option>
+                    <option value="props">소품</option>
+                </select>
+                
+                <span class="filter-label">정렬:</span>
+                <select class="filter-select" id="conceptart-sort-filter">
+                    <option value="newest">최신순</option>
+                    <option value="oldest">오래된순</option>
+                    <option value="name">이름순</option>
+                </select>
+            </div>
+            
+            <!-- 컨셉아트 그리드 -->
+            <div id="conceptart-gallery" class="gallery-grid">
+                <!-- 영상 아이템들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            
+            <!-- 빈 상태 메시지 -->
+            <div id="conceptart-empty-state" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🎨</div>
+                <div class="empty-state-title">컨셉아트가 없습니다</div>
+                <div class="empty-state-text">아직 등록된 컨셉아트 이미지가 없습니다.</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 라이트박스 -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close" onclick="closeLightbox()">×</button>
+            <button class="lightbox-nav lightbox-prev" onclick="navigateLightbox(-1)">‹</button>
+            <button class="lightbox-nav lightbox-next" onclick="navigateLightbox(1)">›</button>
+            <div id="lightbox-media-container">
+                <!-- 이미지나 영상이 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 백 투 탑 버튼 -->
+    <button class="back-to-top" id="back-to-top" onclick="scrollToTop()">↑</button>
+    
+    <!-- JavaScript -->
+    <script>
+        // 전역 상태 관리
+        const galleryState = {
+            currentTab: 'storyboard',
+            storyboardMedia: [],
+            conceptArtImages: [],
+            filteredStoryboard: [],
+            filteredConceptArt: [],
+            currentLightboxIndex: -1,
+            currentLightboxType: null
+        };
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            loadMediaData();
+            initializeFilters();
+            initializeBackToTop();
+        });
+        
+        // 탭 초기화
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+        }
+        
+        // 탭 전환
+        function switchTab(tabName) {
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            
+            // 컨텐츠 표시 변경
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            galleryState.currentTab = tabName;
+        }
+        
+        // 미디어 데이터 로드
+        function loadMediaData() {
+            // 컨셉아트 데이터 로드
+            loadConceptArtImages();
+            
+            // 스토리보드 데이터 로드
+            loadStoryboardMedia();
+            
+            // 갤러리 렌더링
+            renderImageGallery();
+            renderVideoGallery();
+            
+            // 카운트 업데이트
+            updateCounts();
+        }
+        
+        // 컨셉아트 이미지 로드
+        function loadConceptArtImages() {
+            try {
+                const storedData = localStorage.getItem('conceptArtManagerData_v1.2');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    const conceptData = parsedData.conceptArtData || parsedData.concept_art_collection || {};
+                    
+                    ['characters', 'locations', 'props'].forEach(category => {
+                        const categoryData = conceptData[category] || {};
+                        Object.entries(categoryData).forEach(([id, concept]) => {
+                            // 메인 이미지
+                            if (concept.main_image_url) {
+                                galleryState.images.push({
+                                    url: concept.main_image_url,
+                                    title: concept.name_kr || concept.name || id,
+                                    category: category,
+                                    source: 'concept-art',
+                                    subtitle: `[컨셉아트] ${getCategoryName(category)} - 메인 이미지`,
+                                    timestamp: concept.timestamp || Date.now()
+                                });
+                            }
+                            
+                            // 추가 이미지들
+                            if (concept.additional_images) {
+                                for (let i = 1; i <= 4; i++) {
+                                    const imageKey = `image_${i}`;
+                                    const imageData = concept.additional_images[imageKey];
+                                    if (imageData && imageData.url) {
+                                        galleryState.images.push({
+                                            url: imageData.url,
+                                            title: concept.name_kr || concept.name || id,
+                                            category: category,
+                                            source: 'concept-art',
+                                            subtitle: `[컨셉아트] ${getCategoryName(category)} - 추가 이미지 ${i}`,
+                                            timestamp: imageData.timestamp || Date.now()
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('컨셉아트 데이터 로드 실패:', error);
+            }
+        }
+        
+        // 스토리보드 미디어 로드
+        function loadStoryboardMedia() {
+            try {
+                // 스토리보드 데이터 로드
+                const storyboardData = localStorage.getItem('storyboardData');
+                if (storyboardData) {
+                    const parsed = JSON.parse(storyboardData);
+                    
+                    // 시퀀스, 씬, 샷 데이터 순회
+                    if (parsed.sequences) {
+                        parsed.sequences.forEach(sequence => {
+                            // 시퀀스 이미지
+                            if (sequence.imageUrl) {
+                                galleryState.images.push({
+                                    url: sequence.imageUrl,
+                                    title: sequence.title || `시퀀스 ${sequence.number}`,
+                                    category: 'sequence',
+                                    source: 'storyboard',
+                                    subtitle: `[스토리보드] 시퀀스 ${sequence.number}`,
+                                    timestamp: Date.now()
+                                });
+                            }
+                            
+                            // 씬 데이터
+                            if (sequence.scenes) {
+                                sequence.scenes.forEach(scene => {
+                                    if (scene.imageUrl) {
+                                        galleryState.images.push({
+                                            url: scene.imageUrl,
+                                            title: scene.title || `씬 ${scene.number}`,
+                                            category: 'scene',
+                                            source: 'storyboard',
+                                            subtitle: `[스토리보드] 시퀀스 ${sequence.number} - 씬 ${scene.number}`,
+                                            timestamp: Date.now()
+                                        });
+                                    }
+                                    
+                                    // 샷 데이터
+                                    if (scene.shots) {
+                                        scene.shots.forEach(shot => {
+                                            if (shot.imageUrl) {
+                                                galleryState.images.push({
+                                                    url: shot.imageUrl,
+                                                    title: shot.title || `샷 ${shot.number}`,
+                                                    category: 'shot',
+                                                    source: 'storyboard',
+                                                    subtitle: `[스토리보드] 시퀀스 ${sequence.number} - 씬 ${scene.number} - 샷 ${shot.number}`,
+                                                    timestamp: Date.now()
+                                                });
+                                            }
+                                            
+                                            // 영상 데이터
+                                            if (shot.videoUrl) {
+                                                galleryState.videos.push({
+                                                    url: shot.videoUrl,
+                                                    title: shot.title || `샷 ${shot.number}`,
+                                                    category: 'scene',
+                                                    source: 'storyboard',
+                                                    subtitle: `[스토리보드] 시퀀스 ${sequence.number} - 씬 ${scene.number} - 샷 ${shot.number}`,
+                                                    timestamp: Date.now()
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+                
+                // 대체 데이터 구조 확인 (다른 키 이름)
+                const altData = localStorage.getItem('storyboard_data');
+                if (!storyboardData && altData) {
+                    // 대체 구조 처리
+                    console.log('대체 스토리보드 데이터 구조 확인');
+                }
+            } catch (error) {
+                console.error('스토리보드 데이터 로드 실패:', error);
+            }
+        }
+        
+        // 이미지 갤러리 렌더링
+        function renderImageGallery() {
+            const container = document.getElementById('image-gallery');
+            const emptyState = document.getElementById('image-empty-state');
+            
+            if (galleryState.filteredImages.length === 0 && galleryState.images.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'grid';
+            emptyState.style.display = 'none';
+            
+            const images = galleryState.filteredImages.length > 0 ? 
+                          galleryState.filteredImages : galleryState.images;
+            
+            container.innerHTML = images.map((image, index) => `
+                <div class="gallery-item" onclick="openImageLightbox(${index})">
+                    <img src="${getImageUrl(image.url)}" 
+                         alt="${image.title}" 
+                         class="gallery-item-image"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"280\" height=\"200\" viewBox=\"0 0 280 200\"%3E%3Crect fill=\"%23333\" width=\"280\" height=\"200\"/%3E%3Ctext fill=\"%23666\" font-size=\"14\" x=\"50%25\" y=\"50%25\" text-anchor=\"middle\" dy=\".3em\"%3E이미지 로드 실패%3C/text%3E%3C/svg%3E'">
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">${image.title}</div>
+                        <div class="gallery-item-subtitle">${image.subtitle}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 영상 갤러리 렌더링
+        function renderVideoGallery() {
+            const container = document.getElementById('video-gallery');
+            const emptyState = document.getElementById('video-empty-state');
+            
+            if (galleryState.filteredVideos.length === 0 && galleryState.videos.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'grid';
+            emptyState.style.display = 'none';
+            
+            const videos = galleryState.filteredVideos.length > 0 ? 
+                          galleryState.filteredVideos : galleryState.videos;
+            
+            container.innerHTML = videos.map((video, index) => `
+                <div class="gallery-item" onclick="openVideoLightbox(${index})">
+                    <div class="gallery-item-video">
+                        <div class="video-play-btn">▶</div>
+                    </div>
+                    <div class="gallery-item-info">
+                        <div class="gallery-item-title">${video.title}</div>
+                        <div class="gallery-item-subtitle">${video.subtitle}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 이미지 URL 처리
+        function getImageUrl(url) {
+            if (!url) return '';
+            
+            // Google Drive URL 처리
+            const fileId = extractGoogleDriveFileId(url);
+            if (fileId) {
+                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+            }
+            
+            return url;
+        }
+        
+        // Google Drive 파일 ID 추출
+        function extractGoogleDriveFileId(url) {
+            if (!url || typeof url !== 'string') return null;
+            
+            const patterns = [
+                /\/file\/d\/([a-zA-Z0-9-_]+)/,
+                /id=([a-zA-Z0-9-_]+)/,
+                /\/d\/([a-zA-Z0-9-_]+)/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+        
+        // 카테고리 이름 변환
+        function getCategoryName(category) {
+            const names = {
+                characters: '캐릭터',
+                locations: '장소',
+                props: '소품',
+                sequence: '시퀀스',
+                scene: '씬',
+                shot: '샷'
+            };
+            return names[category] || category;
+        }
+        
+        // 필터 초기화
+        function initializeFilters() {
+            // 이미지 필터
+            document.getElementById('image-source-filter').addEventListener('change', filterImages);
+            document.getElementById('image-category-filter').addEventListener('change', filterImages);
+            document.getElementById('image-sort-filter').addEventListener('change', sortImages);
+            
+            // 영상 필터
+            document.getElementById('video-source-filter').addEventListener('change', filterVideos);
+            document.getElementById('video-category-filter').addEventListener('change', filterVideos);
+            document.getElementById('video-sort-filter').addEventListener('change', sortVideos);
+        }
+        
+        // 이미지 필터링
+        function filterImages() {
+            const source = document.getElementById('image-source-filter').value;
+            const category = document.getElementById('image-category-filter').value;
+            
+            let filtered = [...galleryState.images];
+            
+            // 출처 필터
+            if (source !== 'all') {
+                filtered = filtered.filter(img => img.source === source);
+            }
+            
+            // 카테고리 필터
+            if (category !== 'all') {
+                filtered = filtered.filter(img => img.category === category);
+            }
+            
+            galleryState.filteredImages = filtered;
+            sortImages();
+        }
+        
+        // 이미지 정렬
+        function sortImages() {
+            const sortBy = document.getElementById('image-sort-filter').value;
+            const images = galleryState.filteredImages.length > 0 ? 
+                          galleryState.filteredImages : galleryState.images;
+            
+            switch(sortBy) {
+                case 'newest':
+                    images.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    break;
+                case 'oldest':
+                    images.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                    break;
+                case 'name':
+                    images.sort((a, b) => a.title.localeCompare(b.title));
+                    break;
+            }
+            
+            renderImageGallery();
+        }
+        
+        // 영상 필터링
+        function filterVideos() {
+            const source = document.getElementById('video-source-filter').value;
+            const category = document.getElementById('video-category-filter').value;
+            
+            let filtered = [...galleryState.videos];
+            
+            // 출처 필터
+            if (source !== 'all') {
+                filtered = filtered.filter(video => video.source === source);
+            }
+            
+            // 카테고리 필터
+            if (category !== 'all') {
+                filtered = filtered.filter(video => video.category === category);
+            }
+            
+            galleryState.filteredVideos = filtered;
+            sortVideos();
+        }
+        
+        // 영상 정렬
+        function sortVideos() {
+            const sortBy = document.getElementById('video-sort-filter').value;
+            const videos = galleryState.filteredVideos.length > 0 ? 
+                          galleryState.filteredVideos : galleryState.videos;
+            
+            switch(sortBy) {
+                case 'newest':
+                    videos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    break;
+                case 'oldest':
+                    videos.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                    break;
+                case 'name':
+                    videos.sort((a, b) => a.title.localeCompare(b.title));
+                    break;
+            }
+            
+            renderVideoGallery();
+        }
+        
+        // 카운트 업데이트
+        function updateCounts() {
+            document.getElementById('image-count').textContent = galleryState.images.length;
+            document.getElementById('video-count').textContent = galleryState.videos.length;
+        }
+        
+        // 라이트박스 열기 (이미지)
+        function openImageLightbox(index) {
+            const images = galleryState.filteredImages.length > 0 ? 
+                          galleryState.filteredImages : galleryState.images;
+            const image = images[index];
+            
+            if (!image) return;
+            
+            galleryState.currentLightboxIndex = index;
+            galleryState.currentLightboxType = 'image';
+            
+            const lightbox = document.getElementById('lightbox');
+            const container = document.getElementById('lightbox-media-container');
+            
+            container.innerHTML = `
+                <img src="${getImageUrl(image.url)}" 
+                     alt="${image.title}" 
+                     class="lightbox-image">
+            `;
+            
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 라이트박스 열기 (영상)
+        function openVideoLightbox(index) {
+            const videos = galleryState.filteredVideos.length > 0 ? 
+                          galleryState.filteredVideos : galleryState.videos;
+            const video = videos[index];
+            
+            if (!video) return;
+            
+            galleryState.currentLightboxIndex = index;
+            galleryState.currentLightboxType = 'video';
+            
+            const lightbox = document.getElementById('lightbox');
+            const container = document.getElementById('lightbox-media-container');
+            
+            // Google Drive 영상 임베드
+            const fileId = extractGoogleDriveFileId(video.url);
+            if (fileId) {
+                container.innerHTML = `
+                    <iframe src="https://drive.google.com/file/d/${fileId}/preview" 
+                            class="lightbox-video"
+                            allow="autoplay"
+                            allowfullscreen>
+                    </iframe>
+                `;
+            } else {
+                container.innerHTML = `
+                    <video src="${video.url}" 
+                           class="lightbox-video"
+                           controls
+                           autoplay>
+                    </video>
+                `;
+            }
+            
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 라이트박스 닫기
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // 영상 정지
+            const container = document.getElementById('lightbox-media-container');
+            container.innerHTML = '';
+        }
+        
+        // 라이트박스 네비게이션
+        function navigateLightbox(direction) {
+            if (galleryState.currentLightboxType === 'image') {
+                const images = galleryState.filteredImages.length > 0 ? 
+                              galleryState.filteredImages : galleryState.images;
+                const newIndex = (galleryState.currentLightboxIndex + direction + images.length) % images.length;
+                openImageLightbox(newIndex);
+            } else if (galleryState.currentLightboxType === 'video') {
+                const videos = galleryState.filteredVideos.length > 0 ? 
+                              galleryState.filteredVideos : galleryState.videos;
+                const newIndex = (galleryState.currentLightboxIndex + direction + videos.length) % videos.length;
+                openVideoLightbox(newIndex);
+            }
+        }
+        
+        // ESC 키로 라이트박스 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            } else if (e.key === 'ArrowLeft') {
+                navigateLightbox(-1);
+            } else if (e.key === 'ArrowRight') {
+                navigateLightbox(1);
+            }
+        });
+        
+        // 라이트박스 배경 클릭으로 닫기
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+        
+        // 백 투 탑 버튼 초기화
+        function initializeBackToTop() {
+            const backToTopBtn = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            });
+        }
+        
+        // 맨 위로 스크롤
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 데이터 새로고침 제거 (중복 생성 문제 해결)
+    </script>
+</body>
+</html>

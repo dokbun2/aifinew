@@ -5258,12 +5258,23 @@ try {
     showMessage('컨셉아트 열기 중 오류가 발생했습니다: ' + e.message, 'error');
 }
     }
+    
+    // 미디어 갤러리 보기
+    function openMediaGallery() {
+        try {
+            // 미디어 갤러리 페이지로 직접 이동 (동일한 창에서)
+            window.location.href = '../media-gallery.html';
+        } catch (e) {
+            showMessage('미디어 갤러리 열기 중 오류가 발생했습니다: ' + e.message, 'error');
+        }
+    }
 
     // 이벤트 리스너 설정
     function setupEventListeners() {
 document.getElementById('import-btn')?.addEventListener('click', importData);
 // export-btn은 인라인 onclick 사용으로 변경
 document.getElementById('concept-art-btn')?.addEventListener('click', openConceptArt);
+document.getElementById('media-gallery-btn')?.addEventListener('click', openMediaGallery);
 document.getElementById('expand-all-btn')?.addEventListener('click', expandAll);
 document.getElementById('collapse-all-btn')?.addEventListener('click', collapseAll);
 document.getElementById('search-input')?.addEventListener('input', searchNavigation);
