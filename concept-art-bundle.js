@@ -239,9 +239,23 @@ const dataManager = {
                 };
                 
                 if (item.prompts) {
-                    for (const [aiTool, promptData] of Object.entries(item.prompts)) {
-                        if (promptData.prompt_english) {
-                            convertedItem.base_prompts[aiTool] = promptData.prompt_english;
+                    // Stage 4 JSON 구조 지원: universal 필드 처리
+                    if (typeof item.prompts.universal === 'string') {
+                        // universal 프롬프트를 모든 AI 도구로 매핑
+                        const universalPrompt = item.prompts.universal;
+                        convertedItem.base_prompts['midjourney'] = universalPrompt;
+                        convertedItem.base_prompts['leonardo'] = universalPrompt;
+                        convertedItem.base_prompts['ideogram'] = universalPrompt;
+                        convertedItem.base_prompts['imagefx'] = universalPrompt;
+                        convertedItem.base_prompts['openart'] = universalPrompt;
+                    } else {
+                        // 기존 구조 지원
+                        for (const [aiTool, promptData] of Object.entries(item.prompts)) {
+                            if (typeof promptData === 'string') {
+                                convertedItem.base_prompts[aiTool] = promptData;
+                            } else if (promptData.prompt_english) {
+                                convertedItem.base_prompts[aiTool] = promptData.prompt_english;
+                            }
                         }
                     }
                 }
@@ -391,9 +405,16 @@ const uiRenderer = {
         conceptTitle.textContent = name;
         
         this.displayCSVData(concept);
+        this.buildAITabs(); // AI 도구 탭 버튼 생성
         this.displayBasePrompts(concept);
         this.displayVariants(concept);
         imageManager.updateImageGallery(concept);
+        
+        // 첫 번째 AI 도구 탭 자동 선택
+        if (concept.base_prompts && Object.keys(concept.base_prompts).length > 0) {
+            const firstAITool = Object.keys(concept.base_prompts)[0];
+            this.showAITab(firstAITool, 'base');
+        }
         
         const firstTab = document.querySelector('.tab-button.active');
         if (firstTab) {
