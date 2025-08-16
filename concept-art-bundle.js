@@ -546,8 +546,16 @@ const uiRenderer = {
                     <div class="image-container" id="image-base-${aiTool}">
                         <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
                     </div>
-                    <div class="image-actions">
-                        <button class="btn btn-secondary" onclick="imageManager.addImage('${aiTool}', 'base')">이미지 URL 추가</button>
+                    <div class="image-url-section">
+                        <div class="image-url-input-group">
+                            <input type="text" 
+                                   class="image-url-input" 
+                                   id="image-url-input-base-${aiTool}"
+                                   placeholder="이미지 URL을 입력하세요"
+                                   onkeypress="if(event.key==='Enter') imageManager.applyImageUrl('${aiTool}', 'base')"
+                                   oninput="imageManager.previewImageUrl(this.value, 'base', '${aiTool}')">
+                            <button class="btn-apply-url" onclick="imageManager.applyImageUrl('${aiTool}', 'base')">적용</button>
+                        </div>
                     </div>
                     <div class="additional-images-section">
                         <h4 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">🖼️ 추가 이미지</h4>
@@ -708,8 +716,16 @@ const uiRenderer = {
                                 <div class="image-container" id="image-${typeKey}_${index}-${aiTool}">
                                     <div class="no-image-message">이미지를 추가하려면 버튼을 클릭하세요</div>
                                 </div>
-                                <div class="image-actions">
-                                    <button class="btn btn-secondary" onclick="imageManager.addImage('${aiTool}', '${typeKey}', ${index})">이미지 URL 추가</button>
+                                <div class="image-url-section">
+                                    <div class="image-url-input-group">
+                                        <input type="text" 
+                                               class="image-url-input" 
+                                               id="image-url-input-${typeKey}_${index}-${aiTool}"
+                                               placeholder="이미지 URL을 입력하세요"
+                                               onkeypress="if(event.key==='Enter') imageManager.applyImageUrl('${aiTool}', '${typeKey}', ${index})"
+                                               oninput="imageManager.previewImageUrl(this.value, '${typeKey}', '${aiTool}', ${index})">
+                                        <button class="btn-apply-url" onclick="imageManager.applyImageUrl('${aiTool}', '${typeKey}', ${index})">적용</button>
+                                    </div>
                                 </div>
                             `;
                             typeContent.appendChild(variantDiv);
@@ -1384,7 +1400,58 @@ const imageManager = {
         return url;
     },
     
+    applyImageUrl: function(aiTool, type, index = null) {
+        const inputId = index !== null ? 
+            `image-url-input-${type}_${index}-${aiTool}` : 
+            `image-url-input-${type}-${aiTool}`;
+        
+        const inputField = document.getElementById(inputId);
+        if (!inputField) {
+            console.error('Input field not found:', inputId);
+            return;
+        }
+        
+        const url = inputField.value.trim();
+        if (!url) {
+            utils.showToast('URL을 입력해주세요');
+            return;
+        }
+        
+        const concept = dataManager.getCurrentConcept();
+        if (!concept) {
+            utils.showToast('선택된 컨셉아트가 없습니다.');
+            return;
+        }
+        
+        // 드롭박스 URL 자동 변환
+        const processedUrl = this.convertDropboxUrl(url);
+        
+        if (!utils.isValidUrl(processedUrl)) {
+            utils.showToast('유효한 URL을 입력해주세요');
+            return;
+        }
+        
+        if (!concept.generated_images) concept.generated_images = { base_prompts: {}, variations: {} };
+        if (type === 'base' && !concept.generated_images.base_prompts) concept.generated_images.base_prompts = {};
+        if (type !== 'base' && !concept.generated_images.variations) concept.generated_images.variations = {};
+        if (type !== 'base' && !concept.generated_images.variations[aiTool]) concept.generated_images.variations[aiTool] = {};
+        
+        this.setImageUrl(aiTool, type, index, processedUrl, concept);
+        inputField.value = ''; // 입력 필드 초기화
+        utils.showToast('이미지가 추가되었습니다');
+    },
+    
+    previewImageUrl: function(url, type, aiTool, index = null) {
+        // 실시간 미리보기는 옵션으로 구현 가능
+        // 현재는 간단한 URL 검증만 수행
+        if (url && url.length > 10) {
+            const processedUrl = this.convertDropboxUrl(url.trim());
+            // 미리보기 로직 추가 가능
+        }
+    },
+    
     addImage: function(aiTool, type, index = null) {
+        // 이 함수는 추가 이미지 슬롯용으로 유지 (기존 호환성)
         const concept = dataManager.getCurrentConcept();
         if (!concept) {
             utils.showToast('선택된 컨셉아트가 없습니다.');

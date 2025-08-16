@@ -3,6 +3,67 @@
 /* Import existing modern styles */
 @import url('concept-art-styles-modern.css');
 
+/* ===== Inline URL Input Styles ===== */
+.image-url-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.image-url-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.image-url-input {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.875rem;
+    font-family: 'Monaco', 'Courier New', monospace;
+    transition: all 0.2s ease;
+}
+
+.image-url-input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.15);
+}
+
+.image-url-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.8125rem;
+}
+
+.btn-apply-url {
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-apply-url:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-apply-url:active {
+    transform: translateY(0);
+}
+
 /* ===== Additional Images Section Styles ===== */
 .additional-images-section {
     margin-top: 2rem;
