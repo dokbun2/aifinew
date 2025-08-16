@@ -239,21 +239,45 @@ const dataManager = {
                 };
                 
                 if (item.prompts) {
-                    // Stage 4 JSON 구조 지원: universal 필드 처리
-                    if (typeof item.prompts.universal === 'string') {
-                        // universal 프롬프트를 모든 AI 도구로 매핑
+                    // 유연한 프롬프트 처리: JSON 구조에 따라 자동 대응
+                    const aiTools = ['midjourney', 'leonardo', 'ideogram', 'imagefx', 'openart'];
+                    
+                    // 1. 먼저 개별 AI 도구 프롬프트 확인
+                    const hasIndividualPrompts = aiTools.some(tool => item.prompts[tool]);
+                    
+                    if (hasIndividualPrompts) {
+                        // 개별 프롬프트가 있으면 각각 처리
+                        for (const [aiTool, promptData] of Object.entries(item.prompts)) {
+                            // universal과 universal_translated는 건너뜀
+                            if (aiTool === 'universal' || aiTool === 'universal_translated') continue;
+                            
+                            if (typeof promptData === 'string') {
+                                convertedItem.base_prompts[aiTool] = promptData;
+                            } else if (promptData?.prompt_english) {
+                                convertedItem.base_prompts[aiTool] = promptData.prompt_english;
+                            }
+                        }
+                        
+                        // universal이 있고 특정 도구의 프롬프트가 없으면 universal 사용
+                        if (item.prompts.universal) {
+                            aiTools.forEach(tool => {
+                                if (!convertedItem.base_prompts[tool]) {
+                                    convertedItem.base_prompts[tool] = item.prompts.universal;
+                                }
+                            });
+                        }
+                    } else if (item.prompts.universal) {
+                        // universal만 있으면 모든 도구에 복사
                         const universalPrompt = item.prompts.universal;
-                        convertedItem.base_prompts['midjourney'] = universalPrompt;
-                        convertedItem.base_prompts['leonardo'] = universalPrompt;
-                        convertedItem.base_prompts['ideogram'] = universalPrompt;
-                        convertedItem.base_prompts['imagefx'] = universalPrompt;
-                        convertedItem.base_prompts['openart'] = universalPrompt;
+                        aiTools.forEach(tool => {
+                            convertedItem.base_prompts[tool] = universalPrompt;
+                        });
                     } else {
-                        // 기존 구조 지원
+                        // 기존 구조 지원 (prompt_english 등)
                         for (const [aiTool, promptData] of Object.entries(item.prompts)) {
                             if (typeof promptData === 'string') {
                                 convertedItem.base_prompts[aiTool] = promptData;
-                            } else if (promptData.prompt_english) {
+                            } else if (promptData?.prompt_english) {
                                 convertedItem.base_prompts[aiTool] = promptData.prompt_english;
                             }
                         }
