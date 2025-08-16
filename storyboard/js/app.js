@@ -6,6 +6,18 @@ let selectedSceneId = null;
 let hasStage2Structure = false; // Stage 2 구조 로드 여부
 let editedPrompts = {}; // 프롬프트 수정 데이터 저장용
 
+// HTML 속성용 문자열 이스케이프 함수
+function escapeHtmlAttribute(str) {
+    if (!str) return '';
+    return str
+        .replace(/\\/g, '\\\\')  // 백슬래시를 먼저 이스케이프
+        .replace(/'/g, "\\'")     // 작은따옴표 이스케이프
+        .replace(/"/g, '&quot;')  // 큰따옴표를 HTML 엔티티로 변경
+        .replace(/\n/g, '\\n')    // 줄바꿈 이스케이프
+        .replace(/\r/g, '\\r')    // 캐리지 리턴 이스케이프
+        .replace(/\t/g, '\\t');   // 탭 이스케이프
+}
+
 // 디버깅용 전역 변수 노출
 window.debugData = {
 	getCurrentData: () => currentData,
@@ -3362,13 +3374,13 @@ let aiSectionsHtml = '';
 										</div>
 									` : ''}
 									${parameters ? `<div style="margin-top: 5px; font-size: 0.9em; color: #666;">Parameters: ${parameters}</div>` : ''}
-									<button class="copy-btn" onclick="copyImagePrompt('${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${ai.name}', '${imageId}')">
+									<button class="copy-btn" onclick="copyImagePrompt('${escapeHtmlAttribute(mainPrompt)}', '${ai.name}', '${imageId}')">
 										프롬프트 복사
 									</button>
-									<button class="edit-btn" onclick="editImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${(translatedPrompt || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${(parameters || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" style="margin-left: 8px;">
+									<button class="edit-btn" onclick="editImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${escapeHtmlAttribute(mainPrompt)}', '${escapeHtmlAttribute(translatedPrompt || '')}', '${escapeHtmlAttribute(parameters || '')}')" style="margin-left: 8px;">
 										프롬프트 수정
 									</button>
-									<button class="ai-edit-btn" onclick="aiEditImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${mainPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"')}')" style="margin-left: 8px; background-color: #8b5cf6;">
+									<button class="ai-edit-btn" onclick="aiEditImagePrompt('${shot.id}', '${ai.name}', '${imageId}', '${escapeHtmlAttribute(mainPrompt)}')" style="margin-left: 8px; background-color: #8b5cf6;">
 										AI 수정
 									</button>
 								</div>
@@ -3822,7 +3834,15 @@ try {
 		if (!prompt || prompt.trim() === '') {
 			return showMessage(`${aiName} 프롬프트가 비어 있습니다.`, 'warning');
 		}
-		copyToClipboard(prompt).then(ok => {
+		// HTML 엔티티 디코드 (필요한 경우)
+		const decodedPrompt = prompt
+			.replace(/&quot;/g, '"')
+			.replace(/&apos;/g, "'")
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&amp;/g, '&');
+		
+		copyToClipboard(decodedPrompt).then(ok => {
 			if (ok) showMessage(`${aiName} 프롬프트 (${imageId})가 복사되었습니다.`, 'success');
 		});
 	}
@@ -5986,6 +6006,21 @@ editedPrompts = JSON.parse(localStorage.getItem('editedImagePrompts') || '{}');
 
 // 프롬프트 수정 버튼 클릭 시 호출되는 함수
 function editImagePrompt(shotId, aiName, imageId, originalPrompt, translatedPrompt, parameters) {
+    // HTML 엔티티 디코드
+    const decodeHtmlEntities = (str) => {
+        if (!str) return '';
+        return str
+            .replace(/&quot;/g, '"')
+            .replace(/&apos;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
+    };
+    
+    const decodedOriginal = decodeHtmlEntities(originalPrompt);
+    const decodedTranslated = decodeHtmlEntities(translatedPrompt);
+    const decodedParameters = decodeHtmlEntities(parameters);
+    
     // 수정 모달 HTML 생성
     const modalHtml = `
         <div id="prompt-edit-modal" class="modal-overlay" onclick="closePromptEditModal(event)">
@@ -5997,18 +6032,18 @@ function editImagePrompt(shotId, aiName, imageId, originalPrompt, translatedProm
                 <div class="modal-body">
                     <div class="form-group">
                         <label>원본 프롬프트:</label>
-                        <textarea id="edit-original-prompt" class="prompt-textarea" rows="4">${originalPrompt}</textarea>
+                        <textarea id="edit-original-prompt" class="prompt-textarea" rows="4">${decodedOriginal}</textarea>
                     </div>
-                    ${translatedPrompt ? `
+                    ${decodedTranslated ? `
                     <div class="form-group">
                         <label>번역된 프롬프트:</label>
-                        <textarea id="edit-translated-prompt" class="prompt-textarea" rows="4">${translatedPrompt}</textarea>
+                        <textarea id="edit-translated-prompt" class="prompt-textarea" rows="4">${decodedTranslated}</textarea>
                     </div>
                     ` : ''}
-                    ${parameters ? `
+                    ${decodedParameters ? `
                     <div class="form-group">
                         <label>파라미터:</label>
-                        <input type="text" id="edit-parameters" class="prompt-input" value="${parameters}">
+                        <input type="text" id="edit-parameters" class="prompt-input" value="${decodedParameters}">
                     </div>
                     ` : ''}
                 </div>
@@ -6203,9 +6238,17 @@ function addPromptEditModalStyles() {
 // AI 수정 버튼 클릭 시 호출되는 함수
 function aiEditImagePrompt(shotId, aiName, imageId, originalPrompt) {
     try {
+        // HTML 엔티티 디코드
+        const decodedPrompt = originalPrompt
+            .replace(/&quot;/g, '"')
+            .replace(/&apos;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
+        
         // 수정된 프롬프트가 있는지 확인
         const editedPrompt = getEditedPrompt(shotId, aiName, imageId);
-        let promptToTransfer = originalPrompt;
+        let promptToTransfer = decodedPrompt;
         
         if (editedPrompt && editedPrompt.originalPrompt) {
             promptToTransfer = editedPrompt.originalPrompt;
