@@ -215,6 +215,17 @@ const dataManager = {
                         concept.main_image_url = firstImage;
                     }
                 }
+                
+                // additional_images를 3개로 제한 (image_1, image_2, image_3만 유지)
+                if (concept.additional_images) {
+                    const validKeys = ['image_1', 'image_2', 'image_3'];
+                    const currentKeys = Object.keys(concept.additional_images);
+                    currentKeys.forEach(key => {
+                        if (!validKeys.includes(key)) {
+                            delete concept.additional_images[key];
+                        }
+                    });
+                }
             }
         }
         
