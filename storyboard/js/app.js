@@ -3339,6 +3339,9 @@ let aiSectionsHtml = '';
 						const imageStage6Data = shotStage6Data[imageId] || {};
 						const imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
 						const hasPrompt = imagePrompts.prompt || imagePrompts.main_prompt;
+						
+						// csv_data 또는 block_data 가져오기 (v3.0)
+						const blockData = imageStage6Data.csv_data || imageStage6Data.block_data || {};
 
 						// 프롬프트가 없으면 건너뛰기
 						const editedPrompt = getEditedPrompt(shot.id, ai.name, imageId);
@@ -5647,32 +5650,56 @@ try {
                                                     shot.image_prompts = {};
                                                 }
                                                 
-                                                // AI 도구별 프롬프트 병합
-                                                Object.keys(firstImageData.prompts).forEach(aiTool => {
-                                                    const promptData = firstImageData.prompts[aiTool];
+                                                // universal 프롬프트가 있는 경우 처리
+                                                if (firstImageData.prompts.universal) {
+                                                    const universalPrompt = firstImageData.prompts.universal;
+                                                    const universalTranslated = firstImageData.prompts.universal_translated || '';
+                                                    const csvParams = firstImageData.csv_data?.PARAMETERS || firstImageData.block_data?.PARAMETERS || '';
                                                     
-                                                    if (aiTool === 'midjourney') {
-                                                        shot.image_prompts.midjourney = {
-                                                            main_prompt: promptData.prompt || '',
-                                                            main_prompt_translated: promptData.prompt_translated || '',
-                                                            parameters: promptData.parameters || ''
-                                                        };
-                                                    } else {
-                                                        let parameters = '';
-                                                        if (promptData.negative_prompt) {
-                                                            parameters = `Negative: ${promptData.negative_prompt}`;
-                                                        }
-                                                        if (promptData.aspect_ratio) {
-                                                            parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
-                                                        }
+                                                    // 모든 AI 도구에 universal 프롬프트 적용
+                                                    shot.image_prompts.midjourney = {
+                                                        main_prompt: universalPrompt,
+                                                        main_prompt_translated: universalTranslated,
+                                                        parameters: csvParams
+                                                    };
+                                                    shot.image_prompts.dalle3 = {
+                                                        main_prompt: universalPrompt,
+                                                        main_prompt_translated: universalTranslated,
+                                                        parameters: ''
+                                                    };
+                                                    shot.image_prompts.stable_diffusion = {
+                                                        main_prompt: universalPrompt,
+                                                        main_prompt_translated: universalTranslated,
+                                                        parameters: ''
+                                                    };
+                                                } else {
+                                                    // 기존 방식 유지 (호환성)
+                                                    Object.keys(firstImageData.prompts).forEach(aiTool => {
+                                                        const promptData = firstImageData.prompts[aiTool];
                                                         
-                                                        shot.image_prompts[aiTool] = {
-                                                            main_prompt: promptData.prompt || '',
-                                                            main_prompt_translated: promptData.prompt_translated || '',
-                                                            parameters: parameters
-                                                        };
-                                                    }
-                                                });
+                                                        if (aiTool === 'midjourney') {
+                                                            shot.image_prompts.midjourney = {
+                                                                main_prompt: promptData.prompt || '',
+                                                                main_prompt_translated: promptData.prompt_translated || '',
+                                                                parameters: promptData.parameters || ''
+                                                            };
+                                                        } else {
+                                                            let parameters = '';
+                                                            if (promptData.negative_prompt) {
+                                                                parameters = `Negative: ${promptData.negative_prompt}`;
+                                                            }
+                                                            if (promptData.aspect_ratio) {
+                                                                parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
+                                                            }
+                                                            
+                                                            shot.image_prompts[aiTool] = {
+                                                                main_prompt: promptData.prompt || '',
+                                                                main_prompt_translated: promptData.prompt_translated || '',
+                                                                parameters: parameters
+                                                            };
+                                                        }
+                                                    });
+                                                }
                                                 
                                                 mergedCount++;
                                             }
