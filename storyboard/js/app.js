@@ -3488,8 +3488,16 @@ let aiSectionsHtml = '';
 					return selectedPlanData.images.some(planImage => {
 						const imageId = planImage.id;
 						const imageStage6Data = shotStage6Data[imageId] || {};
-						const imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
-						const hasPrompt = imagePrompts.prompt || imagePrompts.main_prompt;
+						
+						// universal 프롬프트 특별 처리
+						let hasPrompt = false;
+						if (ai.id === 'universal') {
+							// universal은 문자열로 직접 저장되거나 universal_translated와 함께 있음
+							hasPrompt = !!(imageStage6Data.prompts?.universal || imageStage6Data.prompts?.universal_translated);
+						} else {
+							const imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
+							hasPrompt = !!(imagePrompts.prompt || imagePrompts.main_prompt);
+						}
 						
 						// 수정된 프롬프트도 확인
 						const editedPromptExists = getEditedPrompt(shot.id, ai.name, imageId);
@@ -3527,7 +3535,13 @@ let aiSectionsHtml = '';
 							}
 						}
 						
-						const hasPrompt = imagePrompts.prompt || imagePrompts.main_prompt;
+						// universal 프롬프트 특별 처리를 고려한 hasPrompt 체크
+						let hasPrompt = false;
+						if (ai.id === 'universal') {
+							hasPrompt = !!(imageStage6Data.prompts?.universal || imageStage6Data.prompts?.universal_translated || imagePrompts.prompt || imagePrompts.main_prompt);
+						} else {
+							hasPrompt = !!(imagePrompts.prompt || imagePrompts.main_prompt);
+						}
 						
 						// csv_data 또는 block_data 가져오기 (v3.0)
 						const blockData = imageStage6Data.csv_data || imageStage6Data.block_data || {};
