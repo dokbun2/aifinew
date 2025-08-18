@@ -2207,7 +2207,7 @@ window.navigateToBoth = function() {
 
 // 모달 액션 처리
 window.handleModalAction = function() {
-    // 단순히 모달만 닫고 메인 페이지에 남아있음
+    // 모달 닫기
     closeSequentialUploadModal();
     
     // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
@@ -2220,7 +2220,48 @@ window.handleModalAction = function() {
     console.log('스토리보드 처리 완료 플래그 제거됨');
     
     // 완료 메시지 표시
-    showUploadMessage('업로드가 완료되었습니다. 프로젝트 카드를 클릭하여 해당 페이지로 이동할 수 있습니다.', 'success');
+    showUploadMessage('업로드가 완료되었습니다. 스토리보드 페이지로 이동합니다.', 'success');
+    
+    // 업로드된 스테이지 데이터에 따라 URL 파라미터 구성
+    let urlParams = [];
+    
+    // Stage 2 데이터 확인
+    if (localStorage.getItem('stage2TempJson')) {
+        urlParams.push('loadTempJson=true');
+    }
+    
+    // Stage 5 데이터 확인  
+    if (localStorage.getItem('stage5TempJsonFiles')) {
+        urlParams.push('loadStage5JsonMultiple=true');
+    }
+    
+    // Stage 6 데이터 확인
+    if (localStorage.getItem('stage6TempJsonFiles')) {
+        urlParams.push('loadStage6JsonMultiple=true');
+    }
+    
+    // Stage 7 데이터 확인
+    if (localStorage.getItem('stage7TempJsonFiles')) {
+        urlParams.push('loadStage7JsonMultiple=true');
+    }
+    
+    // Stage 8 데이터 확인
+    if (localStorage.getItem('stage8TempJsonFiles')) {
+        urlParams.push('loadStage8JsonMultiple=true');
+    }
+    
+    // 스토리보드 페이지로 이동
+    const storyboardUrl = urlParams.length > 0 
+        ? `storyboard/index.html?${urlParams.join('&')}`
+        : 'storyboard/index.html';
+    
+    console.log('📌 스토리보드 페이지로 이동:', storyboardUrl);
+    
+    // 페이드 아웃 효과와 함께 페이지 이동
+    document.body.classList.add('fade-out');
+    setTimeout(() => {
+        window.location.href = storyboardUrl;
+    }, 300);
 }
 
 // 메인 페이지의 Stage 카드에 완료 표시 추가
