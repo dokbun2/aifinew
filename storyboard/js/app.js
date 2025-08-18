@@ -3471,6 +3471,7 @@ else {
 
 // AI별 프롬프트 및 생성된 이미지 섹션
 const imageAIs = [
+    { id: 'universal', name: 'Universal' },  // universal 프롬프트 지원 추가
     { id: 'midjourney', name: 'Midjourney' },
     { id: 'ideogram', name: 'Ideogram' },
     { id: 'leonardo', name: 'Leonardo' },
@@ -3511,7 +3512,21 @@ let aiSectionsHtml = '';
 					selectedPlanData.images.forEach((planImage, imgIdx) => {
 						const imageId = planImage.id;
 						const imageStage6Data = shotStage6Data[imageId] || {};
-						const imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
+						let imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
+						
+						// universal 프롬프트 특별 처리
+						if (ai.id === 'universal' && imageStage6Data.prompts?.universal) {
+							const universalData = imageStage6Data.prompts.universal;
+							if (typeof universalData === 'string') {
+								imagePrompts = {
+									prompt: universalData,
+									prompt_translated: imageStage6Data.prompts.universal_translated || ''
+								};
+							} else {
+								imagePrompts = universalData;
+							}
+						}
+						
 						const hasPrompt = imagePrompts.prompt || imagePrompts.main_prompt;
 						
 						// csv_data 또는 block_data 가져오기 (v3.0)
@@ -3522,9 +3537,26 @@ let aiSectionsHtml = '';
 						if (!hasPrompt && !editedPrompt) return;
 
 						aiHasContent = true;
-						let mainPrompt = imagePrompts.prompt || imagePrompts.main_prompt || '';
-						let translatedPrompt = imagePrompts.prompt_translated || imagePrompts.main_prompt_translated || '';
-						let parameters = imagePrompts.parameters || '';
+						let mainPrompt = '';
+						let translatedPrompt = '';
+						let parameters = '';
+						
+						// universal 프롬프트 특별 처리
+						if (ai.id === 'universal' && imageStage6Data.prompts?.universal) {
+							const universalData = imageStage6Data.prompts.universal;
+							if (typeof universalData === 'string') {
+								mainPrompt = universalData;
+								translatedPrompt = imageStage6Data.prompts.universal_translated || '';
+							} else {
+								mainPrompt = universalData.prompt || universalData.main_prompt || '';
+								translatedPrompt = universalData.prompt_translated || universalData.main_prompt_translated || '';
+							}
+							parameters = imageStage6Data.csv_data?.['502'] || imageStage6Data.csv_data?.PARAMETERS || '';
+						} else {
+							mainPrompt = imagePrompts.prompt || imagePrompts.main_prompt || '';
+							translatedPrompt = imagePrompts.prompt_translated || imagePrompts.main_prompt_translated || '';
+							parameters = imagePrompts.parameters || '';
+						}
 						
 						// 수정된 프롬프트가 있는지 확인 (이미 위에서 선언함)
 						if (editedPrompt) {
