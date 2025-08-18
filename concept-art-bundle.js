@@ -2592,6 +2592,15 @@ function initialize() {
                     setTimeout(() => {
                         utils.showToast('스토리보드로 이동합니다...');
                         setTimeout(() => {
+                            // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
+                            localStorage.removeItem('stage2TempProcessed');
+                            localStorage.removeItem('stage5TempProcessed');
+                            localStorage.removeItem('stage6TempProcessed');
+                            localStorage.removeItem('stage6TempFilesProcessed');
+                            localStorage.removeItem('stage7TempProcessed');
+                            localStorage.removeItem('stage8TempProcessed');
+                            console.log('스토리보드 처리 완료 플래그 제거됨');
+                            
                             document.body.classList.add('fade-out');
                             setTimeout(() => {
                                 window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';

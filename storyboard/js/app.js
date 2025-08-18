@@ -5640,8 +5640,9 @@ try {
                     });
                     
                     // 처리 완료 후 임시 데이터 정리
-                    localStorage.removeItem('stage5TempJsonFiles');
-                    localStorage.removeItem('stage5TempFileNames');
+                    // 단계별 업로드 시 재방문을 위해 데이터 유지
+                    // localStorage.removeItem('stage5TempJsonFiles');
+                    // localStorage.removeItem('stage5TempFileNames');
                     
                 } catch (error) {
                     console.error('Stage 5 여러 임시 JSON 로드 오류:', error);

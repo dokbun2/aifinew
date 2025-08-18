@@ -2158,6 +2158,16 @@ window.closePageSelectionModal = function() {
 // 스토리보드로 이동
 window.navigateToStoryboard = function() {
     closePageSelectionModal();
+    
+    // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
+    localStorage.removeItem('stage2TempProcessed');
+    localStorage.removeItem('stage5TempProcessed');
+    localStorage.removeItem('stage6TempProcessed');
+    localStorage.removeItem('stage6TempFilesProcessed');
+    localStorage.removeItem('stage7TempProcessed');
+    localStorage.removeItem('stage8TempProcessed');
+    console.log('스토리보드 처리 완료 플래그 제거됨');
+    
     document.body.classList.add('fade-out');
     setTimeout(() => {
         window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';
@@ -2176,6 +2186,16 @@ window.navigateToConceptArt = function() {
 // 순차적으로 모두 보기 (먼저 컨셉아트 -> 스토리보드)
 window.navigateToBoth = function() {
     closePageSelectionModal();
+    
+    // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
+    localStorage.removeItem('stage2TempProcessed');
+    localStorage.removeItem('stage5TempProcessed');
+    localStorage.removeItem('stage6TempProcessed');
+    localStorage.removeItem('stage6TempFilesProcessed');
+    localStorage.removeItem('stage7TempProcessed');
+    localStorage.removeItem('stage8TempProcessed');
+    console.log('스토리보드 처리 완료 플래그 제거됨');
+    
     // localStorage에 순차 보기 플래그 설정
     localStorage.setItem('sequentialViewMode', 'true');
     document.body.classList.add('fade-out');
@@ -2198,6 +2218,15 @@ window.handleModalAction = function() {
         showPageSelectionModal();
     } else {
         // Stage 4 데이터가 없으면 바로 스토리보드로 이동
+        // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
+        localStorage.removeItem('stage2TempProcessed');
+        localStorage.removeItem('stage5TempProcessed');
+        localStorage.removeItem('stage6TempProcessed');
+        localStorage.removeItem('stage6TempFilesProcessed');
+        localStorage.removeItem('stage7TempProcessed');
+        localStorage.removeItem('stage8TempProcessed');
+        console.log('스토리보드 처리 완료 플래그 제거됨');
+        
         document.body.classList.add('fade-out');
         setTimeout(() => {
             window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';
