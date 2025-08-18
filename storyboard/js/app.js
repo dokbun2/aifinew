@@ -3455,8 +3455,8 @@ else {
                                 <div style="margin-top: 15px;">
                                     <h6>이미지 구성:</h6>
                                     ${plan.images.map((img, idx) => `
-                                        <div style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                                            <strong>${img.id}:</strong> ${img.description || '설명 없음'}
+                                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #e5e5e5;">
+                                            <strong style="color: #ffffff;">${img.id}:</strong> <span style="color: #cccccc;">${img.description || '설명 없음'}</span>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -3736,7 +3736,8 @@ saveDataToLocalStorage();
 showShotContent(shotId); // 전체 재렌더링
 setTimeout(() => switchTab('image', shotId), 0); // 이미지 탭 유지
 
-showMessage(`Plan ${planId}이(가) 선택되었습니다.`, 'success');
+// 플랜 선택 메시지 제거 (사용자 요청)
+// showMessage(`Plan ${planId}이(가) 선택되었습니다.`, 'success');
     } catch (error) {
 showMessage('이미지 플랜 선택 중 오류가 발생했습니다.', 'error');
     }
