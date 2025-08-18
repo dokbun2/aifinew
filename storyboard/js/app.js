@@ -1357,65 +1357,71 @@ function createTestData() {
 									const stage6Data = window.stage6ImagePrompts[shotId];
 									
 									if (stage6Data) {
-										const firstImageData = Object.values(stage6Data)[0];
+										// 모든 이미지 데이터를 처리 (첫 번째만이 아닌)
+										const allImageData = Object.values(stage6Data);
 										
-										if (firstImageData && firstImageData.prompts) {
-											if (!shot.image_prompts) {
-												shot.image_prompts = {};
-											}
+										if (allImageData.length > 0) {
+											// 첫 번째 이미지의 프롬프트를 기본값으로 사용 (하위 호환성)
+											const firstImageData = allImageData[0];
 											
-											// AI 도구별 프롬프트 처리
-											Object.keys(firstImageData.prompts).forEach(aiTool => {
-												const promptData = firstImageData.prompts[aiTool];
-												
-												if (aiTool === 'universal') {
-													const universalPrompt = typeof promptData === 'string' ? promptData : (promptData.prompt || promptData);
-													const universalTranslated = firstImageData.prompts.universal_translated || '';
-													const csvParams = firstImageData.csv_data?.PARAMETERS || '';
-													
-													shot.image_prompts.universal = {
-														main_prompt: universalPrompt,
-														main_prompt_translated: universalTranslated,
-														parameters: csvParams
-													};
-													
-													// 호환성을 위해 다른 AI 도구 형식으로도 저장
-													shot.image_prompts.midjourney = {
-														main_prompt: universalPrompt,
-														main_prompt_translated: universalTranslated,
-														parameters: csvParams
-													};
-													shot.image_prompts.dalle3 = {
-														main_prompt: universalPrompt,
-														main_prompt_translated: universalTranslated,
-														parameters: ''
-													};
-													shot.image_prompts.stable_diffusion = {
-														main_prompt: universalPrompt,
-														main_prompt_translated: universalTranslated,
-														parameters: ''
-													};
-												} else if (aiTool !== 'universal_translated') {
-													// 기존 형식 처리
-													let parameters = '';
-													if (promptData && typeof promptData === 'object') {
-														if (promptData.negative_prompt) {
-															parameters = `Negative: ${promptData.negative_prompt}`;
-														}
-														if (promptData.aspect_ratio) {
-															parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
-														}
-													}
-													
-													shot.image_prompts[aiTool] = {
-														main_prompt: promptData.prompt || '',
-														main_prompt_translated: promptData.prompt_translated || '',
-														parameters: promptData.parameters || parameters
-													};
+											if (firstImageData && firstImageData.prompts) {
+												if (!shot.image_prompts) {
+													shot.image_prompts = {};
 												}
-											});
-											
-											mergedCount++;
+												
+												// AI 도구별 프롬프트 처리 (첫 번째 이미지 기준)
+												Object.keys(firstImageData.prompts).forEach(aiTool => {
+													const promptData = firstImageData.prompts[aiTool];
+													
+													if (aiTool === 'universal') {
+														const universalPrompt = typeof promptData === 'string' ? promptData : (promptData.prompt || promptData);
+														const universalTranslated = firstImageData.prompts.universal_translated || '';
+														const csvParams = firstImageData.csv_data?.PARAMETERS || '';
+														
+														shot.image_prompts.universal = {
+															main_prompt: universalPrompt,
+															main_prompt_translated: universalTranslated,
+															parameters: csvParams
+														};
+														
+														// 호환성을 위해 다른 AI 도구 형식으로도 저장
+														shot.image_prompts.midjourney = {
+															main_prompt: universalPrompt,
+															main_prompt_translated: universalTranslated,
+															parameters: csvParams
+														};
+														shot.image_prompts.dalle3 = {
+															main_prompt: universalPrompt,
+															main_prompt_translated: universalTranslated,
+															parameters: ''
+														};
+														shot.image_prompts.stable_diffusion = {
+															main_prompt: universalPrompt,
+															main_prompt_translated: universalTranslated,
+															parameters: ''
+														};
+													} else if (aiTool !== 'universal_translated') {
+														// 기존 형식 처리
+														let parameters = '';
+														if (promptData && typeof promptData === 'object') {
+															if (promptData.negative_prompt) {
+																parameters = `Negative: ${promptData.negative_prompt}`;
+															}
+															if (promptData.aspect_ratio) {
+																parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
+															}
+														}
+														
+														shot.image_prompts[aiTool] = {
+															main_prompt: promptData.prompt || '',
+															main_prompt_translated: promptData.prompt_translated || '',
+															parameters: promptData.parameters || parameters
+														};
+													}
+												});
+												
+												mergedCount++;
+											}
 										}
 									}
 								});
@@ -3400,6 +3406,7 @@ const referenceImagesData = shot.reference_images || [];
 // Stage 6 데이터에서 이미지별 프롬프트 가져오기
 const stage6Data = window.stage6ImagePrompts || {};
 const shotStage6Data = stage6Data[shot.id] || {};
+console.log('🔍 Stage 6 데이터 확인:', shot.id, Object.keys(shotStage6Data).length, 'images');
 
 let planSelectorHtml = '';
 let selectedPlanData = null;
@@ -3422,6 +3429,7 @@ if (complexity === 'simple' && imageDesignPlans.single) {
 // Complex 샷인 경우
 else {
     selectedPlanData = imageDesignPlans[selectedPlan] || imageDesignPlans.A || {};
+    console.log('📸 선택된 플랜:', selectedPlan, 'images:', selectedPlanData.images?.length);
     planSelectorHtml = `
         <div class="image-design-plan-selector">
             <h4>🎨 이미지 설계 플랜 선택</h4>
@@ -3520,6 +3528,7 @@ let aiSectionsHtml = '';
 					selectedPlanData.images.forEach((planImage, imgIdx) => {
 						const imageId = planImage.id;
 						const imageStage6Data = shotStage6Data[imageId] || {};
+						console.log(`  🖼️ AI: ${ai.name}, Image ${imgIdx + 1}:`, imageId, 'has data:', !!imageStage6Data.prompts);
 						let imagePrompts = imageStage6Data.prompts?.[ai.id] || {};
 						
 						// universal 프롬프트 특별 처리
