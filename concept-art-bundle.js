@@ -2585,6 +2585,20 @@ function initialize() {
             const success = dataManager.handleStage4TempData();
             if (success) {
                 console.log('Stage 4 데이터 로드 성공, UI 업데이트는 handleStage4TempData에서 처리됨');
+                
+                // 순차 보기 모드 확인
+                if (urlParams.get('continueToStoryboard') === 'true') {
+                    // 3초 후 스토리보드로 자동 이동
+                    setTimeout(() => {
+                        utils.showToast('스토리보드로 이동합니다...');
+                        setTimeout(() => {
+                            document.body.classList.add('fade-out');
+                            setTimeout(() => {
+                                window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';
+                            }, 300);
+                        }, 1000);
+                    }, 3000);
+                }
             } else {
                 console.log('Stage 4 데이터 로드 실패');
             }
