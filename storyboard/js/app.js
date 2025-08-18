@@ -1334,9 +1334,7 @@ function createTestData() {
 								});
 							});
 
-                    showMessage('Stage 6 이미지 프롬프트 데이터가 로드되었습니다.', 'success');
-
-								// Stage 6 데이터 localStorage에 저장
+                    // Stage 6 데이터 localStorage에 저장
 								const jsonFileName = getProjectFileName();
 								localStorage.setItem(`stage6ImagePrompts_${jsonFileName}`, JSON.stringify(window.stage6ImagePrompts));
 
@@ -1348,6 +1346,87 @@ function createTestData() {
 								localStorage.setItem(`stage6ImagePrompts_${jsonFileName}`, JSON.stringify(window.stage6ImagePrompts));
 								event.target.value = '';
 								return;
+							}
+							
+							// currentData가 있으면 Stage 6 데이터를 shots에 병합
+							if (currentData && currentData.breakdown_data && currentData.breakdown_data.shots) {
+								let mergedCount = 0;
+								
+								currentData.breakdown_data.shots.forEach(shot => {
+									const shotId = shot.id;
+									const stage6Data = window.stage6ImagePrompts[shotId];
+									
+									if (stage6Data) {
+										const firstImageData = Object.values(stage6Data)[0];
+										
+										if (firstImageData && firstImageData.prompts) {
+											if (!shot.image_prompts) {
+												shot.image_prompts = {};
+											}
+											
+											// AI 도구별 프롬프트 처리
+											Object.keys(firstImageData.prompts).forEach(aiTool => {
+												const promptData = firstImageData.prompts[aiTool];
+												
+												if (aiTool === 'universal') {
+													const universalPrompt = typeof promptData === 'string' ? promptData : (promptData.prompt || promptData);
+													const universalTranslated = firstImageData.prompts.universal_translated || '';
+													const csvParams = firstImageData.csv_data?.PARAMETERS || '';
+													
+													shot.image_prompts.universal = {
+														main_prompt: universalPrompt,
+														main_prompt_translated: universalTranslated,
+														parameters: csvParams
+													};
+													
+													// 호환성을 위해 다른 AI 도구 형식으로도 저장
+													shot.image_prompts.midjourney = {
+														main_prompt: universalPrompt,
+														main_prompt_translated: universalTranslated,
+														parameters: csvParams
+													};
+													shot.image_prompts.dalle3 = {
+														main_prompt: universalPrompt,
+														main_prompt_translated: universalTranslated,
+														parameters: ''
+													};
+													shot.image_prompts.stable_diffusion = {
+														main_prompt: universalPrompt,
+														main_prompt_translated: universalTranslated,
+														parameters: ''
+													};
+												} else if (aiTool !== 'universal_translated') {
+													// 기존 형식 처리
+													let parameters = '';
+													if (promptData && typeof promptData === 'object') {
+														if (promptData.negative_prompt) {
+															parameters = `Negative: ${promptData.negative_prompt}`;
+														}
+														if (promptData.aspect_ratio) {
+															parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
+														}
+													}
+													
+													shot.image_prompts[aiTool] = {
+														main_prompt: promptData.prompt || '',
+														main_prompt_translated: promptData.prompt_translated || '',
+														parameters: promptData.parameters || parameters
+													};
+												}
+											});
+											
+											mergedCount++;
+										}
+									}
+								});
+								
+								if (mergedCount > 0) {
+									showMessage(`Stage 6 이미지 프롬프트가 ${mergedCount}개의 샷에 성공적으로 적용되었습니다.`, 'success');
+									saveDataToLocalStorage();
+									updateUI();
+								} else {
+									showMessage('Stage 6 이미지 프롬프트 데이터가 로드되었습니다.', 'success');
+								}
 							}
 						}
 
@@ -1416,7 +1495,45 @@ function createTestData() {
 											Object.keys(imageWithPrompts.prompts).forEach(aiTool => {
 												const promptData = imageWithPrompts.prompts[aiTool];
 
-												if (aiTool === 'midjourney') {
+												// universal 타입 처리 (Stage 6 v3.0 형식)
+												if (aiTool === 'universal') {
+													const universalPrompt = typeof promptData === 'string' ? promptData : (promptData.prompt || promptData);
+													const universalTranslated = imageWithPrompts.prompts.universal_translated || '';
+													const csvParams = imageWithPrompts.csv_data?.PARAMETERS || '';
+													
+													// universal 프롬프트 저장
+													existingShot.image_prompts.universal = {
+														...(existingShot.image_prompts.universal || {}),
+														main_prompt: universalPrompt || existingShot.image_prompts.universal?.main_prompt || '',
+														main_prompt_translated: universalTranslated || existingShot.image_prompts.universal?.main_prompt_translated || '',
+														parameters: csvParams || existingShot.image_prompts.universal?.parameters || ''
+													};
+													
+													// 호환성을 위해 midjourney 등 다른 형식으로도 저장
+													existingShot.image_prompts.midjourney = {
+														...(existingShot.image_prompts.midjourney || {}),
+														main_prompt: universalPrompt || existingShot.image_prompts.midjourney?.main_prompt || '',
+														main_prompt_translated: universalTranslated || existingShot.image_prompts.midjourney?.main_prompt_translated || '',
+														parameters: csvParams || existingShot.image_prompts.midjourney?.parameters || ''
+													};
+													
+													existingShot.image_prompts.dalle3 = {
+														...(existingShot.image_prompts.dalle3 || {}),
+														main_prompt: universalPrompt || existingShot.image_prompts.dalle3?.main_prompt || '',
+														main_prompt_translated: universalTranslated || existingShot.image_prompts.dalle3?.main_prompt_translated || '',
+														parameters: ''
+													};
+													
+													existingShot.image_prompts.stable_diffusion = {
+														...(existingShot.image_prompts.stable_diffusion || {}),
+														main_prompt: universalPrompt || existingShot.image_prompts.stable_diffusion?.main_prompt || '',
+														main_prompt_translated: universalTranslated || existingShot.image_prompts.stable_diffusion?.main_prompt_translated || '',
+														parameters: ''
+													};
+												} else if (aiTool === 'universal_translated') {
+													// universal_translated는 이미 universal에서 처리됨
+													return;
+												} else if (aiTool === 'midjourney') {
 													// 기존 midjourney 데이터와 병합
 													existingShot.image_prompts.midjourney = {
 														...(existingShot.image_prompts.midjourney || {}),
@@ -5553,7 +5670,25 @@ try {
                                                         Object.keys(firstImageData.prompts).forEach(aiTool => {
                                                             const promptData = firstImageData.prompts[aiTool];
                                                             
-                                                            if (aiTool === 'midjourney') {
+                                                            // universal 타입 처리 (Stage 6 v3.0 형식)
+                                                            if (aiTool === 'universal') {
+                                                                // universal 프롬프트는 전체 문자열로 제공됨
+                                                                shot.image_prompts.universal = {
+                                                                    main_prompt: typeof promptData === 'string' ? promptData : (promptData.prompt || promptData),
+                                                                    main_prompt_translated: firstImageData.prompts.universal_translated || '',
+                                                                    parameters: firstImageData.csv_data?.PARAMETERS || ''
+                                                                };
+                                                                
+                                                                // universal을 다른 AI 도구 형식으로도 저장 (호환성)
+                                                                shot.image_prompts.midjourney = {
+                                                                    main_prompt: shot.image_prompts.universal.main_prompt,
+                                                                    main_prompt_translated: shot.image_prompts.universal.main_prompt_translated,
+                                                                    parameters: shot.image_prompts.universal.parameters
+                                                                };
+                                                            } else if (aiTool === 'universal_translated') {
+                                                                // universal_translated는 이미 universal에서 처리됨
+                                                                return;
+                                                            } else if (aiTool === 'midjourney') {
                                                                 shot.image_prompts.midjourney = {
                                                                     main_prompt: promptData.prompt || '',
                                                                     main_prompt_translated: promptData.prompt_translated || '',
@@ -5707,56 +5842,59 @@ try {
                                                     shot.image_prompts = {};
                                                 }
                                                 
-                                                // universal 프롬프트가 있는 경우 처리
-                                                if (firstImageData.prompts.universal) {
-                                                    const universalPrompt = firstImageData.prompts.universal;
-                                                    const universalTranslated = firstImageData.prompts.universal_translated || '';
-                                                    const csvParams = firstImageData.csv_data?.PARAMETERS || firstImageData.block_data?.PARAMETERS || '';
+                                                // AI 도구별 프롬프트 처리
+                                                Object.keys(firstImageData.prompts).forEach(aiTool => {
+                                                    const promptData = firstImageData.prompts[aiTool];
                                                     
-                                                    // 모든 AI 도구에 universal 프롬프트 적용
-                                                    shot.image_prompts.midjourney = {
-                                                        main_prompt: universalPrompt,
-                                                        main_prompt_translated: universalTranslated,
-                                                        parameters: csvParams
-                                                    };
-                                                    shot.image_prompts.dalle3 = {
-                                                        main_prompt: universalPrompt,
-                                                        main_prompt_translated: universalTranslated,
-                                                        parameters: ''
-                                                    };
-                                                    shot.image_prompts.stable_diffusion = {
-                                                        main_prompt: universalPrompt,
-                                                        main_prompt_translated: universalTranslated,
-                                                        parameters: ''
-                                                    };
-                                                } else {
-                                                    // 기존 방식 유지 (호환성)
-                                                    Object.keys(firstImageData.prompts).forEach(aiTool => {
-                                                        const promptData = firstImageData.prompts[aiTool];
+                                                    // universal 타입 처리 (Stage 6 v3.0 형식)
+                                                    if (aiTool === 'universal') {
+                                                        const universalPrompt = typeof promptData === 'string' ? promptData : (promptData.prompt || promptData);
+                                                        const universalTranslated = firstImageData.prompts.universal_translated || '';
+                                                        const csvParams = firstImageData.csv_data?.PARAMETERS || '';
                                                         
-                                                        if (aiTool === 'midjourney') {
-                                                            shot.image_prompts.midjourney = {
-                                                                main_prompt: promptData.prompt || '',
-                                                                main_prompt_translated: promptData.prompt_translated || '',
-                                                                parameters: promptData.parameters || ''
-                                                            };
-                                                        } else {
-                                                            let parameters = '';
-                                                            if (promptData.negative_prompt) {
-                                                                parameters = `Negative: ${promptData.negative_prompt}`;
-                                                            }
-                                                            if (promptData.aspect_ratio) {
-                                                                parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
-                                                            }
-                                                            
-                                                            shot.image_prompts[aiTool] = {
-                                                                main_prompt: promptData.prompt || '',
-                                                                main_prompt_translated: promptData.prompt_translated || '',
-                                                                parameters: parameters
-                                                            };
+                                                        // universal 프롬프트 저장
+                                                        shot.image_prompts.universal = {
+                                                            main_prompt: universalPrompt,
+                                                            main_prompt_translated: universalTranslated,
+                                                            parameters: csvParams
+                                                        };
+                                                        
+                                                        // 호환성을 위해 다른 AI 도구 형식으로도 저장
+                                                        shot.image_prompts.midjourney = {
+                                                            main_prompt: universalPrompt,
+                                                            main_prompt_translated: universalTranslated,
+                                                            parameters: csvParams
+                                                        };
+                                                        shot.image_prompts.dalle3 = {
+                                                            main_prompt: universalPrompt,
+                                                            main_prompt_translated: universalTranslated,
+                                                            parameters: ''
+                                                        };
+                                                        shot.image_prompts.stable_diffusion = {
+                                                            main_prompt: universalPrompt,
+                                                            main_prompt_translated: universalTranslated,
+                                                            parameters: ''
+                                                        };
+                                                    } else if (aiTool === 'universal_translated') {
+                                                        // universal_translated는 이미 universal에서 처리됨
+                                                        return;
+                                                    } else if (promptData && typeof promptData === 'object') {
+                                                        // 기존 형식 처리 (호환성)
+                                                        let parameters = '';
+                                                        if (promptData.negative_prompt) {
+                                                            parameters = `Negative: ${promptData.negative_prompt}`;
                                                         }
-                                                    });
-                                                }
+                                                        if (promptData.aspect_ratio) {
+                                                            parameters += parameters ? `; Aspect Ratio: ${promptData.aspect_ratio}` : `Aspect Ratio: ${promptData.aspect_ratio}`;
+                                                        }
+                                                        
+                                                        shot.image_prompts[aiTool] = {
+                                                            main_prompt: promptData.prompt || '',
+                                                            main_prompt_translated: promptData.prompt_translated || '',
+                                                            parameters: promptData.parameters || parameters
+                                                        };
+                                                    }
+                                                });
                                                 
                                                 mergedCount++;
                                             }
