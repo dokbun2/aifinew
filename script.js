@@ -2108,44 +2108,44 @@ function showModalActionButton() {
     }
 }
 
-// 페이지 선택 모달 표시
-function showPageSelectionModal() {
-    // 기존 모달이 있으면 제거
-    const existingModal = document.getElementById('page-selection-modal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // 모달 HTML 생성
-    const modalHTML = `
-        <div id="page-selection-modal" class="modal show">
-            <div class="modal-content" style="max-width: 600px;">
-                <h3 style="text-align: center; margin-bottom: 20px;">프로젝트 보기</h3>
-                <p style="text-align: center; margin-bottom: 30px;">
-                    모든 Stage 업로드가 완료되었습니다.<br>
-                    어느 페이지로 이동하시겠습니까?
-                </p>
-                <div style="display: flex; gap: 20px; justify-content: center;">
-                    <button onclick="navigateToStoryboard()" class="action-btn" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        📽️ 스토리보드 보기
-                    </button>
-                    <button onclick="navigateToConceptArt()" class="action-btn" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        🎨 컨셉아트 보기
-                    </button>
-                </div>
-                <div style="margin-top: 20px; text-align: center;">
-                    <button onclick="navigateToBoth()" class="action-btn" style="padding: 10px 30px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        ⚡ 순차적으로 모두 보기
-                    </button>
-                </div>
-                <button onclick="closePageSelectionModal()" class="close-btn" style="position: absolute; top: 10px; right: 10px;">✕</button>
-            </div>
-        </div>
-    `;
-    
-    // 모달을 body에 추가
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
+// 페이지 선택 모달 표시 - 더 이상 사용하지 않음
+// function showPageSelectionModal() {
+//     // 기존 모달이 있으면 제거
+//     const existingModal = document.getElementById('page-selection-modal');
+//     if (existingModal) {
+//         existingModal.remove();
+//     }
+//     
+//     // 모달 HTML 생성
+//     const modalHTML = `
+//         <div id="page-selection-modal" class="modal show">
+//             <div class="modal-content" style="max-width: 600px;">
+//                 <h3 style="text-align: center; margin-bottom: 20px;">프로젝트 보기</h3>
+//                 <p style="text-align: center; margin-bottom: 30px;">
+//                     모든 Stage 업로드가 완료되었습니다.<br>
+//                     어느 페이지로 이동하시겠습니까?
+//                 </p>
+//                 <div style="display: flex; gap: 20px; justify-content: center;">
+//                     <button onclick="navigateToStoryboard()" class="action-btn" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+//                         📽️ 스토리보드 보기
+//                     </button>
+//                     <button onclick="navigateToConceptArt()" class="action-btn" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+//                         🎨 컨셉아트 보기
+//                     </button>
+//                 </div>
+//                 <div style="margin-top: 20px; text-align: center;">
+//                     <button onclick="navigateToBoth()" class="action-btn" style="padding: 10px 30px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+//                         ⚡ 순차적으로 모두 보기
+//                     </button>
+//                 </div>
+//                 <button onclick="closePageSelectionModal()" class="close-btn" style="position: absolute; top: 10px; right: 10px;">✕</button>
+//             </div>
+//         </div>
+//     `;
+//     
+//     // 모달을 body에 추가
+//     document.body.insertAdjacentHTML('beforeend', modalHTML);
+// }
 
 // 페이지 선택 모달 닫기
 window.closePageSelectionModal = function() {
@@ -2207,31 +2207,20 @@ window.navigateToBoth = function() {
 
 // 모달 액션 처리
 window.handleModalAction = function() {
-    // Stage 4 데이터 확인
-    const hasStage4Data = localStorage.getItem('stage4TempJson') !== null;
-    
-    // 모달 닫기
+    // 단순히 모달만 닫고 메인 페이지에 남아있음
     closeSequentialUploadModal();
     
-    if (hasStage4Data) {
-        // Stage 4 데이터가 있으면 선택 모달 표시
-        showPageSelectionModal();
-    } else {
-        // Stage 4 데이터가 없으면 바로 스토리보드로 이동
-        // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
-        localStorage.removeItem('stage2TempProcessed');
-        localStorage.removeItem('stage5TempProcessed');
-        localStorage.removeItem('stage6TempProcessed');
-        localStorage.removeItem('stage6TempFilesProcessed');
-        localStorage.removeItem('stage7TempProcessed');
-        localStorage.removeItem('stage8TempProcessed');
-        console.log('스토리보드 처리 완료 플래그 제거됨');
-        
-        document.body.classList.add('fade-out');
-        setTimeout(() => {
-            window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';
-        }, 300);
-    }
+    // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
+    localStorage.removeItem('stage2TempProcessed');
+    localStorage.removeItem('stage5TempProcessed');
+    localStorage.removeItem('stage6TempProcessed');
+    localStorage.removeItem('stage6TempFilesProcessed');
+    localStorage.removeItem('stage7TempProcessed');
+    localStorage.removeItem('stage8TempProcessed');
+    console.log('스토리보드 처리 완료 플래그 제거됨');
+    
+    // 완료 메시지 표시
+    showUploadMessage('업로드가 완료되었습니다. 프로젝트 카드를 클릭하여 해당 페이지로 이동할 수 있습니다.', 'success');
 }
 
 // 메인 페이지의 Stage 카드에 완료 표시 추가
