@@ -657,11 +657,22 @@ function handleStage4FileSelect(event) {
             // JSON 유효성 검사
             const jsonData = JSON.parse(e.target.result);
             
+            // Stage 4 데이터 유효성 검사
+            if (jsonData.stage !== 4) {
+                throw new Error('Stage 4 파일이 아닙니다.');
+            }
+            
+            // 프로젝트 타입 확인 (CF 또는 FILM)
+            const projectType = jsonData.project_info?.project_type || 
+                               (jsonData.project_info?.project_id?.includes('FILM') ? 'film' : 'cf');
+            console.log(`Stage 4 프로젝트 타입: ${projectType}`);
+            
             // localStorage에 임시 저장 (Stage 4용)
             localStorage.setItem('stage4TempJson', e.target.result);
             localStorage.setItem('stage4TempFileName', file.name);
+            localStorage.setItem('stage4ProjectType', projectType);
             
-            console.log('Stage 4 JSON 파일을 임시 저장했습니다.');
+            console.log(`Stage 4 JSON 파일을 임시 저장했습니다. (${projectType} 프로젝트)`);
             
             // 업로드 완료 메시지 표시
             showStageUploadComplete(4);

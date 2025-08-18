@@ -394,6 +394,12 @@ const dataManager = {
         // Stage 4 데이터 확인 (stage 필드로 판단)
         if (data.stage === 4 || data.stage === "4") {
             console.log('Stage 4 데이터 감지됨, 변환 시작...');
+            
+            // 프로젝트 타입 확인 (CF, FILM 등)
+            const projectType = data.project_info?.project_type || 
+                               (data.project_info?.project_id?.includes('FILM') ? 'film' : 'cf');
+            console.log(`프로젝트 타입: ${projectType}`);
+            
             if (data.concept_art_collection) {
                 state.conceptArtData = this.convertStage4ToV12(data.concept_art_collection);
                 console.log('Stage 4 데이터 변환 완료:', state.conceptArtData);
@@ -402,10 +408,11 @@ const dataManager = {
             }
             
             state.projectInfo = data.project_info || { project_id: "N/A", total_concept_arts: 0 };
+            state.projectInfo.project_type = projectType; // 프로젝트 타입 저장
             state.dataVersion = data.version || data.metadata?.version || "N/A";
             state.dataTimestamp = data.timestamp || data.metadata?.timestamp || "N/A";
             this.saveToLocalStorage();
-            console.log('Stage 4 데이터 저장 완료');
+            console.log(`Stage 4 데이터 저장 완료 (${projectType} 프로젝트)`);
             
         } else if (data.concept_art_collection) {
             // 일반 컨셉아트 데이터
@@ -516,8 +523,10 @@ const uiRenderer = {
         const infoDisplay = document.getElementById('project-info-display');
         if (infoDisplay) {
             const totalConcepts = dataManager.countTotalConcepts();
+            const projectType = state.projectInfo.project_type ? 
+                `(${state.projectInfo.project_type.toUpperCase()})` : '';
             infoDisplay.innerHTML = `
-                <span>프로젝트 ID: ${state.projectInfo.project_id || '데이터 없음'}</span>
+                <span>프로젝트 ID: ${state.projectInfo.project_id || '데이터 없음'} ${projectType}</span>
                 <span>총 컨셉아트: ${totalConcepts || '데이터 없음'}</span>
                 <span>데이터 버전: ${state.dataVersion || '데이터 없음'}</span>
                 <span>마지막 업데이트: ${state.dataTimestamp || '데이터 없음'}</span>
