@@ -1812,14 +1812,18 @@ function createTestData() {
 					});
 				}
 				// Stage 5에서는 샷 정보만 병합 (시퀀스/씬 구조는 Stage 2에서만)
-				const sceneId = jsonData.film_metadata.current_scene;
-				let currentScene = currentData.breakdown_data.scenes.find(scene => scene.id === sceneId);
+				const sceneIdParam = jsonData.film_metadata.current_scene;
 				
-				if (!currentScene) {
-					// Stage 2가 없는 경우 Stage 5 데이터에서 씬 정보 가져오기
+				// CF 프로젝트 타입 처리: "S01-S09" 형식의 범위 처리
+				const isCFProject = jsonData.project_info?.project_type === 'cf' || 
+								   (sceneIdParam && sceneIdParam.includes('-'));
+				
+				// CF 프로젝트인 경우 모든 씬 데이터를 처리
+				if (isCFProject) {
+					console.log('CF 프로젝트 타입 감지: 모든 씬 데이터 처리');
 					
+					// Stage 5에서 제공한 모든 씬 정보 추가
 					if (newScenes.length > 0) {
-						// Stage 5에서 제공한 씬 정보 추가
 						newScenes.forEach(scene => {
 							const existingScene = currentData.breakdown_data.scenes.find(s => s.id === scene.id);
 							if (!existingScene) {
@@ -1828,40 +1832,91 @@ function createTestData() {
 									scene.shot_ids = [];
 								}
 								currentData.breakdown_data.scenes.push(scene);
+							} else {
+								// 기존 씬 업데이트
+								Object.assign(existingScene, scene);
+								if (!existingScene.shot_ids) {
+									existingScene.shot_ids = [];
+								}
 							}
 						});
-						
-						// 시퀀스 정보도 필요한 경우 추가
-						if (newSequences.length > 0) {
-							newSequences.forEach(seq => {
-								const existingSeq = currentData.breakdown_data.sequences.find(s => s.id === seq.id);
-								if (!existingSeq) {
-									currentData.breakdown_data.sequences.push(seq);
-								}
-							});
-						}
-						
-						// 다시 씬 찾기
-						currentScene = currentData.breakdown_data.scenes.find(scene => scene.id === sceneId);
 					}
 					
+					// 시퀀스 정보도 필요한 경우 추가
+					if (newSequences.length > 0) {
+						newSequences.forEach(seq => {
+							const existingSeq = currentData.breakdown_data.sequences.find(s => s.id === seq.id);
+							if (!existingSeq) {
+								currentData.breakdown_data.sequences.push(seq);
+							} else {
+								// 기존 시퀀스 업데이트
+								Object.assign(existingSeq, seq);
+							}
+						});
+					}
+				} else {
+					// 기존 로직: 단일 씬 처리
+					const sceneId = sceneIdParam;
+					let currentScene = currentData.breakdown_data.scenes.find(scene => scene.id === sceneId);
+					
 					if (!currentScene) {
-						// 여전히 없으면 기본 씬 생성
-						const newScene = {
-							id: sceneId,
-							title: `씬 ${sceneId}`,
-							description: '',
-							shots: [],
-							shot_ids: []  // shot_ids 배열 추가
-						};
-						currentData.breakdown_data.scenes.push(newScene);
-						currentScene = newScene;
+						// Stage 2가 없는 경우 Stage 5 데이터에서 씬 정보 가져오기
+						
+						if (newScenes.length > 0) {
+							// Stage 5에서 제공한 씬 정보 추가
+							newScenes.forEach(scene => {
+								const existingScene = currentData.breakdown_data.scenes.find(s => s.id === scene.id);
+								if (!existingScene) {
+									// shot_ids 배열이 없으면 초기화
+									if (!scene.shot_ids) {
+										scene.shot_ids = [];
+									}
+									currentData.breakdown_data.scenes.push(scene);
+								}
+							});
+							
+							// 시퀀스 정보도 필요한 경우 추가
+							if (newSequences.length > 0) {
+								newSequences.forEach(seq => {
+									const existingSeq = currentData.breakdown_data.sequences.find(s => s.id === seq.id);
+									if (!existingSeq) {
+										currentData.breakdown_data.sequences.push(seq);
+									}
+								});
+							}
+							
+							// 다시 씬 찾기
+							currentScene = currentData.breakdown_data.scenes.find(scene => scene.id === sceneId);
+						}
+						
+						if (!currentScene) {
+							// 여전히 없으면 기본 씬 생성
+							const newScene = {
+								id: sceneId,
+								title: `씬 ${sceneId}`,
+								description: '',
+								shots: [],
+								shot_ids: []  // shot_ids 배열 추가
+							};
+							currentData.breakdown_data.scenes.push(newScene);
+							currentScene = newScene;
+						}
 					}
 				}
 
-				// 해당 씬의 샷만 병합 (기존 데이터 보존)
+				// 샷 데이터 병합 처리
 				newShots.forEach(newShot => {
-					if (newShot.scene_id === sceneId) {
+					// CF 프로젝트인 경우 모든 샷 처리, 그렇지 않으면 특정 씬의 샷만 처리
+					const shouldProcessShot = isCFProject || newShot.scene_id === sceneIdParam;
+					
+					if (shouldProcessShot) {
+						// CF 프로젝트인 경우 해당 씬 찾기
+						let targetScene = null;
+						if (isCFProject) {
+							targetScene = currentData.breakdown_data.scenes.find(scene => scene.id === newShot.scene_id);
+						} else {
+							targetScene = currentData.breakdown_data.scenes.find(scene => scene.id === sceneIdParam);
+						}
 						const existingIndex = currentData.breakdown_data.shots.findIndex(
 							shot => shot.id === newShot.id
 						);
@@ -1945,11 +2000,13 @@ function createTestData() {
 							}
 						}
 						// 씬의 shot_ids 업데이트 (안전 체크 추가)
-						if (!currentScene.shot_ids) {
-							currentScene.shot_ids = [];
-						}
-						if (!currentScene.shot_ids.includes(newShot.id)) {
-							currentScene.shot_ids.push(newShot.id);
+						if (targetScene) {
+							if (!targetScene.shot_ids) {
+								targetScene.shot_ids = [];
+							}
+							if (!targetScene.shot_ids.includes(newShot.id)) {
+								targetScene.shot_ids.push(newShot.id);
+							}
 						}
 					}
 				});
