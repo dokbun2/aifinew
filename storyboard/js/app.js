@@ -5650,7 +5650,9 @@ try {
                     // 오류 시에도 임시 데이터 유지 (재시도 가능하도록)
                 }
             } else {
-                showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
+                // Stage 5 데이터가 없는 경우 - 정상적인 경우일 수 있음
+                console.log('Stage 5 임시 데이터가 없습니다.');
+                // showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
             }
         }, 2000);
     }
@@ -5986,7 +5988,9 @@ try {
                     // 오류 시에도 임시 데이터 유지 (재시도 가능하도록)
                 }
             } else {
-                showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
+                // Stage 6 데이터가 없는 경우 - 정상적인 경우일 수 있음
+                console.log('Stage 6 임시 데이터가 없습니다.');
+                // showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
             }
         }, 3500);
     }
@@ -6075,8 +6079,9 @@ try {
                     // 오류 시에도 임시 데이터 유지 (재시도 가능하도록)
                 }
             } else {
-                console.log('임시 저장된 Stage 7 JSON 데이터들을 찾을 수 없습니다.');
-                showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
+                // Stage 7 데이터가 없는 경우 - 정상적인 경우일 수 있음
+                console.log('Stage 7 임시 데이터가 없습니다.');
+                // showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
             }
         }, 4500);
     }
@@ -6259,8 +6264,9 @@ try {
                     // 오류 시에도 임시 데이터 유지 (재시도 가능하도록)
                 }
             } else {
-                console.log('임시 저장된 Stage 8 JSON 데이터들을 찾을 수 없습니다.');
-                showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
+                // Stage 8 데이터가 없는 경우 - 정상적인 경우일 수 있음
+                console.log('Stage 8 임시 데이터가 없습니다.');
+                // showMessage('임시 저장된 파일들을 찾을 수 없습니다.', 'warning');
             }
         }, 5000);
     }
