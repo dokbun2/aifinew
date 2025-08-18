@@ -282,37 +282,69 @@ function updateProjectCardStatus() {
     // 스토리보드 카드 상태 업데이트
     if (storyboardCard) {
         const hasStage2 = localStorage.getItem('stage2TempJson');
-        const hasAdvancedStages = localStorage.getItem('stage5TempJsonFiles') ||
-                                 localStorage.getItem('stage6TempJson') || 
-                                 localStorage.getItem('stage6TempJsonFiles') ||
-                                 localStorage.getItem('stage7TempJsonFiles') ||
-                                 localStorage.getItem('stage8TempJsonFiles');
+        const hasStage5 = localStorage.getItem('stage5TempJsonFiles');
+        const hasStage6 = localStorage.getItem('stage6TempJson') || localStorage.getItem('stage6TempJsonFiles');
+        const hasStage7 = localStorage.getItem('stage7TempJsonFiles');
+        const hasStage8 = localStorage.getItem('stage8TempJsonFiles');
+        
+        // 업로드된 스테이지 개수 계산
+        let uploadedStages = [];
+        if (hasStage2) uploadedStages.push('2');
+        if (hasStage5) uploadedStages.push('5');
+        if (hasStage6) uploadedStages.push('6');
+        if (hasStage7) uploadedStages.push('7');
+        if (hasStage8) uploadedStages.push('8');
         
         const statusElement = storyboardCard.querySelector('.project-status');
         
-        if (hasStage2 && hasAdvancedStages) {
-            statusElement.textContent = '전체 데이터 준비됨';
+        // 애니메이션 클래스 추가
+        statusElement.classList.add('updating');
+        setTimeout(() => {
+            statusElement.classList.remove('updating');
+        }, 500);
+        
+        if (uploadedStages.length === 5) {
+            // 모든 스테이지 업로드 완료
+            statusElement.textContent = '✅ 전체 데이터 준비 완료';
             statusElement.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
-            statusElement.style.color = 'white'; // 흰색 글씨 추가
+            statusElement.style.color = 'white';
+            statusElement.style.fontWeight = 'bold';
             storyboardCard.style.opacity = '1';
             storyboardCard.style.cursor = 'pointer';
-        } else if (hasStage2) {
-            statusElement.textContent = 'Stage 2 준비됨';
-            statusElement.style.background = 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)';
-            statusElement.style.color = 'white'; // 흰색 글씨 추가
-            storyboardCard.style.opacity = '1';
+            storyboardCard.style.transform = 'scale(1.02)';
+            storyboardCard.style.boxShadow = '0 8px 16px rgba(76, 175, 80, 0.3)';
+        } else if (uploadedStages.length > 0) {
+            // 일부 스테이지 업로드됨
+            const stageText = uploadedStages.join(', ');
+            statusElement.textContent = `📊 Stage ${stageText} 업로드됨 (${uploadedStages.length}/5)`;
+            
+            // 진행도에 따른 색상 변경
+            const progress = uploadedStages.length / 5;
+            if (progress >= 0.8) {
+                statusElement.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+            } else if (progress >= 0.6) {
+                statusElement.style.background = 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)';
+            } else if (progress >= 0.4) {
+                statusElement.style.background = 'linear-gradient(135deg, #03A9F4 0%, #0288D1 100%)';
+            } else {
+                statusElement.style.background = 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+            }
+            
+            statusElement.style.color = 'white';
+            statusElement.style.fontWeight = '600';
+            storyboardCard.style.opacity = '0.95';
             storyboardCard.style.cursor = 'pointer';
-        } else if (hasAdvancedStages) {
-            statusElement.textContent = 'Stage 2 필요';
-            statusElement.style.background = 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
-            statusElement.style.color = 'white'; // 이미 흰색
-            storyboardCard.style.opacity = '1';
-            storyboardCard.style.cursor = 'pointer';
+            storyboardCard.style.transform = 'scale(1.01)';
+            storyboardCard.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
         } else {
-            statusElement.textContent = '활성 프로젝트';
-            statusElement.style.background = '';
-            statusElement.style.color = ''; // 기본 색상으로 복원
-            storyboardCard.style.opacity = '0.7';
+            // 업로드된 데이터 없음
+            statusElement.textContent = '📁 활성 프로젝트';
+            statusElement.style.background = 'linear-gradient(135deg, #9E9E9E 0%, #757575 100%)';
+            statusElement.style.color = 'white';
+            statusElement.style.fontWeight = 'normal';
+            storyboardCard.style.opacity = '0.85';
+            storyboardCard.style.transform = 'scale(1)';
+            storyboardCard.style.boxShadow = '';
         }
     }
     
@@ -321,17 +353,30 @@ function updateProjectCardStatus() {
         const hasConceptData = localStorage.getItem('stage4TempJson');
         
         const statusElement = conceptCard.querySelector('.project-status');
+        
+        // 애니메이션 클래스 추가
+        statusElement.classList.add('updating');
+        setTimeout(() => {
+            statusElement.classList.remove('updating');
+        }, 500);
+        
         if (hasConceptData) {
-            statusElement.textContent = 'JSON 데이터 준비됨';
+            statusElement.textContent = '✅ Stage 4 데이터 준비됨';
             statusElement.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
-            statusElement.style.color = 'white'; // 흰색 글씨 추가
+            statusElement.style.color = 'white';
+            statusElement.style.fontWeight = 'bold';
             conceptCard.style.opacity = '1';
             conceptCard.style.cursor = 'pointer';
+            conceptCard.style.transform = 'scale(1.02)';
+            conceptCard.style.boxShadow = '0 8px 16px rgba(76, 175, 80, 0.3)';
         } else {
-            statusElement.textContent = '활성 프로젝트';
-            statusElement.style.background = '';
-            statusElement.style.color = ''; // 기본 색상으로 복원
-            conceptCard.style.opacity = '0.7';
+            statusElement.textContent = '🎨 활성 프로젝트';
+            statusElement.style.background = 'linear-gradient(135deg, #9E9E9E 0%, #757575 100%)';
+            statusElement.style.color = 'white';
+            statusElement.style.fontWeight = 'normal';
+            conceptCard.style.opacity = '0.85';
+            conceptCard.style.transform = 'scale(1)';
+            conceptCard.style.boxShadow = '';
         }
     }
 }
@@ -1975,6 +2020,9 @@ function completeStageUpload(stageNumber) {
     
     // 메인 페이지의 Stage 카드에도 완료 표시 추가
     markStageCardAsCompleted(stageNumber);
+    
+    // 프로젝트 카드 상태 업데이트 - 실시간 변경사항 반영
+    updateProjectCardStatus();
     
     // 진행률 업데이트
     updateOverallProgress();
