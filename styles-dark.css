@@ -438,6 +438,106 @@ body.dark-theme {
     margin-bottom: var(--space-lg);
 }
 
+/* Stage Links Section - 스테이지 바로가기 버튼 섹션 */
+.stage-links-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 0 3rem 3rem;
+    margin-bottom: var(--space-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.stage-links-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.stage-link-card {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    padding: 10px 20px;  /* 12px에서 10px로 줄임 */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    min-height: 65px;  /* 80px에서 65px로 줄임 */
+}
+
+.stage-link-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transition: left 0.5s ease;
+}
+
+.stage-link-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-purple);
+    box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
+}
+
+.stage-link-card:hover::before {
+    left: 100%;
+}
+
+/* 기존 stage-number와 stage-content 스타일을 바로가기 카드에도 적용 */
+.stage-link-card .stage-number {
+    width: 40px;  /* 45px에서 40px로 줄임 */
+    height: 40px;  /* 45px에서 40px로 줄임 */
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;  /* 1.4rem에서 1.3rem으로 줄임 */
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.stage-link-card .stage-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;  /* flex-start에서 center로 변경하여 수직 중앙 정렬 */
+    align-self: center;  /* stretch에서 center로 변경 */
+}
+
+.stage-link-card .stage-name {
+    font-size: 0.95rem;  /* 1rem에서 0.95rem으로 줄임 */
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.15;  /* 1.2에서 1.15로 조정 */
+    margin-bottom: 3px;  /* 4px에서 3px로 줄임 */
+    font-family: 'Paperlogy', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.stage-link-card .stage-description {
+    font-size: 0.8rem;  /* 0.85rem에서 0.8rem으로 줄임 */
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.15;  /* 1.2에서 1.15로 조정 */
+    padding: 0;
+    font-family: 'Paperlogy', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 .stage-upload-start-btn {
     background: var(--primary-gradient);
     color: white;
@@ -1075,6 +1175,14 @@ body.dark-theme {
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .stage-links-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stage-link-card {
+        min-height: 60px;  /* 70px에서 60px로 줄임 */
+    }
+    
     /* Tablet Grid Layout */
     .projects-grid.all-in-one-line {
         grid-template-columns: repeat(2, 1fr);
@@ -1105,6 +1213,26 @@ body.dark-theme {
     .stage-grid {
         grid-template-columns: 1fr;
         gap: 15px;
+    }
+    
+    .stage-links-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .stage-links-section {
+        padding: 2rem 1.5rem;
+    }
+    
+    .stage-link-card {
+        padding: 12px 18px;  /* 15px 20px에서 12px 18px로 줄임 */
+        min-height: 60px;  /* 70px에서 60px로 줄임 */
+    }
+    
+    .stage-link-card .stage-number {
+        width: 38px;  /* 50px에서 38px로 줄임 */
+        height: 38px;  /* 50px에서 38px로 줄임 */
+        font-size: 1.2rem;  /* 1.4rem에서 1.2rem으로 줄임 */
     }
     
     .stage-card {
