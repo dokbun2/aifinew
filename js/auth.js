@@ -225,19 +225,57 @@ class GoogleAuth {
     }
 
     showPendingApproval() {
+        // 기존 모달이 있으면 제거
+        const existingModal = document.querySelector('.approval-pending-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
         const modal = document.createElement('div');
         modal.className = 'approval-pending-modal';
-        modal.innerHTML = `
-            <div class="approval-pending-content">
-                <div class="pending-icon">⏳</div>
-                <h3>승인 대기중</h3>
-                <p>관리자의 승인을 기다리고 있습니다.</p>
-                <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
-                <p class="user-email">${this.user.email}</p>
-                <button onclick="this.parentElement.parentElement.remove()" class="close-btn">확인</button>
-            </div>
+        
+        const content = document.createElement('div');
+        content.className = 'approval-pending-content';
+        
+        content.innerHTML = `
+            <button class="modal-close-x">×</button>
+            <div class="pending-icon">⏳</div>
+            <h3>승인 대기중</h3>
+            <p>관리자의 승인을 기다리고 있습니다.</p>
+            <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
+            <p class="user-email">${this.user.email}</p>
         `;
+        
+        // X 버튼에 이벤트 리스너 추가
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-close-x';
+        closeBtn.textContent = '×';
+        closeBtn.onclick = () => modal.remove();
+        
+        // 확인 버튼 생성
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'close-btn';
+        confirmBtn.textContent = '확인';
+        confirmBtn.onclick = () => modal.remove();
+        
+        // 먼저 content를 만들고
+        content.innerHTML = `
+            <div class="pending-icon">⏳</div>
+            <h3>승인 대기중</h3>
+            <p>관리자의 승인을 기다리고 있습니다.</p>
+            <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
+            <p class="user-email">${this.user.email}</p>
+        `;
+        
+        // 버튼들을 appendChild로 추가
+        content.insertBefore(closeBtn, content.firstChild);
+        content.appendChild(confirmBtn);
+        
+        modal.appendChild(content);
         document.body.appendChild(modal);
+        
+        // Tool 페이지도 잠금 처리
+        this.disableAllFeatures();
         
         setTimeout(() => {
             modal.classList.add('show');
@@ -247,9 +285,16 @@ class GoogleAuth {
     enableMainFeatures() {
         // 메인 기능 활성화
         document.querySelectorAll('.stage-card').forEach(card => {
+            // 좌물쇠 오버레이 제거
+            const lockOverlay = card.querySelector('.lock-overlay');
+            if (lockOverlay) {
+                lockOverlay.remove();
+            }
+            
+            // 활성화 스타일
             card.classList.remove('disabled');
             card.style.pointerEvents = 'auto';
-            card.style.opacity = '1';
+            card.dataset.locked = 'false';
         });
         
         // 보호된 링크 활성화
@@ -260,11 +305,41 @@ class GoogleAuth {
     }
 
     disableMainFeatures() {
-        // 메인 기능 비활성화
+        // 메인 기능 비활성화 - Tool 카드에 좌물쇠 오버레이 추가
         document.querySelectorAll('.stage-card').forEach(card => {
+            // 이미 처리된 카드는 스킵
+            if (card.dataset.locked === 'true') return;
+            
+            // 카드 중앙에 좌물쇠 오버레이 추가
+            if (!card.querySelector('.lock-overlay')) {
+                const lockOverlay = document.createElement('div');
+                lockOverlay.className = 'lock-overlay';
+                lockOverlay.innerHTML = '🔒';
+                lockOverlay.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(0, 0, 0, 0.7);
+                    backdrop-filter: blur(2px);
+                    font-size: 32px;
+                    z-index: 10;
+                    border-radius: inherit;
+                `;
+                
+                // 카드에 position relative 추가 (절대 위치 지정을 위해)
+                card.style.position = 'relative';
+                card.appendChild(lockOverlay);
+            }
+            
+            // 비활성화 스타일
             card.classList.add('disabled');
             card.style.pointerEvents = 'none';
-            card.style.opacity = '0.5';
+            card.dataset.locked = 'true';
         });
         
         // 보호된 링크 비활성화
@@ -272,6 +347,52 @@ class GoogleAuth {
             link.classList.add('disabled');
             link.setAttribute('data-protected', 'true');
         });
+    }
+    
+    disableAllFeatures() {
+        // 현재 페이지가 Tool 페이지인지 확인
+        const currentPath = window.location.pathname;
+        const toolPages = [
+            'prompt-builder.html',
+            'video-prompt-builder.html',
+            'prompt-generator/index.html',
+            'concept-art/index.html',
+            'storyboard/index.html',
+            'media-gallery/index.html'
+        ];
+        
+        // Tool 페이지에서 간단하게 좌물쇠 아이콘만 추가하고 비활성화
+        if (toolPages.some(page => currentPath.includes(page))) {
+            // 모든 버튼과 인터랙티브 요소에 좌물쇠 추가
+            document.querySelectorAll('button, .btn, a[href], input, textarea, select, .clickable, .card, .stage-card').forEach(element => {
+                // 이미 처리된 요소는 스킵
+                if (element.dataset.locked === 'true') return;
+                
+                // 좌물쇠 아이콘 추가
+                const lockIcon = document.createElement('span');
+                lockIcon.innerHTML = '🔒 ';
+                lockIcon.style.cssText = 'margin-right: 4px;';
+                
+                // 텍스트가 있는 요소에만 아이콘 추가
+                if (element.textContent.trim()) {
+                    element.insertBefore(lockIcon, element.firstChild);
+                }
+                
+                // 비활성화 스타일 적용
+                element.style.opacity = '0.5';
+                element.style.cursor = 'not-allowed';
+                element.style.pointerEvents = 'none';
+                element.dataset.locked = 'true';
+                
+                // disabled 속성 추가 (form 요소들)
+                if ('disabled' in element) {
+                    element.disabled = true;
+                }
+            });
+        }
+        
+        // 메인 페이지의 기능도 비활성화
+        this.disableMainFeatures();
     }
 
     async logout() {
@@ -331,9 +452,25 @@ class GoogleAuth {
                     if (this.isApproved) {
                         this.enableMainFeatures();
                     } else {
-                        this.disableMainFeatures();
-                        // 승인되지 않은 사용자는 메인 페이지에서만 대기 메시지 표시
-                        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+                        // Tool 페이지인지 확인
+                        const currentPath = window.location.pathname;
+                        const toolPages = [
+                            'prompt-builder.html',
+                            'video-prompt-builder.html',
+                            'prompt-generator',
+                            'concept-art',
+                            'storyboard',
+                            'media-gallery'
+                        ];
+                        
+                        const isToolPage = toolPages.some(page => currentPath.includes(page));
+                        
+                        if (isToolPage) {
+                            // Tool 페이지에서는 전체 잠금
+                            this.disableAllFeatures();
+                        } else if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+                            // 메인 페이지에서는 기능 비활성화 및 대기 메시지
+                            this.disableMainFeatures();
                             this.showPendingApproval();
                         }
                     }
@@ -345,8 +482,24 @@ class GoogleAuth {
                 this.clearAuth();
             }
         } else {
-            // 로그인이 필요한 페이지인 경우만 모달 표시
-            if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+            // Tool 페이지인지 확인
+            const currentPath = window.location.pathname;
+            const toolPages = [
+                'prompt-builder.html',
+                'video-prompt-builder.html',
+                'prompt-generator',
+                'concept-art',
+                'storyboard',
+                'media-gallery'
+            ];
+            
+            const isToolPage = toolPages.some(page => currentPath.includes(page));
+            
+            if (isToolPage) {
+                // Tool 페이지에서 로그인 안 된 경우 접근 차단
+                this.showToolAccessDenied();
+            } else if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+                // 메인 페이지에서는 로그인 모달 표시
                 this.disableMainFeatures();
                 this.showLoginModal();
             }
@@ -472,6 +625,71 @@ class GoogleAuth {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+    
+    showToolAccessDenied() {
+        // 전체 페이지를 덮는 오버레이 생성
+        const overlay = document.createElement('div');
+        overlay.className = 'tool-access-denied-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: rgba(20, 20, 20, 0.98);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 20px;
+            padding: 48px;
+            text-align: center;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        `;
+        
+        content.innerHTML = `
+            <div style="font-size: 64px; margin-bottom: 24px;">🔐</div>
+            <h2 style="color: #fff; font-size: 28px; margin-bottom: 16px; font-weight: 600;">로그인이 필요합니다</h2>
+            <p style="color: rgba(255, 255, 255, 0.7); font-size: 16px; margin-bottom: 32px; line-height: 1.6;">
+                이 도구를 사용하려면 먼저 로그인해주세요.<br>
+                Google 계정으로 간편하게 로그인할 수 있습니다.
+            </p>
+            <button onclick="window.location.href='/'" style="
+                background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+                color: white;
+                border: none;
+                padding: 14px 40px;
+                border-radius: 28px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 107, 0.4)'" 
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 107, 0.3)'">
+                로그인 페이지로 이동
+            </button>
+        `;
+        
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+        
+        // 모든 인터랙션 차단
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('button')) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }, true);
     }
     
     toggleUserMenu(event) {
