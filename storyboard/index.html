@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIFI 영상 프레임워크 스토리보드 - Dark Theme</title>
+    <title>영상 프레임워크 스토리보드</title>
     
     <!-- Content Security Policy for Google Drive iframe -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-src 'self' https://drive.google.com https://*.googleusercontent.com https://docs.google.com; img-src 'self' data: blob: https: http:; media-src 'self' data: blob: https: http:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:; frame-src 'self' https://drive.google.com https://*.googleusercontent.com https://docs.google.com; img-src 'self' data: blob: https: http:; media-src 'self' data: blob: https: http:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; font-src 'self' data: https://cdnjs.cloudflare.com;">
     
     <!-- SEO -->
     <meta name="description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템. 시퀀스, 씬, 샷 단위로 체계적 관리">
@@ -14,87 +14,918 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://aifiwb.netlify.app/your_title_storyboard_v9.4.html">
+    <meta property="og:url" content="https://aifimulty.netlify.app/storyboard">
     <meta property="og:title" content="AIFI 영상 프레임워크 스토리보드">
-    <meta property="og:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템. 시퀀스, 씬, 샷 단위로 체계적으로 관리하며 다양한 AI 도구와 연동됩니다.">
-    <meta property="og:image" content="https://aifiwb.netlify.app/og-image-storyboard.jpg">
+    <meta property="og:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템">
+    <meta property="og:image" content="https://aifimulty.netlify.app/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="ko_KR">
-    <meta property="og:site_name" content="AIFI 프로젝트">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://aifiwb.netlify.app/your_title_storyboard_v9.4.html">
-    <meta property="twitter:title" content="AIFI 영상 프레임워크 스토리보드">
-    <meta property="twitter:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템. 시퀀스, 씬, 샷 단위로 체계적 관리">
-    <meta property="twitter:image" content="https://aifiwb.netlify.app/og-image-storyboard.jpg">
-
-    <!-- 카카오톡 -->
-    <meta property="kakao:title" content="AIFI 영상 프레임워크 스토리보드">
-    <meta property="kakao:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템">
-    <meta property="kakao:image" content="https://aifiwb.netlify.app/og-image-storyboard.jpg">
-
-    <!-- 파비콘 -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <meta property="og:image:alt" content="AIFI 스토리보드">
     
-    <!-- 외부 CSS 파일 -->
-    <link rel="stylesheet" href="css/main.css">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://aifimulty.netlify.app/storyboard">
+    <meta name="twitter:title" content="AIFI 영상 프레임워크 스토리보드">
+    <meta name="twitter:description" content="AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템">
+    <meta name="twitter:image" content="https://aifimulty.netlify.app/og-image.jpg">
+    
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/x-icon" href="../favicon_io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
+    
+    <!-- Apple Developer Style CSS -->
+    <link rel="stylesheet" href="../apple-developer-style.css">
+    <!-- Shot Detail Apple Style CSS -->
+    <link rel="stylesheet" href="css/shot-detail-apple.css">
+    <!-- Image Display Improvements CSS -->
+    <link rel="stylesheet" href="css/image-display-improvements.css">
+    
+    <!-- Tabler Icons -->
+    <script src="../tabler-icons.js"></script>
+    
+    <style>
+        /* Additional styles for storyboard - matching concept art */
+        body {
+            padding-top: 48px; /* Only nav height, no gap */
+        }
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            /* Mobile Navigation */
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-menu {
+                display: none;
+                position: fixed;
+                top: 48px;
+                left: 0;
+                width: 100%;
+                background: rgba(20, 20, 20, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 1000;
+            }
+            
+            .nav-menu.active {
+                display: flex;
+            }
+            
+            /* Storyboard Header Mobile */
+            .storyboard-header-content {
+                padding: 0 15px;
+            }
+            
+            .storyboard-header-top {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .storyboard-header-buttons {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            
+            .compact-btn {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            
+            /* Tab Navigation Mobile */
+            .tab-navigation {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tab-button {
+                white-space: nowrap;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            /* Content Container Mobile */
+            .storyboard-container {
+                padding: 15px;
+            }
+            
+            /* Cards and Lists Mobile */
+            .sequence-list, .scene-list {
+                gap: 10px;
+            }
+            
+            .sequence-card, .scene-card, .shot-card {
+                padding: 12px;
+            }
+            
+            .shot-list {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 10px;
+            }
+            
+            /* Shot cards mobile optimization */
+            .shot-card {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .shot-thumbnail {
+                height: 180px;
+            }
+            
+            /* Sequence and Scene cards mobile */
+            .sequence-card, .scene-card {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            /* Empty state mobile */
+            .empty-state {
+                padding: 40px 20px;
+                text-align: center;
+            }
+            
+            .empty-state h3 {
+                font-size: 20px;
+            }
+            
+            .empty-state p {
+                font-size: 14px;
+            }
+            
+            /* Buttons Mobile */
+            .btn-primary, .btn-secondary {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            /* Modal Mobile */
+            .modal-content {
+                width: 95% !important;
+                max-width: 95% !important;
+                max-height: 90vh;
+                overflow-y: auto;
+                padding: 20px;
+                margin: 20px auto;
+            }
+            
+            /* Shot detail modal mobile */
+            .shot-detail-modal .modal-content {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100% !important;
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .shot-detail-content {
+                padding: 15px !important;
+            }
+            
+            .shot-detail-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .shot-detail-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            
+            /* Navigation sections mobile */
+            .nav-section {
+                width: 100% !important;
+                margin-bottom: 15px;
+            }
+            
+            .nav-section h3 {
+                font-size: 14px;
+                padding: 10px;
+            }
+            
+            .nav-item {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            /* Forms Mobile */
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            input, textarea, select {
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            /* Extra Small Devices */
+            .storyboard-header-title {
+                font-size: 14px;
+            }
+            
+            .compact-btn {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+            
+            .shot-card {
+                padding: 10px;
+            }
+            
+            .shot-thumbnail {
+                height: 120px;
+            }
+            
+            /* Sidebar on very small screens */
+            .storyboard-sidebar {
+                padding: 10px !important;
+                margin-bottom: 15px;
+            }
+            
+            /* Sidebar navigation items on small screens */
+            .nav-section {
+                max-height: 250px !important;
+            }
+            
+            .nav-section h3 {
+                font-size: 12px;
+            }
+            
+            .nav-item {
+                padding: 8px;
+                font-size: 12px;
+            }
+            
+            /* Content area padding */
+            #content-area {
+                padding: 10px !important;
+                width: 100% !important;
+            }
+            
+            /* Main layout on very small screens */
+            .storyboard-main-layout {
+                padding: 0 5px !important;
+            }
+            
+            /* Shot list on very small screens */
+            .shot-list {
+                padding: 5px;
+                gap: 10px;
+            }
+            
+            /* Ensure full width for all content */
+            .storyboard-container,
+            .storyboard-content,
+            .sequence-list,
+            .scene-list,
+            .shot-list {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+            
+            /* Hide less important buttons on very small screens */
+            .btn-secondary.optional {
+                display: none;
+            }
+        }
+        
+        /* Touch-friendly sizing */
+        @media (hover: none) and (pointer: coarse) {
+            button, .btn-primary, .btn-secondary {
+                min-height: 44px;
+            }
+            
+            .tab-button {
+                min-height: 40px;
+            }
+        }
+        
+        /* Storyboard Header - Matching Concept Art Header */
+        .storyboard-header {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky;
+            top: 48px; /* Directly attached to nav */
+            z-index: 100;
+            margin-top: 0; /* Remove any margin */
+        }
+        
+        .storyboard-header-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 22px;
+        }
+        
+        .storyboard-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .storyboard-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .storyboard-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin: 0;
+        }
+        
+        .storyboard-header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .compact-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .compact-btn:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.25);
+        }
+        
+        .compact-btn-primary {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: white;
+        }
+        
+        .compact-btn-primary:hover {
+            background: #0051D5;
+            border-color: #0051D5;
+        }
+        
+        .compact-btn-danger {
+            background: rgba(220, 38, 38, 0.9);
+            border-color: rgba(220, 38, 38, 0.9);
+            color: white;
+        }
+        
+        .compact-btn-danger:hover {
+            background: rgba(220, 38, 38, 1);
+        }
+        
+        .header-subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        
+        /* Main Layout - Matching Concept Art */
+        .storyboard-main-layout {
+            display: flex;
+            gap: 30px;
+            max-width: 1440px;
+            margin: 9px auto 30px auto; /* Top margin matches sidebar top position */
+            padding: 0 22px;
+            overflow-x: hidden;  /* Prevent horizontal scrolling */
+            position: relative; /* For sidebar positioning */
+            align-items: flex-start; /* Align items at the top */
+        }
+        
+        /* Sidebar - Matching Concept Art */
+        .storyboard-sidebar {
+            width: 300px;
+            position: fixed;
+            top: 125px; /* 48px (nav) + 40px (header height) + 52px (extra space) */
+            left: calc(50% - 720px + 22px); /* Center aligned with max-width 1440px container */
+            z-index: 50;
+            height: calc(100vh - 160px);
+        }
+        
+        /* Fallback for smaller screens */
+        @media (max-width: 1484px) {
+            .storyboard-sidebar {
+                left: 22px; /* Use padding value for smaller screens */
+            }
+        }
+        
+        /* Mobile responsive - reset to normal flow */
+        @media (max-width: 768px) {
+            .storyboard-sidebar {
+                position: static !important;
+                width: 100% !important;
+                top: auto !important;
+                left: auto !important;
+                height: auto !important;
+                margin-bottom: 20px;
+                padding: 15px;
+                box-sizing: border-box;
+                float: none !important;
+                display: block !important;
+            }
+            
+            /* Main content area mobile */
+            #content-area {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 15px;
+                box-sizing: border-box;
+                position: static !important;
+                float: none !important;
+                display: block !important;
+            }
+            
+            .storyboard-container {
+                flex-direction: column !important;
+                padding: 0 !important;
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .storyboard-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .storyboard-main-layout {
+                flex-direction: column !important;
+                display: block !important;
+                padding: 0 10px !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .nav-section {
+                height: auto !important; /* Auto height for mobile */
+                max-height: 300px; /* Limit height */
+                overflow-y: auto;
+            }
+        }
+        
+        .nav-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: 100%;  /* Use full height of parent */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;  /* 컨테이너 밖으로 나가는 것 방지 */
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .nav-controls button {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-controls button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Navigation Tree */
+        .nav-tree {
+            flex: 1;  /* 남은 공간 모두 사용 */
+            min-height: 0;  /* flexbox에서 overflow 작동을 위해 필요 */
+            overflow-y: auto;
+        }
+        
+        .sequence-item {
+            margin-bottom: 10px;
+        }
+        
+        .sequence-header {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .sequence-header:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sequence-header.active {
+            background: var(--apple-blue);
+            color: white;
+        }
+        
+        .toggle-icon {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .sequence-header.expanded .toggle-icon {
+            transform: rotate(90deg);
+        }
+        
+        .scenes-container {
+            margin-left: 20px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .scenes-container.collapsed {
+            display: none;
+        }
+        
+        .scene-header {
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 6px;
+        }
+        
+        .scene-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .scene-header.active {
+            background: rgba(0, 122, 255, 0.2);
+            color: var(--apple-blue);
+        }
+        
+        .shots-container {
+            margin-left: 20px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .shots-container.collapsed {
+            display: none;
+        }
+        
+        .shot-item {
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        
+        .shot-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .shot-item.active {
+            background: rgba(0, 122, 255, 0.15);
+            color: var(--apple-blue);
+        }
+        
+        /* Content Area - Matching Concept Art */
+        .storyboard-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            min-height: 600px;
+            overflow-x: hidden;  /* Prevent horizontal scrolling */
+            overflow-y: auto;
+            margin-left: 310px; /* 300px (sidebar width) + 30px (gap) */
+            margin-top: 0; /* Remove any top margin */
+        }
+        
+        .content-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .content-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+            margin: 0 0 8px 0;
+        }
+        
+        .content-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Tabs - Matching Concept Art */
+        .content-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+        
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Info Tables */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .info-table th,
+        .info-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .info-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            color: white;
+            width: 30%;
+        }
+        
+        .info-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        /* Message Container */
+        .message-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 300px;
+            backdrop-filter: blur(20px);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .success-message {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10B981;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #EF4444;
+        }
+        
+        .close-button {
+            margin-left: 15px;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .close-button:hover {
+            opacity: 1;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Hidden file input */
+        .hidden-file-input {
+            display: none;
+        }
+    </style>
+    <!-- FontAwesome CDN for free icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <a href="../index.html" class="home-btn">🏠 홈</a>
-            <div class="header-title">Film Storyboard</div>
-         <!-- <div class="project-info">
-                <div id="project-title">새 프로젝트</div>
-                <div id="project-file" style="font-size: 0.8rem; opacity: 0.8;">파일: 없음</div>
-            </div> -->
+    <!-- Navigation Bar -->
+    <nav class="apple-nav">
+        <div class="nav-content" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="../index.html#features" class="nav-link" style="font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-home" style="font-size: 16px;"></i>
+                    홈
+                </a>
+            </div>
+            <a href="#" onclick="event.preventDefault(); return false;" class="nav-brand" style="cursor: pointer; position: absolute; left: 50%; transform: translateX(-50%);">STORYBOARD</a>
+            <ul class="nav-menu">
+                <li><a href="../concept-art/index.html" class="nav-link">컨셉아트</a></li>
+                <li><a href="../media-gallery/index.html" class="nav-link" target="_blank">갤러리</a></li>
+            </ul>
         </div>
-        <div class="header-actions">
-            <button class="btn btn-secondary" id="concept-art-btn">컨셉아트 보기</button>
-            <button class="btn btn-secondary" id="media-gallery-btn" style="background: #dc2626;">미디어 갤러리</button>
-            <button class="btn btn-primary" id="import-btn">JSON 가져오기</button>
-            <button class="btn btn-primary" id="export-btn" onclick="exportFullData()">JSON 내보내기</button>
-			<button class="btn btn-secondary" id="scenario-export-btn" style="display:none;">시나리오 다운</button>
-			<button class="btn btn-danger" id="reset-btn" style="margin-left: 20px;">데이터 초기화</button>
-        </div>
-    </header>
-
-    <div class="container">
-        <nav class="navigation">
-            <div class="nav-header">
-                <div class="project-header">
-                    <h3 id="nav-project-title">프로젝트 로딩 중...</h3>
-                    <small id="nav-project-description" style="color: #666;">프로젝트 설명이 여기에 표시됩니다</small>
+    </nav>
+    
+    <!-- Storyboard Header -->
+    <div class="storyboard-header">
+        <div class="storyboard-header-content">
+            <div class="storyboard-header-top">
+                <div class="storyboard-header-left">
+                    <div>
+                        <h1 class="storyboard-header-title">영상 프레임워크 스토리보드</h1>
+                        <p class="header-subtitle" id="project-info">프로젝트를 로드하거나 JSON 파일을 가져오세요</p>
+                    </div>
                 </div>
+                <div class="storyboard-header-buttons">
+                    <button class="compact-btn compact-btn-primary" onclick="document.getElementById('file-input').click()">JSON 업로드</button>
+                    <button class="compact-btn compact-btn-primary" onclick="if(window.exportJSON) window.exportJSON()">JSON 다운로드</button>
+                    <button class="compact-btn compact-btn-danger" onclick="if(confirm('모든 데이터를 삭제하시겠습니까?')) { if(window.clearAllData) window.clearAllData() }">데이터 초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Layout -->
+    <div class="storyboard-main-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="storyboard-sidebar">
+            <div class="nav-section">
                 <div class="nav-controls">
-                    <button class="btn btn-secondary" id="expand-all-btn">전체 펼치기</button>
-                    <button class="btn btn-secondary" id="collapse-all-btn">전체 접기</button>
+                    <button onclick="if(window.expandAll) window.expandAll()">전체 펼치기</button>
+                    <button onclick="if(window.collapseAll) window.collapseAll()">전체 접기</button>
                 </div>
                 <div class="search-box">
                     <input type="text" id="search-input" placeholder="시퀀스, 씬, 샷 검색..." />
                 </div>
-            </div>
-            <div class="nav-content" id="navigation-content">
-                <div class="empty-state" id="nav-empty">
-                    <div class="empty-state-icon">📁</div>
-                    <div>데이터가 없습니다</div>
-                    <div style="font-size: 0.9rem; margin-top: 10px;">JSON 가져오기를 사용해 데이터를 로드해주세요</div>
+                <div class="nav-tree" id="navigation-content">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <div>데이터가 없습니다</div>
+                        <div style="font-size: 12px; margin-top: 10px;">JSON 파일을 가져오세요</div>
+                    </div>
                 </div>
             </div>
-        </nav>
-
-        <main class="main-content">
+        </aside>
+        
+        <!-- Content Area -->
+        <main class="storyboard-content">
             <div class="content-header">
-                <div>
-                    <h1 class="content-title" id="content-title">프로젝트 선택</h1>
-                    <p class="content-subtitle" id="content-subtitle">좌측에서 시퀀스, 씬, 또는 샷을 선택하세요</p>
-                </div>
-                <div class="content-actions" id="content-actions" style="display: none;">
-                </div>
+                <h2 class="content-title" id="content-title">프로젝트 선택</h2>
+                <p class="content-subtitle" id="content-subtitle">좌측에서 시퀀스, 씬, 또는 샷을 선택하세요</p>
             </div>
-
+            
             <div id="content-area">
                 <div class="empty-state">
                     <div class="empty-state-icon">🎬</div>
@@ -103,20 +934,40 @@
             </div>
         </main>
     </div>
-
+    
+    <!-- Message Container -->
     <div id="message-container" class="message-container"></div>
-	<footer style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 10px; background: rgba(255,255,255,0.9); border-top: 1px solid #e0e0e0; font-size: 0.85rem; color: #666;">
-    © 2025 AiFi. All rights reserved.
-    </footer>
-
+    
+    <!-- Hidden File Input -->
     <input type="file" id="file-input" class="hidden-file-input" accept=".json">
-	<!-- 이미지 크게 보기 모달 -->
-		<div id="imageDisplayModal" class="image-modal" onclick="closeImageModal(event)">
-			<span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
-			<img class="image-modal-content" id="modalImageContent">
-		</div>
-
-    <!-- 외부 JavaScript 파일 -->
-    <script src="js/app.js"></script>
+    
+    <!-- Image Display Modal -->
+    <div id="imageDisplayModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center;">
+        <span class="image-modal-close" onclick="closeImageModal(event)" style="position: absolute; top: 20px; right: 40px; color: white; font-size: 40px; font-weight: 300; cursor: pointer;">&times;</span>
+        <img id="modalImageContent" style="max-width: 90%; max-height: 90%; border-radius: 8px;">
+    </div>
+    
+    <!-- Prompt Edit Modal -->
+    <div id="prompt-edit-modal" style="display: none;">
+        <!-- Prompt edit modal content will be dynamically generated -->
+    </div>
+    
+    <!-- Scripts -->
+    <!-- 리팩토링된 모듈들 - 임시 비활성화 (app.js와 중복되어 에러 발생) -->
+    <!-- 
+    <script src="js/modules/app-config.js?v=1.4"></script>
+    <script src="js/modules/app-utils.js?v=1.4"></script>
+    <script src="js/modules/data/storage.js?v=1.4"></script>
+    <script src="js/modules/data/import-export.js?v=1.4"></script>
+    <script src="js/modules/ui/navigation.js?v=1.4"></script>
+    <script src="js/modules/ui/content-display.js?v=1.4"></script>
+    <script src="js/modules/stage/stage-converter.js?v=1.4"></script>
+    <script src="js/modules/events/event-handlers.js?v=1.4"></script>
+    -->
+    
+    <!-- 기존 스크립트들 -->
+    <script src="js/storyboard-functions.js?v=1.1"></script>
+    <script src="js/app.js?v=1.4"></script>
+    <script src="js/shot-ui-improvements.js?v=1.1"></script>
 </body>
 </html>

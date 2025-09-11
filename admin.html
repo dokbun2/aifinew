@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIFI Admin - 관리자 대시보드</title>
+    
+    <!-- Google Sign-In -->
+    <meta name="google-signin-client_id" content="325933740145-8ubka8q1fobrdv8hf5t196btkog8fnas.apps.googleusercontent.com">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Apple Developer Style -->
+    <link rel="stylesheet" href="apple-developer-style.css">
+    
+    <!-- Tabler Icons -->
+    <script src="tabler-icons.js"></script>
+    
+    <style>
+        /* 관리자 페이지 심플 & 컴팩트 스타일 */
+        body {
+            background: #000;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* 상단 네비게이션 바 */
+        .admin-navbar {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 12px 0;
+        }
+        
+        .admin-navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .home-button {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-page-title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .admin-page-badge {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 헤더 스타일 - 심플하게 */
+        .admin-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .admin-title-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .admin-header h1 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .admin-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+        
+        /* 액션 버튼들 - 컴팩트 */
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        
+        .action-btn.danger {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.2);
+        }
+        
+        .action-btn.danger:hover {
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        /* 통계 카드 - 컴팩트 */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .stat-icon {
+            display: inline-block;
+            margin-right: 8px;
+            opacity: 0.7;
+            vertical-align: middle;
+        }
+        
+        /* Tabler 아이콘 스타일 */
+        .ti {
+            vertical-align: middle;
+            display: inline-block;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            display: inline-block;
+        }
+        
+        .stat-change {
+            display: none;
+        }
+        
+        /* 검색 및 필터 섹션 - 심플 */
+        .admin-controls {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+        
+        .filter-btn {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+        
+        .filter-btn.active {
+            background: #007AFF;
+            color: #fff;
+            border-color: #007AFF;
+        }
+        
+        /* 사용자 섹션 - 컴팩트 */
+        .users-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .section-title {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .bulk-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .user-list {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        /* 사용자 리스트 헤더 */
+        .user-list-header {
+            display: grid;
+            grid-template-columns: 30px 1fr 150px 200px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+        }
+        
+        .user-item {
+            display: grid;
+            grid-template-columns: 30px 1fr 150px 200px;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        
+        .user-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .user-name {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .user-email {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+        }
+        
+        .user-meta {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+        
+        .user-action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .approve-btn {
+            background: rgba(0, 122, 255, 0.1);
+            color: #007AFF;
+            border: 1px solid rgba(0, 122, 255, 0.2);
+        }
+        
+        .approve-btn:hover {
+            background: rgba(0, 122, 255, 0.2);
+        }
+        
+        .reject-btn, .revoke-btn {
+            background: rgba(255, 59, 48, 0.1);
+            color: #FF3B30;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+        }
+        
+        .reject-btn:hover, .revoke-btn:hover {
+            background: rgba(255, 59, 48, 0.2);
+        }
+        
+        /* Empty State - 심플 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .empty-state-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+        
+        .empty-state-title {
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .empty-state-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* 관리자 전용 알림 */
+        .admin-only-notice {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            color: #FF3B30;
+            margin: 40px auto;
+            max-width: 400px;
+        }
+        
+        .admin-only-notice h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        /* 로그아웃 버튼 - 네비게이션 바에 위치 */
+        .admin-logout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 59, 48, 0.1);
+            color: #FF3B30;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .admin-logout-btn:hover {
+            background: rgba(255, 59, 48, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        /* 알림 스타일 - 심플 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(20, 20, 20, 0.95);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 10000;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 13px;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.success {
+            border-color: #007AFF;
+            background: rgba(0, 122, 255, 0.2);
+        }
+        
+        .notification.error {
+            border-color: #FF3B30;
+            background: rgba(255, 59, 48, 0.2);
+        }
+        
+        /* 로딩 스피너 */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #007AFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .admin-header h1 {
+                font-size: 28px;
+            }
+            
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-list-header,
+            .user-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .user-checkbox {
+                display: none;
+            }
+            
+            .admin-controls {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 상단 네비게이션 바 -->
+    <nav class="admin-navbar">
+        <div class="admin-navbar-content">
+            <div class="admin-nav-left">
+                <a href="/index.html" class="home-button">
+                    <i class="ti ti-home" style="font-size: 18px;"></i>
+                    <span>홈으로</span>
+                </a>
+                <div class="admin-page-title">
+                    <i class="ti ti-shield-lock" style="font-size: 20px;"></i>
+                    <span>관리자 대시보드</span>
+                    <span class="admin-page-badge">ADMIN</span>
+                </div>
+            </div>
+            <button class="admin-logout-btn" onclick="adminAuth.logout()">
+                <i class="ti ti-logout" style="font-size: 16px;"></i>
+                <span>로그아웃</span>
+            </button>
+        </div>
+    </nav>
+    
+    <div class="admin-container" id="admin-content" style="display: none;">
+        <div class="admin-header">
+            <div class="admin-header-top">
+                <div class="admin-title-section">
+                    <div>
+                        <h1>관리자</h1>
+                        <p class="admin-subtitle">사용자 관리</p>
+                    </div>
+                </div>
+                <div class="admin-actions">
+                    <button class="action-btn" onclick="adminAuth.exportUsers()">
+                        <i class="ti ti-download" style="font-size: 14px;"></i>
+                        <span>데이터 내보내기</span>
+                    </button>
+                    <button class="action-btn" onclick="adminAuth.refreshData()">
+                        <i class="ti ti-refresh" style="font-size: 14px;"></i>
+                        <span>새로고침</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <i class="ti ti-clock stat-icon" style="font-size: 16px;"></i>
+                    <span class="stat-number" id="pending-count">0</span>
+                    <span class="stat-label">대기</span>
+                </div>
+                <div class="stat-card">
+                    <i class="ti ti-circle-check stat-icon" style="font-size: 16px;"></i>
+                    <span class="stat-number" id="approved-count">0</span>
+                    <span class="stat-label">승인</span>
+                </div>
+                <div class="stat-card">
+                    <i class="ti ti-users stat-icon" style="font-size: 16px;"></i>
+                    <span class="stat-number" id="total-count">0</span>
+                    <span class="stat-label">전체</span>
+                </div>
+                <div class="stat-card">
+                    <i class="ti ti-activity stat-icon" style="font-size: 16px;"></i>
+                    <span class="stat-number" id="active-count">0</span>
+                    <span class="stat-label">활성</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 검색 및 필터 -->
+        <div class="admin-controls">
+            <div class="search-box">
+                <i class="ti ti-search search-icon" style="font-size: 14px;"></i>
+                <input type="text" class="search-input" id="user-search" placeholder="이름 또는 이메일로 검색..." onkeyup="adminAuth.searchUsers(this.value)">
+            </div>
+            <button class="filter-btn active" onclick="adminAuth.filterUsers('all')">
+                <i class="ti ti-list" style="font-size: 14px;"></i>
+                <span>전체</span>
+            </button>
+            <button class="filter-btn" onclick="adminAuth.filterUsers('pending')">
+                <i class="ti ti-clock" style="font-size: 14px;"></i>
+                <span>대기중</span>
+            </button>
+            <button class="filter-btn" onclick="adminAuth.filterUsers('approved')">
+                <i class="ti ti-circle-check" style="font-size: 14px;"></i>
+                <span>승인됨</span>
+            </button>
+        </div>
+        
+        <!-- 승인 대기 사용자 -->
+        <div class="users-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="ti ti-clock" style="font-size: 14px;"></i>
+                    <span>승인 대기중인 사용자</span>
+                    <span class="section-badge" id="pending-badge">0</span>
+                </h2>
+                <div class="bulk-actions">
+                    <button class="action-btn" onclick="adminAuth.approveSelected()">
+                        <i class="ti ti-check" style="font-size: 14px;"></i>
+                        <span>선택 승인</span>
+                    </button>
+                    <button class="action-btn danger" onclick="adminAuth.rejectSelected()">
+                        <i class="ti ti-x" style="font-size: 14px;"></i>
+                        <span>선택 거절</span>
+                    </button>
+                </div>
+            </div>
+            <div class="user-list">
+                <div class="user-list-header">
+                    <div><input type="checkbox" id="select-all-pending" onchange="adminAuth.selectAll('pending', this.checked)"></div>
+                    <div>사용자 정보</div>
+                    <div>요청 시간</div>
+                    <div>작업</div>
+                </div>
+                <div id="pending-users">
+                    <div class="empty-state">
+                        <i class="ti ti-inbox empty-state-icon" style="font-size: 32px;"></i>
+                        <div class="empty-state-title">승인 대기 사용자 없음</div>
+                        <p class="empty-state-text">새로운 가입 요청이 들어오면 여기에 표시됩니다</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 승인된 사용자 -->
+        <div class="users-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="ti ti-circle-check" style="font-size: 14px;"></i>
+                    <span>승인된 사용자</span>
+                    <span class="section-badge" id="approved-badge">0</span>
+                </h2>
+                <div class="bulk-actions">
+                    <button class="action-btn danger" onclick="adminAuth.revokeSelected()">
+                        <i class="ti ti-user-x" style="font-size: 14px;"></i>
+                        <span>선택 권한 취소</span>
+                    </button>
+                </div>
+            </div>
+            <div class="user-list">
+                <div class="user-list-header">
+                    <div><input type="checkbox" id="select-all-approved" onchange="adminAuth.selectAll('approved', this.checked)"></div>
+                    <div>사용자 정보</div>
+                    <div>승인 날짜</div>
+                    <div>작업</div>
+                </div>
+                <div id="approved-users">
+                    <div class="empty-state">
+                        <i class="ti ti-users empty-state-icon" style="font-size: 32px;"></i>
+                        <div class="empty-state-title">승인된 사용자 없음</div>
+                        <p class="empty-state-text">승인된 사용자가 여기에 표시됩니다</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-only-notice" id="admin-only-notice" style="display: none;">
+        <!-- 내용은 JavaScript에서 동적으로 설정됩니다 -->
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        // 페이지 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin page loaded');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>컨셉아트 프롬프트 라이브러리</title>
+    
+    <!-- Apple Developer Style CSS -->
+    <link rel="stylesheet" href="../apple-developer-style.css">
+    
+    <!-- SEO -->
+    <meta name="description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템">
+    <meta name="keywords" content="컨셉아트, AI 이미지생성, 프롬프트, 캐릭터 디자인, 배경, 소품, Midjourney, DALL-E">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aifimulty.netlify.app/concept-art">
+    <meta property="og:title" content="컨셉아트 프롬프트 라이브러리">
+    <meta property="og:description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템. 다중 AI 도구 프롬프트 지원">
+    <meta property="og:image" content="https://aifimulty.netlify.app/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:site_name" content="AIFI 프로젝트">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://aifimulty.netlify.app/concept-art">
+    <meta property="twitter:title" content="컨셉아트 프롬프트 라이브러리">
+    <meta property="twitter:description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템">
+    <meta property="twitter:image" content="https://aifimulty.netlify.app/og-image.jpg">
+    <meta property="twitter:image" content="https://aifiwb.netlify.app/og-image-concept.jpg">
+
+    <!-- 카카오톡 -->
+    <meta property="kakao:title" content="컨셉아트 프롬프트 라이브러리">
+    <meta property="kakao:description" content="캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템">
+    <meta property="kakao:image" content="https://aifiwb.netlify.app/og-image-concept.jpg">
+
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/x-icon" href="../favicon_io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
+    
+    <style>
+        /* Additional styles for concept art page */
+        body {
+            padding-top: 48px; /* 네비게이션 바 높이만큼 패딩 추가 */
+        }
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            /* Mobile Navigation */
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-menu {
+                display: none;
+                position: fixed;
+                top: 48px;
+                left: 0;
+                width: 100%;
+                background: rgba(20, 20, 20, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 1000;
+            }
+            
+            .nav-menu.active {
+                display: flex;
+            }
+            
+            /* Header Mobile */
+            .concept-art-header {
+                padding: 15px;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            /* Tab Navigation Mobile */
+            .tab-navigation {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            
+            .tab-navigation::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .tab-button {
+                white-space: nowrap;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            /* Content Container Mobile */
+            .concept-art-container {
+                padding: 15px;
+            }
+            
+            /* Grid Layouts Mobile */
+            .character-grid, .location-grid, .prop-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .additional-images-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            /* Cards Mobile */
+            .character-card, .location-card, .prop-card {
+                padding: 15px;
+            }
+            
+            .character-image, .location-image, .prop-image {
+                height: 200px;
+            }
+            
+            .additional-image-preview {
+                height: 150px;
+            }
+            
+            /* Buttons Mobile */
+            .btn-primary, .btn-secondary {
+                padding: 12px 20px;
+                font-size: 14px;
+                width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            /* Modal Mobile */
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+                overflow-y: auto;
+                padding: 20px;
+            }
+            
+            /* Forms Mobile */
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            input, textarea, select {
+                font-size: 16px; /* Prevent zoom on iOS */
+                width: 100%;
+            }
+            
+            /* Gallery Mode Mobile */
+            .gallery-view {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-item {
+                height: 250px;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            /* Extra Small Devices */
+            .header-title {
+                font-size: 18px;
+            }
+            
+            .tab-button {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            /* Sidebar on very small screens */
+            .concept-sidebar {
+                padding: 10px !important;
+                margin-bottom: 15px;
+            }
+            
+            /* Sidebar navigation items on small screens */
+            .concept-category {
+                margin-bottom: 10px;
+            }
+            
+            .nav-items {
+                max-height: 250px !important;
+            }
+            
+            .category-header h3 {
+                font-size: 12px;
+            }
+            
+            .nav-item {
+                padding: 8px;
+                font-size: 12px;
+            }
+            
+            /* Content area padding */
+            .concept-content {
+                padding: 10px !important;
+                width: 100% !important;
+            }
+            
+            /* Main layout on very small screens */
+            .concept-main-layout {
+                padding: 0 5px !important;
+            }
+            
+            .character-card h3, .location-card h3, .prop-card h3 {
+                font-size: 16px;
+            }
+            
+            .character-image, .location-image, .prop-image {
+                height: 150px;
+            }
+            
+            .additional-image-preview {
+                height: 120px;
+            }
+            
+            /* Compact buttons on very small screens */
+            .btn-sm {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            /* Tab content on very small screens */
+            .tab-content {
+                padding: 5px !important;
+            }
+            
+            /* Ensure full width for all content */
+            .concept-container,
+            .character-grid,
+            .location-grid,
+            .prop-grid,
+            .gallery-view {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                padding: 0 !important;
+            }
+            
+            /* Hide less important elements */
+            .optional-info {
+                display: none;
+            }
+        }
+        
+        /* Touch-friendly sizing */
+        @media (hover: none) and (pointer: coarse) {
+            button, .btn-primary, .btn-secondary {
+                min-height: 44px;
+            }
+            
+            .tab-button {
+                min-height: 40px;
+            }
+            
+            input, select, textarea {
+                min-height: 44px;
+                padding: 12px;
+            }
+        }
+        
+        /* Reference Images Apple Style */
+        .additional-images-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .additional-images-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .additional-image-slot {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .additional-image-slot:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--apple-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.15);
+        }
+        
+        .additional-image-preview {
+            width: 100%;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .additional-image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .additional-image-preview img:hover {
+            transform: scale(1.05);
+        }
+        
+        .no-image-placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            background: rgba(0, 0, 0, 0.7);
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 60px;
+            max-height: 120px;
+        }
+        
+        /* Main image section Apple style */
+        .image-display-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .image-container {
+            width: 100%;
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            cursor: pointer;
+        }
+        
+        .image-url-section {
+            margin-top: 15px;
+        }
+        
+        .image-url-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .image-url-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .image-url-input:focus {
+            outline: none;
+            background: rgba(0, 0, 0, 0.7);
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .btn-apply-url {
+            padding: 10px 20px;
+            background: var(--apple-blue);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .btn-apply-url:hover {
+            background: #0051D5;
+            transform: scale(1.02);
+        }
+        
+        .btn-apply-additional {
+            width: 100%;
+            padding: 8px;
+            background: var(--apple-blue);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-apply-additional:hover {
+            background: #0051D5;
+            transform: scale(1.01);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .additional-images-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .concept-header {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky;
+            top: 48px;
+            z-index: 100;
+        }
+        
+        .concept-header-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 22px;
+        }
+        
+        .concept-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .concept-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .concept-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .concept-header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .compact-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .compact-btn:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.25);
+        }
+        
+        .compact-btn-primary {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: white;
+        }
+        
+        .compact-btn-primary:hover {
+            background: #0051D5;
+            border-color: #0051D5;
+        }
+        
+        .compact-btn-danger {
+            background: rgba(220, 38, 38, 0.9);
+            border-color: rgba(220, 38, 38, 0.9);
+            color: white;
+        }
+        
+        .compact-btn-danger:hover {
+            background: rgba(220, 38, 38, 1);
+        }
+        
+        .header-subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        
+        .concept-main-layout {
+            display: flex;
+            gap: 30px;
+            max-width: 1440px;
+            margin: 9px auto 30px auto; /* Reduced top margin to get closer to header */
+            padding: 0 22px;
+            position: relative;
+            align-items: flex-start;
+        }
+        
+        .concept-sidebar {
+            width: 300px;
+            position: fixed;
+            top: 125px; /* Reduced to bring closer to header */
+            left: calc(50% - 720px + 22px); /* Center aligned with max-width 1440px container */
+            z-index: 50;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Custom scrollbar for sidebar */
+        .concept-sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .concept-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .concept-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .concept-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Fallback for smaller screens */
+        @media (max-width: 1484px) {
+            .concept-sidebar {
+                left: 22px; /* Use padding value for smaller screens */
+            }
+        }
+        
+        /* Mobile responsive - reset to normal flow */
+        @media (max-width: 768px) {
+            .concept-sidebar {
+                position: static !important;
+                width: 100% !important;
+                top: auto !important;
+                left: auto !important;
+                height: auto !important;
+                margin-bottom: 20px;
+                padding: 15px;
+                box-sizing: border-box;
+                float: none !important;
+                display: block !important;
+            }
+            
+            /* Main content area mobile */
+            .concept-content {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 15px;
+                box-sizing: border-box;
+                position: static !important;
+                float: none !important;
+                display: block !important;
+            }
+            
+            .concept-main-layout {
+                flex-direction: column !important;
+                display: block !important;
+                padding: 0 10px !important;
+                margin: 0 !important;
+                margin-top: 20px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Navigation items in sidebar */
+            .nav-items {
+                height: auto !important;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            
+            .concept-category {
+                width: 100% !important;
+                margin-bottom: 15px;
+            }
+            
+            .category-header h3 {
+                font-size: 14px;
+                padding: 10px;
+            }
+            
+            .nav-item {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            /* Tab content area */
+            .tab-content {
+                width: 100% !important;
+                padding: 10px !important;
+            }
+            
+            /* Ensure all content is full width */
+            .character-grid, 
+            .location-grid, 
+            .prop-grid,
+            .gallery-view,
+            .concept-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+        }
+        
+        .concept-category {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .concept-category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .concept-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .concept-list li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .concept-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .concept-list li.active {
+            background: var(--apple-blue);
+            color: white;
+        }
+        
+        .concept-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            margin-left: 310px; /* 300px sidebar + 30px gap */
+            margin-top: 0;
+        }
+        
+        .concept-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+        
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .csv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .csv-table th,
+        .csv-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .csv-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            color: white;
+        }
+        
+        .csv-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #1a1a1a;
+            display: block;
+        }
+        
+        .gallery-item-info {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 32px;
+        }
+        
+        .gallery-item-title {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+        
+        .gallery-item-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 1.4;
+            margin-top: 4px;
+        }
+        
+        .no-image-message {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Toast message */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Image modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            cursor: pointer;
+        }
+        
+        .image-modal-content {
+            display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: 300;
+            cursor: pointer;
+        }
+        
+        /* Prompt text areas - black background */
+        #base-prompt-content > div > div > div,
+        #korean-translation-universal,
+        .prompt-text-area,
+        .translation-area {
+            background: rgba(0, 0, 0, 0.9) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px !important;
+        }
+        
+        /* 프롬프트 복사/편집 버튼 스타일 개선 */
+        .prompt-copy-btn,
+        .prompt-edit-btn,
+        .ai-edit-btn {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .prompt-copy-btn:hover::after {
+            content: "클릭하여 복사";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            margin-bottom: 4px;
+            pointer-events: none;
+        }
+        
+        /* 복사 버튼 특별 스타일 */
+        .prompt-copy-btn {
+            background: var(--apple-blue) !important;
+            border-color: var(--apple-blue) !important;
+        }
+        
+        .prompt-copy-btn:hover {
+            background: #0051D5 !important;
+            border-color: #0051D5 !important;
+            transform: scale(1.02);
+        }
+        
+        /* 편집 버튼 스타일 */
+        .prompt-edit-btn {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .prompt-edit-btn:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        /* AI 편집 버튼 스타일 */
+        .ai-edit-btn {
+            background: #8b5cf6 !important;
+            border-color: #8b5cf6 !important;
+        }
+        
+        .ai-edit-btn:hover {
+            background: #7c3aed !important;
+            border-color: #7c3aed !important;
+            transform: scale(1.02);
+        }
+        
+        /* Button container spacing */
+        .button-group,
+        .ai-button-group {
+            margin-top: 12px !important;
+        }
+        
+        /* Prompt buttons - Apple style */
+        #base-prompt-content button.btn,
+        #base-prompt-content button.btn-primary,
+        #base-prompt-content button.btn-secondary,
+        #base-prompt-content button.btn-ai-edit,
+        .btn.btn-primary,
+        .btn.btn-secondary,
+        .btn.btn-ai-edit {
+            padding: 5px 10px !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            border-radius: 6px !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            transition: all 0.2s !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            line-height: 1.2 !important;
+            display: inline-block !important;
+            margin: 4px !important;
+        }
+        
+        /* Primary button style */
+        #base-prompt-content button.btn-primary,
+        .btn.btn-primary {
+            background: var(--apple-blue) !important;
+            border-color: var(--apple-blue) !important;
+            color: white !important;
+        }
+        
+        #base-prompt-content button.btn-primary:hover,
+        .btn.btn-primary:hover {
+            background: #0051D5 !important;
+            border-color: #0051D5 !important;
+            transform: scale(1.02);
+        }
+        
+        /* Secondary button style */
+        #base-prompt-content button.btn-secondary,
+        .btn.btn-secondary {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        #base-prompt-content button.btn-secondary:hover,
+        .btn.btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        /* AI Edit button style */
+        #base-prompt-content button.btn-ai-edit,
+        .btn.btn-ai-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border: none !important;
+            color: white !important;
+        }
+        
+        #base-prompt-content button.btn-ai-edit:hover,
+        .btn.btn-ai-edit:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+            transform: scale(1.02);
+        }
+    </style>
+    <!-- Tabler Icons Library -->
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Error occurred: ', {
+                message: msg,
+                source: url,
+                lineno: lineNo,
+                colno: columnNo,
+                error: error
+            });
+            return false;
+        };
+    </script>
+    <script src="../tabler-icons.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="apple-nav">
+        <div class="nav-content" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="../index.html#features" class="nav-link" style="font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <span class="nav-icon-home" style="display: flex; align-items: center;"></span>
+                    홈
+                </a>
+            </div>
+            <a href="#" class="nav-brand" style="position: absolute; left: 50%; transform: translateX(-50%);">CONCEPT ART</a>
+            <ul class="nav-menu">
+                <li><a href="../storyboard/index.html" class="nav-link">스토리보드</a></li>
+                <li><a href="../media-gallery/index.html" class="nav-link" target="_blank">갤러리</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <!-- Compact Header with Actions -->
+    <div class="concept-header">
+        <div class="concept-header-content">
+            <div class="concept-header-top">
+                <div class="concept-header-left">
+                    <div>
+                        <h1 class="concept-header-title">컨셉아트 프롬프트 라이브러리</h1>
+                        <p class="header-subtitle">생성된 이미지 URL을 추가하고, 작업이 완료되면 "JSON 내보내기" 버튼을 클릭하여 모든 데이터를 저장하세요.</p>
+                    </div>
+                </div>
+                <div class="concept-header-buttons">
+                    <button id="header-import-json-btn" class="compact-btn compact-btn-primary">
+                        JSON 업로드
+                    </button>
+                    <button id="header-export-json-btn" class="compact-btn compact-btn-primary">
+                        JSON 다운로드
+                    </button>
+                    <button id="header-clear-btn" class="compact-btn compact-btn-danger">
+                        데이터 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden file input -->
+    <input type="file" id="import-json-input" accept=".json" style="display: none;">
+    
+    <!-- Main Layout -->
+    <div class="concept-main-layout">
+        <!-- Sidebar -->
+        <div class="concept-sidebar">
+            <div class="concept-category">
+                <div class="concept-category-title">캐릭터</div>
+                <ul class="concept-list" id="character-list"></ul>
+            </div>
+            <div class="concept-category">
+                <div class="concept-category-title">장소</div>
+                <ul class="concept-list" id="location-list"></ul>
+            </div>
+            <div class="concept-category">
+                <div class="concept-category-title">소품</div>
+                <ul class="concept-list" id="prop-list"></ul>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="concept-content">
+            <div id="concept-detail">
+                <h2 id="concept-title" style="color: white; margin-bottom: 30px;">컨셉아트를 선택하세요</h2>
+                
+                <div class="concept-tabs">
+                    <button class="tab-button active" onclick="openTab(event, 'csv-tab')">블록화</button>
+                    <button class="tab-button" onclick="openTab(event, 'prompts-tab')">기본 프롬프트</button>
+                    <button class="tab-button" onclick="openTab(event, 'image-gallery-tab')">이미지 갤러리</button>
+                </div>
+                
+                <div id="csv-tab" class="tab-content active">
+                    <h3 style="color: white; margin-bottom: 20px;">블록화</h3>
+                    <table class="csv-table" id="csv-data-table">
+                        <thead><tr><th>ID</th><th>원본</th><th>번역본</th></tr></thead>
+                        <tbody><tr><td colspan="3">컨셉아트를 선택하면 블록화 데이터가 표시됩니다.</td></tr></tbody>
+                    </table>
+                </div>
+                
+                <div id="prompts-tab" class="tab-content">
+                    <h3 style="color: white; margin-bottom: 20px;">기본 프롬프트</h3>
+                    <div id="base-prompt-content">
+                        <!-- 프롬프트 콘텐츠는 JavaScript로 동적 생성 -->
+                    </div>
+                </div>
+                
+                <div id="image-gallery-tab" class="tab-content">
+                    <h3 style="color: white; margin-bottom: 20px;">이미지 갤러리</h3>
+                    <div class="image-gallery" id="image-gallery-content">
+                        <div class="no-image-message">컨셉아트를 선택하고 이미지를 추가하면 갤러리가 표시됩니다.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Message -->
+    <div id="toast-message" class="toast"></div>
+    
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal(event)">
+        <span class="image-modal-close" onclick="closeImageModal(event)">&times;</span>
+        <img class="image-modal-content" id="modalImage">
+    </div>
+
+    <!-- JavaScript Bundle -->
+    <script src="js/bundle.js"></script>
+    
+    <script>
+        // DOM이 로드된 후 아이콘 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // getTablerIcon 함수가 정의되어 있는지 확인
+                if (typeof getTablerIcon === 'function') {
+                    const homeIcon = document.querySelector('.nav-icon-home');
+                    if (homeIcon) {
+                        homeIcon.innerHTML = getTablerIcon('home', 18);
+                    }
+                } else {
+                    console.warn('getTablerIcon 함수가 정의되지 않았습니다.');
+                }
+            } catch(e) {
+                console.error('아이콘 초기화 오류:', e);
+            }
+        });
+    </script>
+    
+</body>
+</html>

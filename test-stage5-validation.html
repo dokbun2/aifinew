@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 5 v6.0 데이터 검증 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+        .warning {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ff9800;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .json-input {
+            width: 100%;
+            height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .output-log {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Stage 5 v6.0 데이터 검증 테스트</h1>
+        
+        <div class="test-section">
+            <div class="test-title">📝 Stage 5 v6.0 JSON 데이터 입력</div>
+            <textarea id="jsonInput" class="json-input" placeholder="Stage 5 v6.0 JSON 데이터를 여기에 붙여넣으세요..."></textarea>
+            <button onclick="loadTestData()">샘플 데이터 로드</button>
+            <button onclick="validateData()">데이터 검증 실행</button>
+            <button onclick="clearAll()">전체 초기화</button>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 검증 결과</div>
+            <div id="validationResults" class="output-log">검증 결과가 여기에 표시됩니다...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔄 변환된 데이터 구조</div>
+            <div id="convertedData" class="output-log">변환된 데이터가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+
+    <script>
+        // Stage 5 v6.0 샘플 데이터
+        const sampleData = {
+            "stage": 5,
+            "version": "6.0",
+            "project_type": "CF",
+            "film_metadata": {
+                "title": "저녁 메뉴 세계 정상 회담",
+                "genre": "Comedy",
+                "director": "Director Name",
+                "duration": "01:00"
+            },
+            "breakdown_data": {
+                "sequences": [
+                    {
+                        "sequence_id": "SEQ1",
+                        "name": "저녁 메뉴 세계 정상 회담",
+                        "description": "각국 정상들이 저녁 메뉴를 두고 회담하는 시퀀스"
+                    }
+                ],
+                "scenes": [
+                    {
+                        "scene_id": "S01",
+                        "sequence_id": "SEQ1",
+                        "title": "정상 회담장",
+                        "description": "각국 정상들이 모여 저녁 메뉴를 논의"
+                    }
+                ],
+                "shots": [
+                    {
+                        "shot_id": "SH001",
+                        "scene_id": "S01",
+                        "title": "회담장 전경",
+                        "description": "정상들이 모인 회담장의 전체 모습"
+                    },
+                    {
+                        "shot_id": "SH002",
+                        "scene_id": "S01",
+                        "title": "김치 제안",
+                        "description": "한국 대표가 김치를 제안하는 장면"
+                    },
+                    {
+                        "shot_id": "SH003",
+                        "scene_id": "S01",
+                        "title": "피자 제안",
+                        "description": "이탈리아 대표가 피자를 제안하는 장면"
+                    },
+                    {
+                        "shot_id": "SH004",
+                        "scene_id": "S01",
+                        "title": "스시 제안",
+                        "description": "일본 대표가 스시를 제안하는 장면"
+                    },
+                    {
+                        "shot_id": "SH005",
+                        "scene_id": "S01",
+                        "title": "논쟁 장면",
+                        "description": "각국 대표들이 열띤 논쟁을 벌이는 장면"
+                    },
+                    {
+                        "shot_id": "SH006",
+                        "scene_id": "S01",
+                        "title": "합의 도달",
+                        "description": "결국 모두가 만족하는 메뉴로 합의"
+                    },
+                    {
+                        "shot_id": "SH007",
+                        "scene_id": "S01",
+                        "title": "만찬 장면",
+                        "description": "합의된 메뉴로 만찬을 즐기는 장면"
+                    }
+                ]
+            }
+        };
+
+        function loadTestData() {
+            document.getElementById('jsonInput').value = JSON.stringify(sampleData, null, 2);
+            log('샘플 데이터가 로드되었습니다.', 'success');
+        }
+
+        function validateData() {
+            const input = document.getElementById('jsonInput').value;
+            if (!input) {
+                log('JSON 데이터를 입력해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(input);
+                log('=== 데이터 검증 시작 ===', 'info');
+                
+                // 1. 기본 구조 검증
+                log('\n1. 기본 구조 검증', 'info');
+                if (data.stage === 5 && data.version === "6.0") {
+                    log('✅ Stage 5 v6.0 형식 확인', 'success');
+                } else {
+                    log('❌ Stage 5 v6.0 형식이 아닙니다', 'error');
+                    return;
+                }
+
+                // 2. 데이터 변환 시뮬레이션
+                log('\n2. 데이터 변환 프로세스', 'info');
+                const converted = convertStage5V6Format(data);
+                
+                // 3. 정합성 검증
+                log('\n3. 데이터 정합성 검증', 'info');
+                const validation = validateDataIntegrity(converted);
+                
+                // 4. 결과 표시
+                displayConvertedData(converted);
+                
+            } catch (error) {
+                log(`오류: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        function convertStage5V6Format(data) {
+            const result = JSON.parse(JSON.stringify(data)); // Deep copy
+            
+            // sequence_id → id 변환
+            if (result.breakdown_data.sequences) {
+                result.breakdown_data.sequences = result.breakdown_data.sequences.map(seq => {
+                    if (seq.sequence_id && !seq.id) {
+                        log(`시퀀스 ID 정규화: sequence_id(${seq.sequence_id}) → id(${seq.sequence_id})`, 'warning');
+                        seq.id = seq.sequence_id;
+                        delete seq.sequence_id;
+                    }
+                    return seq;
+                });
+            }
+            
+            // scene_id → id 변환
+            if (result.breakdown_data.scenes) {
+                result.breakdown_data.scenes = result.breakdown_data.scenes.map(scene => {
+                    if (scene.scene_id && !scene.id) {
+                        log(`씬 ID 정규화: scene_id(${scene.scene_id}) → id(${scene.scene_id})`, 'warning');
+                        scene.id = scene.scene_id;
+                        delete scene.scene_id;
+                    }
+                    return scene;
+                });
+            }
+            
+            // shot_id → id 변환
+            if (result.breakdown_data.shots) {
+                result.breakdown_data.shots = result.breakdown_data.shots.map(shot => {
+                    if (shot.shot_id && !shot.id) {
+                        log(`샷 ID 정규화: shot_id(${shot.shot_id}) → id(${shot.shot_id})`, 'warning');
+                        shot.id = shot.shot_id;
+                        delete shot.shot_id;
+                    }
+                    return shot;
+                });
+            }
+            
+            return result;
+        }
+
+        function validateDataIntegrity(data) {
+            const bd = data.breakdown_data;
+            const errors = [];
+            const warnings = [];
+            
+            // 중복 검사
+            const sequenceIds = new Set();
+            const sceneIds = new Set();
+            const shotIds = new Set();
+            
+            // 시퀀스 검증
+            bd.sequences.forEach(seq => {
+                if (sequenceIds.has(seq.id)) {
+                    errors.push(`중복 시퀀스 ID: ${seq.id}`);
+                }
+                sequenceIds.add(seq.id);
+            });
+            
+            // 씬 검증
+            bd.scenes.forEach(scene => {
+                if (sceneIds.has(scene.id)) {
+                    errors.push(`중복 씬 ID: ${scene.id}`);
+                }
+                sceneIds.add(scene.id);
+                
+                if (!sequenceIds.has(scene.sequence_id)) {
+                    errors.push(`씬 ${scene.id}의 sequence_id(${scene.sequence_id})가 유효하지 않음`);
+                }
+            });
+            
+            // 샷 검증
+            bd.shots.forEach(shot => {
+                if (shotIds.has(shot.id)) {
+                    errors.push(`중복 샷 ID: ${shot.id}`);
+                }
+                shotIds.add(shot.id);
+                
+                if (!sceneIds.has(shot.scene_id)) {
+                    errors.push(`샷 ${shot.id}의 scene_id(${shot.scene_id})가 유효하지 않음`);
+                }
+            });
+            
+            // 결과 출력
+            if (errors.length > 0) {
+                errors.forEach(err => log(`❌ ${err}`, 'error'));
+            } else {
+                log('✅ 데이터 정합성 검증 통과', 'success');
+            }
+            
+            // 통계 출력
+            log(`\n📊 데이터 통계:
+- 시퀀스: ${bd.sequences.length}개
+- 씬: ${bd.scenes.length}개  
+- 샷: ${bd.shots.length}개`, 'info');
+            
+            return {errors, warnings};
+        }
+
+        function displayConvertedData(data) {
+            const output = document.getElementById('convertedData');
+            const display = {
+                sequences: data.breakdown_data.sequences.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    description: s.description
+                })),
+                scenes: data.breakdown_data.scenes.map(s => ({
+                    id: s.id,
+                    sequence_id: s.sequence_id,
+                    title: s.title
+                })),
+                shots: data.breakdown_data.shots.map(s => ({
+                    id: s.id,
+                    scene_id: s.scene_id,
+                    title: s.title
+                }))
+            };
+            
+            output.textContent = JSON.stringify(display, null, 2);
+        }
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('validationResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearAll() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('validationResults').textContent = '검증 결과가 여기에 표시됩니다...';
+            document.getElementById('convertedData').textContent = '변환된 데이터가 여기에 표시됩니다...';
+        }
+
+        // 페이지 로드 시 샘플 데이터 자동 로드
+        window.onload = () => {
+            loadTestData();
+        };
+    </script>
+</body>
+</html>

@@ -1,6 +1,34 @@
 // 업로드 후 이동할 URL을 저장할 전역 변수
 let pendingNavigationUrl = null;
 
+// 관리자 접근 권한 확인 함수
+function checkAdminAccess() {
+    const userInfo = localStorage.getItem('user_info');
+    const adminLink = document.getElementById('admin-link');
+    
+    if (userInfo && adminLink) {
+        try {
+            const user = JSON.parse(userInfo);
+            const adminList = JSON.parse(localStorage.getItem('admin_list') || '[]');
+            
+            // 사용자가 관리자 목록에 있는지 확인
+            if (adminList.includes(user.email)) {
+                adminLink.style.display = 'inline-block';
+                console.log('관리자 권한 확인됨:', user.email);
+            } else {
+                adminLink.style.display = 'none';
+                console.log('일반 사용자:', user.email);
+            }
+        } catch (e) {
+            console.error('사용자 정보 파싱 오류:', e);
+            adminLink.style.display = 'none';
+        }
+    } else if (adminLink) {
+        // 로그인하지 않은 경우 버튼 숨기기
+        adminLink.style.display = 'none';
+    }
+}
+
 // 개별 스테이지 업로드 상태 초기화 함수
 function resetIndividualUploadState() {
     // uploadStatus가 아직 정의되지 않았다면 먼저 정의
@@ -28,6 +56,90 @@ function resetIndividualUploadState() {
     
     // pendingNavigationUrl 초기화
     pendingNavigationUrl = null;
+}
+
+// 스테이지 카드 업로드 상태 체크 및 업데이트
+function checkAndUpdateStageCards() {
+    // Stage 2 체크 - 업로드 플래그 또는 데이터 존재 여부 확인
+    if (localStorage.getItem('stage2Uploaded') === 'true' || localStorage.getItem('stage2TempJson')) {
+        const stage2Card = document.querySelector('.stage-upload-card[title="시나리오"]');
+        if (stage2Card) {
+            stage2Card.classList.add('uploaded');
+        }
+    }
+    
+    // Stage 4 체크 - 업로드 플래그 또는 데이터 존재 여부 확인
+    if (localStorage.getItem('stage4Uploaded') === 'true' || localStorage.getItem('stage4TempJson')) {
+        const stage4Card = document.querySelector('.stage-upload-card[title="컨셉아트"]');
+        if (stage4Card) {
+            stage4Card.classList.add('uploaded');
+        }
+    }
+    
+    // Stage 5 체크 - 업로드 플래그 또는 데이터 존재 여부 확인
+    if (localStorage.getItem('stage5Uploaded') === 'true' || localStorage.getItem('stage5TempJsonFiles')) {
+        const stage5Card = document.querySelector('.stage-upload-card[title="장면분할"]');
+        if (stage5Card) {
+            stage5Card.classList.add('uploaded');
+        }
+    }
+    
+    // Stage 6 체크 - 업로드 플래그 또는 데이터 존재 여부 확인
+    if (localStorage.getItem('stage6Uploaded') === 'true' || localStorage.getItem('stage6TempJsonFiles')) {
+        const stage6Card = document.querySelector('.stage-upload-card[title="샷이미지"]');
+        if (stage6Card) {
+            stage6Card.classList.add('uploaded');
+        }
+    }
+    
+    // Stage 7 체크 - 업로드 플래그 또는 데이터 존재 여부 확인
+    if (localStorage.getItem('stage7Uploaded') === 'true' || localStorage.getItem('stage7TempJsonFiles')) {
+        const stage7Card = document.querySelector('.stage-upload-card[title="영상"]');
+        if (stage7Card) {
+            stage7Card.classList.add('uploaded');
+        }
+    }
+    
+    // Stage 8 체크 - 업로드 플래그 또는 데이터 존재 여부 확인
+    if (localStorage.getItem('stage8Uploaded') === 'true' || localStorage.getItem('stage8TempJsonFiles')) {
+        const stage8Card = document.querySelector('.stage-upload-card[title="오디오"]');
+        if (stage8Card) {
+            stage8Card.classList.add('uploaded');
+        }
+    }
+}
+
+// 개별 스테이지 업로드 카드 상태 업데이트
+function updateStageUploadCard(stageNumber) {
+    let selector = '';
+    
+    switch(stageNumber) {
+        case 2:
+            selector = '.stage-upload-card[title="시나리오"]';
+            break;
+        case 4:
+            selector = '.stage-upload-card[title="컨셉아트"]';
+            break;
+        case 5:
+            selector = '.stage-upload-card[title="장면분할"]';
+            break;
+        case 6:
+            selector = '.stage-upload-card[title="샷이미지"]';
+            break;
+        case 7:
+            selector = '.stage-upload-card[title="영상"]';
+            break;
+        case 8:
+            selector = '.stage-upload-card[title="오디오"]';
+            break;
+    }
+    
+    if (selector) {
+        const card = document.querySelector(selector);
+        if (card && !card.classList.contains('uploaded')) {
+            card.classList.add('uploaded');
+        }
+    }
 }
 
 // 기존에 저장된 스테이지 데이터 파라미터를 URL에 추가
@@ -115,20 +227,45 @@ function appendExistingStageParams(baseUrl) {
 
 // DOM Content Loaded Event
 document.addEventListener('DOMContentLoaded', function() {
-    // 업로드 알림 섹션 숨기기
-    const notificationSection = document.getElementById('upload-notification-section');
-    if (notificationSection) {
-        notificationSection.style.display = 'none';
+    try {
+        // 관리자 버튼 표시 여부 확인
+        checkAdminAccess();
+        
+        // 업로드 알림 섹션 숨기기
+        const notificationSection = document.getElementById('upload-notification-section');
+        if (notificationSection) {
+            notificationSection.style.display = 'none';
+        }
+        
+        // 각 함수가 존재하는지 확인 후 실행
+        if (typeof initializeAnimations === 'function') {
+            initializeAnimations();
+        }
+        
+        if (typeof setupCardClickHandlers === 'function') {
+            setupCardClickHandlers();
+        }
+        
+        // 비디오 import 기능은 해당 요소가 있는 페이지에서만 실행
+        if (document.getElementById('google-drive-url') && typeof setupVideoImport === 'function') {
+            setupVideoImport();
+        }
+        
+        if (typeof updateProjectCardStatus === 'function') {
+            updateProjectCardStatus(); // 페이지 로드 시 카드 상태 초기화
+        }
+        
+        if (typeof restoreCompletedStages === 'function') {
+            restoreCompletedStages(); // 완료된 Stage 카드 표시 복원
+        }
+        
+        // 초기화 시 Stage 2 버튼 활성화
+        if (typeof enableStageButton === 'function') {
+            enableStageButton(2);
+        }
+    } catch (error) {
+        console.error('초기화 중 오류 발생:', error);
     }
-    
-    initializeAnimations();
-    setupCardClickHandlers();
-    setupVideoImport();
-    updateProjectCardStatus(); // 페이지 로드 시 카드 상태 초기화
-    restoreCompletedStages(); // 완료된 Stage 카드 표시 복원
-    
-    // 초기화 시 Stage 2 버튼 활성화
-    enableStageButton(2);
     
     // Stage 2 파일 입력 이벤트 리스너 추가
     const stage2FileInput = document.getElementById('stage2-json-input');
@@ -413,6 +550,12 @@ function clearAllTempData() {
         'stage7TempProcessed', 'stage8TempProcessed'
     ];
     
+    // 업로드 완료 플래그 삭제
+    const uploadedFlags = [
+        'stage2Uploaded', 'stage4Uploaded', 'stage5Uploaded',
+        'stage6Uploaded', 'stage7Uploaded', 'stage8Uploaded'
+    ];
+    
     let deletedCount = 0;
     
     // 임시 데이터 삭제
@@ -425,6 +568,14 @@ function clearAllTempData() {
     
     // 처리 완료 플래그 삭제
     processedFlags.forEach(key => {
+        if (localStorage.getItem(key)) {
+            localStorage.removeItem(key);
+            deletedCount++;
+        }
+    });
+    
+    // 업로드 완료 플래그 삭제
+    uploadedFlags.forEach(key => {
         if (localStorage.getItem(key)) {
             localStorage.removeItem(key);
             deletedCount++;
@@ -484,6 +635,12 @@ function clearAllTempData() {
         }
     });
     
+    // Stage 업로드 카드의 uploaded 클래스 제거 (녹색 완료 상태 제거)
+    const stageUploadCards = document.querySelectorAll('.stage-upload-card');
+    stageUploadCards.forEach(card => {
+        card.classList.remove('uploaded');
+    });
+    
     // 프로젝트 카드 상태 업데이트
     updateProjectCardStatus();
     
@@ -502,6 +659,9 @@ function clearAllTempData() {
               `• 컨셉아트 데이터\n` +
               `• 수정된 프롬프트\n\n` +
               `이제 새로운 프로젝트를 시작할 수 있습니다.`);
+        
+        // 페이지 새로고침으로 상태 완전 초기화
+        location.reload();
     } else {
         alert('초기화할 데이터가 없습니다.');
     }
@@ -521,15 +681,27 @@ document.addEventListener('keydown', function(event) {
 });
 
 // Navigate to storyboard with auto-import trigger (Stage 2)
-function goToStoryboardWithImport() {
+window.goToStoryboardWithImport = function() {
+    console.log('🎬 goToStoryboardWithImport 함수 호출됨');
+    
     // 개별 스테이지 업로드 시 상태 초기화
     resetIndividualUploadState();
     
     // 파일 선택 대화상자 열기
     const fileInput = document.getElementById('stage2-json-input');
     if (fileInput) {
+        console.log('📂 Stage 2 파일 선택 대화상자 열기');
+        
+        // 이벤트 리스너가 없는 경우 추가
+        if (!fileInput.hasAttribute('data-listener-added')) {
+            fileInput.addEventListener('change', handleStage2FileSelect);
+            fileInput.setAttribute('data-listener-added', 'true');
+            console.log('✅ Stage 2 이벤트 리스너 추가됨');
+        }
+        
         fileInput.click();
     } else {
+        console.log('⚠️ Stage 2 파일 입력 요소를 찾을 수 없음');
         // 폴백: 바로 스토리보드로 이동 (기존 스테이지 데이터도 함께 로드)
         document.body.classList.add('fade-out');
         setTimeout(() => {
@@ -541,7 +713,7 @@ function goToStoryboardWithImport() {
 }
 
 // Navigate to concept art with auto-import trigger (Stage 4)
-function goToConceptArtWithStage4Import() {
+window.goToConceptArtWithStage4Import = function() {
     // 개별 스테이지 업로드 시 상태 초기화
     resetIndividualUploadState();
     
@@ -553,21 +725,33 @@ function goToConceptArtWithStage4Import() {
         // 폴백: 바로 컨셉아트 페이지로 이동
         document.body.classList.add('fade-out');
         setTimeout(() => {
-            window.location.href = 'your_title_storyboard_v9.4_c.html?autoImport=true';
+            window.location.href = 'concept-art/index.html?autoImport=true';
         }, 300);
     }
 }
 
 // Navigate to storyboard with auto-import trigger (Stage 5)
-function goToStoryboardWithStage5Import() {
+window.goToStoryboardWithStage5Import = function() {
+    console.log('🎬 goToStoryboardWithStage5Import 함수 호출됨');
+    
     // 개별 스테이지 업로드 시 상태 초기화
     resetIndividualUploadState();
     
     // 파일 선택 대화상자 열기
     const fileInput = document.getElementById('stage5-json-input');
     if (fileInput) {
+        console.log('📂 Stage 5 파일 선택 대화상자 열기');
+        
+        // 이벤트 리스너가 없는 경우 추가
+        if (!fileInput.hasAttribute('data-listener-added')) {
+            fileInput.addEventListener('change', handleStage5FileSelect);
+            fileInput.setAttribute('data-listener-added', 'true');
+            console.log('✅ Stage 5 이벤트 리스너 추가됨');
+        }
+        
         fileInput.click();
     } else {
+        console.log('⚠️ Stage 5 파일 입력 요소를 찾을 수 없음');
         // 폴백: 바로 스토리보드로 이동 (기존 스테이지 데이터도 함께 로드)
         document.body.classList.add('fade-out');
         setTimeout(() => {
@@ -579,15 +763,27 @@ function goToStoryboardWithStage5Import() {
 }
 
 // Navigate to storyboard with auto-import trigger (Stage 6)
-function goToStoryboardWithStage6Import() {
+window.goToStoryboardWithStage6Import = function() {
+    console.log('🎬 goToStoryboardWithStage6Import 함수 호출됨');
+    
     // 개별 스테이지 업로드 시 상태 초기화
     resetIndividualUploadState();
     
     // 파일 선택 대화상자 열기
     const fileInput = document.getElementById('stage6-json-input');
     if (fileInput) {
+        console.log('📂 Stage 6 파일 선택 대화상자 열기');
+        
+        // 이벤트 리스너가 없는 경우 추가
+        if (!fileInput.hasAttribute('data-listener-added')) {
+            fileInput.addEventListener('change', handleStage6FileSelect);
+            fileInput.setAttribute('data-listener-added', 'true');
+            console.log('✅ Stage 6 이벤트 리스너 추가됨');
+        }
+        
         fileInput.click();
     } else {
+        console.log('⚠️ Stage 6 파일 입력 요소를 찾을 수 없음');
         // 폴백: 바로 스토리보드로 이동 (기존 스테이지 데이터도 함께 로드)
         document.body.classList.add('fade-out');
         setTimeout(() => {
@@ -600,15 +796,27 @@ function goToStoryboardWithStage6Import() {
 }
 
 // Navigate to storyboard with auto-import trigger (Stage 7)
-function goToStoryboardWithStage7Import() {
+window.goToStoryboardWithStage7Import = function() {
+    console.log('🎬 goToStoryboardWithStage7Import 함수 호출됨');
+    
     // 개별 스테이지 업로드 시 상태 초기화
     resetIndividualUploadState();
     
     // 파일 선택 대화상자 열기
     const fileInput = document.getElementById('stage7-json-input');
     if (fileInput) {
+        console.log('📂 Stage 7 파일 선택 대화상자 열기');
+        
+        // 이벤트 리스너가 없는 경우 추가
+        if (!fileInput.hasAttribute('data-listener-added')) {
+            fileInput.addEventListener('change', handleStage7FileSelect);
+            fileInput.setAttribute('data-listener-added', 'true');
+            console.log('✅ Stage 7 이벤트 리스너 추가됨');
+        }
+        
         fileInput.click();
     } else {
+        console.log('⚠️ Stage 7 파일 입력 요소를 찾을 수 없음');
         // 폴백: 바로 스토리보드로 이동 (기존 스테이지 데이터도 함께 로드)
         document.body.classList.add('fade-out');
         setTimeout(() => {
@@ -620,15 +828,27 @@ function goToStoryboardWithStage7Import() {
 }
 
 // Navigate to storyboard with auto-import trigger (Stage 8)
-function goToStoryboardWithStage8Import() {
+window.goToStoryboardWithStage8Import = function() {
+    console.log('🎬 goToStoryboardWithStage8Import 함수 호출됨');
+    
     // 개별 스테이지 업로드 시 상태 초기화
     resetIndividualUploadState();
     
     // 파일 선택 대화상자 열기
     const fileInput = document.getElementById('stage8-json-input');
     if (fileInput) {
+        console.log('📂 Stage 8 파일 선택 대화상자 열기');
+        
+        // 이벤트 리스너가 없는 경우 추가
+        if (!fileInput.hasAttribute('data-listener-added')) {
+            fileInput.addEventListener('change', handleStage8FileSelect);
+            fileInput.setAttribute('data-listener-added', 'true');
+            console.log('✅ Stage 8 이벤트 리스너 추가됨');
+        }
+        
         fileInput.click();
     } else {
+        console.log('⚠️ Stage 8 파일 입력 요소를 찾을 수 없음');
         // 폴백: 바로 스토리보드로 이동 (기존 스테이지 데이터도 함께 로드)
         document.body.classList.add('fade-out');
         setTimeout(() => {
@@ -646,6 +866,7 @@ function handleStage2FileSelect(event) {
         return;
     }
 
+    console.log('📁 Stage 2 파일 선택됨:', file.name);
     
     // 파일을 읽어서 localStorage에 임시 저장
     const reader = new FileReader();
@@ -653,33 +874,47 @@ function handleStage2FileSelect(event) {
         try {
             // JSON 유효성 검사
             const jsonData = JSON.parse(e.target.result);
+            console.log('✅ Stage 2 JSON 파싱 성공');
             
             // localStorage에 임시 저장
             localStorage.setItem('stage2TempJson', e.target.result);
             localStorage.setItem('stage2TempFileName', file.name);
             
+            // Stage 2 업로드 완료 플래그 저장 (영구 보관)
+            localStorage.setItem('stage2Uploaded', 'true');
             
-            // 업로드 완료 메시지 표시
-            showStageUploadComplete(2);
+            console.log('💾 Stage 2 데이터 localStorage 저장 완료');
+            
+            // Stage 2 카드 즉시 업데이트
+            updateStageUploadCard(2);
             
             // 순차 업로드 모달에서 호출된 경우
             const modal = document.getElementById('sequential-upload-modal');
             if (modal && modal.classList.contains('show')) {
+                // 모달에서 호출된 경우
+                showStageUploadComplete(2);
                 completeStageUpload(2);
             } else {
-                // 직접 버튼 클릭의 경우 - 업로드 완료 알림 표시 및 페이지 이동 대기
-                // 기존 스테이지 데이터도 함께 로드하도록 URL 구성
-                let baseUrl = 'storyboard/index.html?loadTempJson=true';
-                pendingNavigationUrl = appendExistingStageParams(baseUrl);
-                // showStageUploadComplete에서 이미 showUploadNotification을 호출하므로 여기서는 호출하지 않음
+                // 개별 Stage 카드에서 직접 호출된 경우 - 바로 스토리보드로 이동
+                console.log('🚀 개별 Stage 2 업로드 - 스토리보드로 바로 이동');
+                
+                // fade 효과와 함께 페이지 이동
+                document.body.classList.add('fade-out');
+                setTimeout(() => {
+                    const url = 'storyboard/index.html?loadTempJson=true';
+                    console.log('📍 이동할 URL:', url);
+                    window.location.href = url;
+                }, 300);
             }
             
         } catch (error) {
+            console.error('❌ Stage 2 JSON 파싱 오류:', error);
             showStageUploadError(2, '올바른 JSON 파일이 아닙니다.');
         }
     };
     
     reader.onerror = function() {
+        console.error('❌ Stage 2 파일 읽기 오류');
         showStageUploadError(2, '파일을 읽는 중 오류가 발생했습니다.');
     };
     
@@ -717,22 +952,36 @@ function handleStage4FileSelect(event) {
             localStorage.setItem('stage4TempFileName', file.name);
             localStorage.setItem('stage4ProjectType', projectType);
             
+            // Stage 4 업로드 완료 플래그 저장 (영구 보관)
+            localStorage.setItem('stage4Uploaded', 'true');
+            
             console.log(`Stage 4 JSON 파일을 임시 저장했습니다. (${projectType} 프로젝트)`);
             
             // 업로드 완료 메시지 표시
             showStageUploadComplete(4);
             
+            // Stage 4 카드 즉시 업데이트
+            updateStageUploadCard(4);
+            
             // 순차 업로드 모달에서 호출된 경우
             const modal = document.getElementById('sequential-upload-modal');
             if (modal && modal.classList.contains('show')) {
+                // 모달에서 호출된 경우
                 completeStageUpload(4);
             } else {
-                // 직접 버튼 클릭의 경우 - 업로드 완료 알림 표시 및 페이지 이동 대기
-                console.log('📌 Stage 4 직접 업로드 - pendingNavigationUrl 설정');
-                // Stage 4는 컨셉아트 페이지로 이동하므로 별도 처리 필요 없음
-                pendingNavigationUrl = 'your_title_storyboard_v9.4_c.html?loadStage4Json=true';
-                console.log('📌 설정된 URL:', pendingNavigationUrl);
-                // showStageUploadComplete에서 이미 showUploadNotification을 호출하므로 여기서는 호출하지 않음
+                // 개별 Stage 카드에서 직접 호출된 경우 - 바로 컨셉아트로 이동
+                console.log('🎨 개별 Stage 4 업로드 - 컨셉아트로 바로 이동');
+                
+                // 컨셉아트 페이지에서 새로고침 후 첫 번째 캐릭터 클릭하도록 플래그 설정
+                localStorage.setItem('shouldClickActiveCharacter', 'true');
+                
+                // fade 효과와 함께 페이지 이동
+                document.body.classList.add('fade-out');
+                setTimeout(() => {
+                    const url = 'concept-art/index.html?loadStage4Json=true&autoRefresh=true';
+                    console.log('📍 이동할 URL:', url);
+                    window.location.href = url;
+                }, 300);
             }
             
         } catch (error) {
@@ -752,12 +1001,14 @@ function handleStage4FileSelect(event) {
 
 // Handle Stage 5 JSON file selection (multiple files)
 function handleStage5FileSelect(event) {
+    console.log('📁 handleStage5FileSelect 함수 호출됨');
     const files = Array.from(event.target.files);
     if (files.length === 0) {
+        console.log('⚠️ 선택된 파일이 없음');
         return;
     }
 
-    console.log(`Stage 5 JSON 파일 ${files.length}개 선택됨:`, files.map(f => f.name));
+    console.log(`✅ Stage 5 JSON 파일 ${files.length}개 선택됨:`, files.map(f => f.name));
     
     // 여러 파일을 순차적으로 처리
     const fileContents = [];
@@ -811,21 +1062,34 @@ function handleStage5FileSelect(event) {
                     
                     console.log(`Stage 5 JSON 파일 총 ${allFileContents.length}개를 임시 저장했습니다.`);
                     
+                    // Stage 5 업로드 완료 플래그 저장 (영구 보관)
+                    localStorage.setItem('stage5Uploaded', 'true');
+                    
+                    // Stage 5 카드 즉시 업데이트
+                    updateStageUploadCard(5);
+                    
                     // 업로드 완료 메시지 표시
                     showStageUploadComplete(5);
                     
                     // 순차 업로드 모달에서 호출된 경우
                     const modal = document.getElementById('sequential-upload-modal');
+                    console.log('🔍 모달 상태 확인:', modal ? '존재함' : '없음', modal?.classList.contains('show') ? '표시중' : '숨김');
+                    
                     if (modal && modal.classList.contains('show')) {
+                        console.log('📋 모달에서 호출됨 - completeStageUpload 실행');
                         completeStageUpload(5);
                     } else {
-                        // 직접 버튼 클릭의 경우 - 업로드 완료 알림 표시 및 페이지 이동 대기
-                        console.log('📌 Stage 5 직접 업로드 - pendingNavigationUrl 설정');
-                        // 기존 스테이지 데이터도 함께 로드하도록 URL 구성
-                        let baseUrl = 'storyboard/index.html?loadStage5JsonMultiple=true';
-                        pendingNavigationUrl = appendExistingStageParams(baseUrl);
-                        console.log('📌 설정된 URL:', pendingNavigationUrl);
-                        // showStageUploadComplete에서 이미 showUploadNotification을 호출하므로 여기서는 호출하지 않음
+                        // 개별 Stage 카드에서 직접 호출된 경우 - 바로 스토리보드로 이동
+                        console.log('🎬 개별 Stage 5 업로드 - 스토리보드로 바로 이동');
+                        
+                        // fade 효과와 함께 페이지 이동
+                        document.body.classList.add('fade-out');
+                        setTimeout(() => {
+                            const url = 'storyboard/index.html?loadStage5JsonMultiple=true';
+                            console.log('📍 이동할 URL:', url);
+                            console.log('🚀 페이지 이동 실행...');
+                            window.location.href = url;
+                        }, 300);
                     }
                 }
                 
@@ -910,6 +1174,12 @@ function handleStage6FileSelect(event) {
                     
                     console.log(`Stage 6 JSON 파일 총 ${allFileContents.length}개를 임시 저장했습니다.`);
                     
+                    // Stage 6 업로드 완료 플래그 저장 (영구 보관)
+                    localStorage.setItem('stage6Uploaded', 'true');
+                    
+                    // Stage 6 카드 즉시 업데이트
+                    updateStageUploadCard(6);
+                    
                     // 업로드 완료 메시지 표시
                     showStageUploadComplete(6);
                     
@@ -918,11 +1188,16 @@ function handleStage6FileSelect(event) {
                     if (modal && modal.classList.contains('show')) {
                         completeStageUpload(6);
                     } else {
-                        // 직접 버튼 클릭의 경우 - 업로드 완료 알림 표시 및 페이지 이동 대기
-                        // 기존 스테이지 데이터도 함께 로드하도록 URL 구성
-                        let baseUrl = 'storyboard/index.html?loadStage6JsonMultiple=true';
-                        pendingNavigationUrl = appendExistingStageParams(baseUrl);
-                        // showStageUploadComplete에서 이미 showUploadNotification을 호출하므로 여기서는 호출하지 않음
+                        // 개별 Stage 카드에서 직접 호출된 경우 - 바로 스토리보드로 이동
+                        console.log('🎬 개별 Stage 6 업로드 - 스토리보드로 바로 이동');
+                        
+                        // fade 효과와 함께 페이지 이동
+                        document.body.classList.add('fade-out');
+                        setTimeout(() => {
+                            const url = 'storyboard/index.html?loadStage6JsonMultiple=true';
+                            console.log('📍 이동할 URL:', url);
+                            window.location.href = url;
+                        }, 300);
                     }
                 }
                 
@@ -1006,6 +1281,12 @@ function handleStage7FileSelect(event) {
                     
                     console.log(`Stage 7 JSON 파일 총 ${allFileContents.length}개를 임시 저장했습니다.`);
                     
+                    // Stage 7 업로드 완료 플래그 저장 (영구 보관)
+                    localStorage.setItem('stage7Uploaded', 'true');
+                    
+                    // Stage 7 카드 즉시 업데이트
+                    updateStageUploadCard(7);
+                    
                     // 업로드 완료 메시지 표시
                     showStageUploadComplete(7);
                     
@@ -1014,11 +1295,16 @@ function handleStage7FileSelect(event) {
                     if (modal && modal.classList.contains('show')) {
                         completeStageUpload(7);
                     } else {
-                        // 직접 버튼 클릭의 경우 - 업로드 완료 알림 표시 및 페이지 이동 대기
-                        // 기존 스테이지 데이터도 함께 로드하도록 URL 구성
-                        let baseUrl = 'storyboard/index.html?loadStage7JsonMultiple=true';
-                        pendingNavigationUrl = appendExistingStageParams(baseUrl);
-                        // showStageUploadComplete에서 이미 showUploadNotification을 호출하므로 여기서는 호출하지 않음
+                        // 개별 Stage 카드에서 직접 호출된 경우 - 바로 스토리보드로 이동
+                        console.log('🎬 개별 Stage 7 업로드 - 스토리보드로 바로 이동');
+                        
+                        // fade 효과와 함께 페이지 이동
+                        document.body.classList.add('fade-out');
+                        setTimeout(() => {
+                            const url = 'storyboard/index.html?loadStage7JsonMultiple=true';
+                            console.log('📍 이동할 URL:', url);
+                            window.location.href = url;
+                        }, 300);
                     }
                 }
                 
@@ -1102,6 +1388,12 @@ function handleStage8FileSelect(event) {
                     
                     console.log(`Stage 8 JSON 파일 총 ${allFileContents.length}개를 임시 저장했습니다.`);
                     
+                    // Stage 8 업로드 완료 플래그 저장 (영구 보관)
+                    localStorage.setItem('stage8Uploaded', 'true');
+                    
+                    // Stage 8 카드 즉시 업데이트
+                    updateStageUploadCard(8);
+                    
                     // 업로드 완료 메시지 표시
                     showStageUploadComplete(8);
                     
@@ -1110,11 +1402,16 @@ function handleStage8FileSelect(event) {
                     if (modal && modal.classList.contains('show')) {
                         completeStageUpload(8);
                     } else {
-                        // 직접 버튼 클릭의 경우 - 업로드 완료 알림 표시 및 페이지 이동 대기
-                        // 기존 스테이지 데이터도 함께 로드하도록 URL 구성
-                        let baseUrl = 'storyboard/index.html?loadStage8JsonMultiple=true';
-                        pendingNavigationUrl = appendExistingStageParams(baseUrl);
-                        // showStageUploadComplete에서 이미 showUploadNotification을 호출하므로 여기서는 호출하지 않음
+                        // 개별 Stage 카드에서 직접 호출된 경우 - 바로 스토리보드로 이동
+                        console.log('🎬 개별 Stage 8 업로드 - 스토리보드로 바로 이동');
+                        
+                        // fade 효과와 함께 페이지 이동
+                        document.body.classList.add('fade-out');
+                        setTimeout(() => {
+                            const url = 'storyboard/index.html?loadStage8JsonMultiple=true';
+                            console.log('📍 이동할 URL:', url);
+                            window.location.href = url;
+                        }, 300);
                     }
                 }
                 
@@ -1770,6 +2067,9 @@ function showStageUploadComplete(stageNumber) {
     // 메인 페이지의 Stage 카드에 완료 표시 추가
     markStageCardAsCompleted(stageNumber);
     
+    // 스테이지 업로드 카드 상태 업데이트
+    updateStageUploadCard(stageNumber);
+    
     // 프로젝트 카드 상태 업데이트
     updateProjectCardStatus();
     
@@ -1798,6 +2098,13 @@ function showStageUploadError(stageNumber, errorMessage) {
 // 업로드 상태 아이템 추가
 function addUploadStatusItem(stageNumber, message, status) {
     const statusList = document.getElementById('upload-status-list');
+    
+    // statusList가 없으면 함수 종료 (개별 업로드의 경우 알림 섹션이 없을 수 있음)
+    if (!statusList) {
+        console.log('📝 upload-status-list 요소가 없음 - 개별 업로드 모드');
+        return;
+    }
+    
     const statusItem = document.createElement('div');
     statusItem.className = 'upload-status-item';
     
@@ -1852,6 +2159,8 @@ function showUploadNotification() {
                 closeUploadNotification();
             }, 3000);
         }
+    } else {
+        console.log('📝 upload-notification-section 요소가 없음 - 개별 업로드 모드');
     }
 }
 
@@ -1868,11 +2177,9 @@ function closeUploadNotification() {
     // 대기 중인 페이지 이동이 있으면 실행
     if (pendingNavigationUrl) {
         console.log('✅ 페이지 이동 실행:', pendingNavigationUrl);
-        document.body.classList.add('fade-out');
-        setTimeout(() => {
-            window.location.href = pendingNavigationUrl;
-            pendingNavigationUrl = null; // 초기화
-        }, 300);
+        // fade-out 효과 제거하고 바로 이동 (디버깅)
+        window.location.href = pendingNavigationUrl;
+        pendingNavigationUrl = null; // 초기화
     } else {
         console.log('⚠️ pendingNavigationUrl이 없음');
     }
@@ -2205,6 +2512,8 @@ window.closePageSelectionModal = function() {
 
 // 스토리보드로 이동
 window.navigateToStoryboard = function() {
+    console.log('🎬 navigateToStoryboard 함수 시작');
+    
     closePageSelectionModal();
     
     // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
@@ -2214,12 +2523,59 @@ window.navigateToStoryboard = function() {
     localStorage.removeItem('stage6TempFilesProcessed');
     localStorage.removeItem('stage7TempProcessed');
     localStorage.removeItem('stage8TempProcessed');
-    console.log('스토리보드 처리 완료 플래그 제거됨');
+    console.log('✅ 스토리보드 처리 완료 플래그 제거됨');
     
-    document.body.classList.add('fade-out');
-    setTimeout(() => {
-        window.location.href = 'storyboard/index.html?loadTempJson=true&loadStage5JsonMultiple=true&loadStage6JsonMultiple=true&loadStage7JsonMultiple=true&loadStage8JsonMultiple=true';
-    }, 300);
+    // URL 파라미터 동적 구성
+    let params = [];
+    
+    // Stage 2 확인
+    if (localStorage.getItem('stage2TempJson')) {
+        params.push('loadTempJson=true');
+        console.log('📦 Stage 2 데이터 발견');
+    }
+    
+    // Stage 5 확인
+    if (localStorage.getItem('stage5TempJsonFiles')) {
+        params.push('loadStage5JsonMultiple=true');
+        console.log('📦 Stage 5 데이터 발견');
+    }
+    
+    // Stage 6 확인
+    if (localStorage.getItem('stage6TempJsonFiles')) {
+        params.push('loadStage6JsonMultiple=true');
+        console.log('📦 Stage 6 데이터 발견');
+    }
+    
+    // Stage 7 확인
+    if (localStorage.getItem('stage7TempJsonFiles')) {
+        params.push('loadStage7JsonMultiple=true');
+        console.log('📦 Stage 7 데이터 발견');
+    }
+    
+    // Stage 8 확인
+    if (localStorage.getItem('stage8TempJsonFiles')) {
+        params.push('loadStage8JsonMultiple=true');
+        console.log('📦 Stage 8 데이터 발견');
+    }
+    
+    // URL 구성
+    let url = 'storyboard/index.html';
+    if (params.length > 0) {
+        url += '?' + params.join('&');
+        console.log('🔗 최종 스토리보드 URL:', url);
+    } else {
+        console.log('⚠️ URL 파라미터 없음, 기본 URL 사용:', url);
+    }
+    
+    console.log('🚀 페이지 이동 실행:', url);
+    
+    // 바로 이동
+    try {
+        window.location.href = url;
+        console.log('✅ window.location.href 설정 완료');
+    } catch (error) {
+        console.error('❌ 페이지 이동 오류:', error);
+    }
 }
 
 // 컨셉아트로 이동
@@ -2227,7 +2583,7 @@ window.navigateToConceptArt = function() {
     closePageSelectionModal();
     document.body.classList.add('fade-out');
     setTimeout(() => {
-        window.location.href = 'your_title_storyboard_v9.4_c.html?loadStage4Json=true';
+        window.location.href = 'concept-art/index.html?loadStage4Json=true';
     }, 300);
 }
 
@@ -2249,67 +2605,30 @@ window.navigateToBoth = function() {
     document.body.classList.add('fade-out');
     setTimeout(() => {
         // 먼저 컨셉아트 페이지로 이동
-        window.location.href = 'your_title_storyboard_v9.4_c.html?loadStage4Json=true&continueToStoryboard=true';
+        window.location.href = 'concept-art/index.html?loadStage4Json=true&continueToStoryboard=true';
     }, 300);
 }
 
 // 모달 액션 처리
 window.handleModalAction = function() {
+    console.log('📍 handleModalAction 함수 호출됨');
+    
     // 모달 닫기
     closeSequentialUploadModal();
     
-    // 스토리보드 페이지에서 데이터를 다시 로드할 수 있도록 처리 완료 플래그 제거
-    localStorage.removeItem('stage2TempProcessed');
-    localStorage.removeItem('stage5TempProcessed');
-    localStorage.removeItem('stage6TempProcessed');
-    localStorage.removeItem('stage6TempFilesProcessed');
-    localStorage.removeItem('stage7TempProcessed');
-    localStorage.removeItem('stage8TempProcessed');
-    console.log('스토리보드 처리 완료 플래그 제거됨');
+    // 디버깅: localStorage 확인
+    console.log('📦 Stage 2 데이터:', localStorage.getItem('stage2TempJson') ? '있음' : '없음');
+    console.log('📦 Stage 5 데이터:', localStorage.getItem('stage5TempJsonFiles') ? '있음' : '없음');
+    console.log('📦 Stage 6 데이터:', localStorage.getItem('stage6TempJsonFiles') ? '있음' : '없음');
+    console.log('📦 Stage 7 데이터:', localStorage.getItem('stage7TempJsonFiles') ? '있음' : '없음');
+    console.log('📦 Stage 8 데이터:', localStorage.getItem('stage8TempJsonFiles') ? '있음' : '없음');
     
-    // 완료 메시지 표시
-    showUploadMessage('업로드가 완료되었습니다. 스토리보드 페이지로 이동합니다.', 'success');
-    
-    // 업로드된 스테이지 데이터에 따라 URL 파라미터 구성
-    let urlParams = [];
-    
-    // Stage 2 데이터 확인
-    if (localStorage.getItem('stage2TempJson')) {
-        urlParams.push('loadTempJson=true');
-    }
-    
-    // Stage 5 데이터 확인  
-    if (localStorage.getItem('stage5TempJsonFiles')) {
-        urlParams.push('loadStage5JsonMultiple=true');
-    }
-    
-    // Stage 6 데이터 확인
-    if (localStorage.getItem('stage6TempJsonFiles')) {
-        urlParams.push('loadStage6JsonMultiple=true');
-    }
-    
-    // Stage 7 데이터 확인
-    if (localStorage.getItem('stage7TempJsonFiles')) {
-        urlParams.push('loadStage7JsonMultiple=true');
-    }
-    
-    // Stage 8 데이터 확인
-    if (localStorage.getItem('stage8TempJsonFiles')) {
-        urlParams.push('loadStage8JsonMultiple=true');
-    }
-    
-    // 스토리보드 페이지로 이동
-    const storyboardUrl = urlParams.length > 0 
-        ? `storyboard/index.html?${urlParams.join('&')}`
-        : 'storyboard/index.html';
-    
-    console.log('📌 스토리보드 페이지로 이동:', storyboardUrl);
-    
-    // 페이드 아웃 효과와 함께 페이지 이동
-    document.body.classList.add('fade-out');
+    // 모달이 완전히 닫힌 후 페이지 이동 (약간의 지연 추가)
     setTimeout(() => {
-        window.location.href = storyboardUrl;
-    }, 300);
+        console.log('🚀 navigateToStoryboard 함수 호출 전');
+        window.navigateToStoryboard();
+        console.log('🚀 navigateToStoryboard 함수 호출 후');
+    }, 100);
 }
 
 // 메인 페이지의 Stage 카드에 완료 표시 추가
@@ -2351,3 +2670,414 @@ function restoreCompletedStages() {
     });
 }
 
+// 히어로 비디오 자동재생 및 사운드 컨트롤
+document.addEventListener('DOMContentLoaded', function() {
+    const heroVideo = document.getElementById('heroVideo');
+    const soundControlBtn = document.getElementById('soundControlBtn');
+    const soundOffIcon = document.getElementById('soundOffIcon');
+    const soundOnIcon = document.getElementById('soundOnIcon');
+    const soundTooltip = document.querySelector('.sound-tooltip');
+    const videoStatus = document.getElementById('videoStatus');
+    const videoStatusText = document.getElementById('videoStatusText');
+    
+    // 디버깅 모드 (개발 시에만 true로 설정)
+    const DEBUG_MODE = false;
+    
+    // 비디오 상태 업데이트 함수
+    function updateVideoStatus(message) {
+        if (DEBUG_MODE && videoStatus && videoStatusText) {
+            videoStatus.style.display = 'block';
+            videoStatusText.textContent = message;
+            console.log('비디오 상태:', message);
+        }
+    }
+    
+    // 재방문자 체크 (Media Engagement 대체)
+    const isReturningVisitor = localStorage.getItem('returningVisitor');
+    const lastVisit = localStorage.getItem('lastVisit');
+    const now = new Date().getTime();
+    
+    // 24시간 이내 재방문자는 소리 자동재생 시도
+    const isFrequentVisitor = lastVisit && (now - parseInt(lastVisit)) < 86400000;
+    
+    if (heroVideo) {
+        // 재생 시도 플래그 (중복 방지)
+        let isPlayAttempted = false;
+        let playbackStarted = false;
+        
+        // 모바일 디바이스 감지
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+            || (window.innerWidth <= 768);
+        
+        // 비디오 재생 함수 - 안정화 버전
+        function attemptVideoPlay() {
+            // 중복 재생 시도 방지
+            if (isPlayAttempted || playbackStarted) {
+                console.log('⏸️ 재생 시도 중복 방지');
+                return;
+            }
+            
+            // 비디오가 이미 재생 중이면 스킵
+            if (!heroVideo.paused && !heroVideo.ended) {
+                console.log('▶️ 비디오 이미 재생 중');
+                playbackStarted = true;
+                return;
+            }
+            
+            isPlayAttempted = true;
+            
+            // 음소거 상태로 재생 (브라우저 정책 준수)
+            heroVideo.muted = true;
+            
+            // 모바일 최적화 설정
+            if (isMobileDevice) {
+                heroVideo.setAttribute('webkit-playsinline', 'true');
+                heroVideo.setAttribute('x-webkit-airplay', 'allow');
+                heroVideo.setAttribute('x5-video-player-type', 'h5');
+                heroVideo.setAttribute('x5-video-player-fullscreen', 'false');
+                heroVideo.setAttribute('x5-video-orientation', 'portraint');
+                
+                // 모바일 성능 최적화
+                heroVideo.setAttribute('preload', 'metadata'); // 메타데이터만 미리 로드
+                heroVideo.setAttribute('poster', 'og-image.jpg'); // 포스터 이미지 설정
+                
+                // iOS Safari 특별 처리
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    // iOS 최적화
+                    heroVideo.setAttribute('playsinline', 'true');
+                    heroVideo.setAttribute('webkit-playsinline', 'true');
+                    console.log('📱 iOS 최적화 적용');
+                }
+                
+                // Android 특별 처리
+                const isAndroid = /Android/i.test(navigator.userAgent);
+                if (isAndroid) {
+                    // Android 최적화
+                    heroVideo.setAttribute('x5-playsinline', 'true');
+                    console.log('📱 Android 최적화 적용');
+                }
+                
+                console.log('📱 모바일 비디오 최적화 설정 적용');
+            }
+            
+            // 재생 시도
+            const playPromise = heroVideo.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log('✅ 비디오 재생 시작');
+                        playbackStarted = true;
+                        
+                        // 사운드 버튼 상태 업데이트
+                        updateSoundButton(false);
+                        
+                        // 재생 시도 플래그 리셋
+                        setTimeout(() => {
+                            isPlayAttempted = false;
+                        }, 1000);
+                    })
+                    .catch((error) => {
+                        console.warn('⚠️ 자동재생 실패:', error.message);
+                        isPlayAttempted = false;
+                        
+                        // 사용자 상호작용 대기
+                        const playOnInteraction = (e) => {
+                            // 사운드 버튼 클릭은 제외
+                            if (e.target.closest('.sound-control-btn')) {
+                                return;
+                            }
+                            
+                            heroVideo.play()
+                                .then(() => {
+                                    console.log('✅ 수동 재생 성공');
+                                    playbackStarted = true;
+                                    updateSoundButton(heroVideo.muted === false);
+                                })
+                                .catch(err => {
+                                    console.error('❌ 재생 실패:', err);
+                                });
+                        };
+                        
+                        // 클릭 이벤트만 사용 (더 안정적)
+                        document.addEventListener('click', playOnInteraction, { once: true });
+                    });
+            }
+        }
+        
+        // 비디오 상태 이벤트 모니터링
+        let dataLoaded = false;
+        
+        heroVideo.addEventListener('loadeddata', () => {
+            if (!dataLoaded) {
+                console.log('📹 비디오 데이터 로드 완료');
+                dataLoaded = true;
+                attemptVideoPlay();
+            }
+        });
+        
+        // playing 이벤트로 재생 확인
+        heroVideo.addEventListener('playing', () => {
+            console.log('▶️ 비디오 재생 중');
+            playbackStarted = true;
+        });
+        
+        // pause 이벤트 감지
+        heroVideo.addEventListener('pause', () => {
+            console.log('⏸️ 비디오 일시정지');
+            // 의도하지 않은 정지인 경우 재시작
+            if (!heroVideo.ended && playbackStarted) {
+                setTimeout(() => {
+                    if (heroVideo.paused && !heroVideo.ended) {
+                        console.log('🔄 비디오 재시작 시도');
+                        heroVideo.play().catch(e => console.log('재시작 실패:', e));
+                    }
+                }, 500);
+            }
+        });
+        
+        // ended 이벤트 - 루프 확인
+        heroVideo.addEventListener('ended', () => {
+            console.log('🔚 비디오 종료 - 루프 재시작');
+            playbackStarted = false;
+            isPlayAttempted = false;
+        });
+        
+        // 비디오 에러 처리
+        heroVideo.addEventListener('error', (e) => {
+            const error = heroVideo.error;
+            console.error('❌ 비디오 에러:', {
+                code: error?.code,
+                message: error?.message,
+                src: heroVideo.currentSrc
+            });
+            
+            // 에러 코드별 처리
+            if (error?.code === 4 || error?.code === 2) {
+                console.error('네트워크 에러 또는 파일을 찾을 수 없음');
+                // 비디오 요소에 에러 클래스 추가
+                heroVideo.classList.add('error');
+                
+                // 히어로 섹션에 비디오 에러 클래스 추가 (폴백 배경 활성화)
+                const heroSection = document.querySelector('.hero-section');
+                if (heroSection) {
+                    heroSection.classList.add('video-error');
+                }
+                
+                // 사운드 컨트롤 버튼 숨기기
+                if (soundControlBtn) {
+                    soundControlBtn.style.display = 'none';
+                }
+            } else if (error?.code === 3) {
+                console.error('디코딩 에러 또는 지원되지 않는 형식');
+            } else if (error?.code === 1) {
+                console.error('미디어 로딩이 중단됨');
+            }
+        });
+        
+        // 비디오 초기 상태 확인 및 재생
+        console.log('📊 비디오 초기 상태:', {
+            readyState: heroVideo.readyState,
+            paused: heroVideo.paused,
+            src: heroVideo.currentSrc || '소스 없음'
+        });
+        
+        // 비디오 초기화 및 재생
+        function initVideo() {
+            // 비디오가 준비되었는지 확인
+            if (heroVideo.readyState >= 2) {
+                // 메타데이터가 로드됨
+                console.log('🎬 비디오 준비 완료, 재생 시도');
+                attemptVideoPlay();
+            } else {
+                // 메타데이터 로드 대기
+                console.log('⏳ 비디오 메타데이터 로드 대기');
+                heroVideo.addEventListener('loadedmetadata', () => {
+                    console.log('📊 메타데이터 로드 완료');
+                    attemptVideoPlay();
+                }, { once: true });
+            }
+        }
+        
+        // DOM 로드 상태 확인
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            // 약간의 지연 후 초기화 (다른 스크립트 로드 대기)
+            setTimeout(initVideo, 200);
+        } else {
+            // DOM 로드 완료 대기
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initVideo, 200);
+            }, { once: true });
+        }
+        
+        // 방문 기록 저장
+        localStorage.setItem('returningVisitor', 'true');
+        localStorage.setItem('lastVisit', now.toString());
+        
+        // 사운드 컨트롤 버튼 이벤트
+        if (soundControlBtn) {
+            soundControlBtn.addEventListener('click', function() {
+                if (heroVideo.muted) {
+                    // 소리 켜기 전에 재생 상태 저장
+                    const wasPlaying = !heroVideo.paused;
+                    
+                    // 소리 켜기
+                    heroVideo.muted = false;
+                    
+                    // 재생이 중단된 경우 다시 재생
+                    if (wasPlaying && heroVideo.paused) {
+                        heroVideo.play().then(() => {
+                            console.log('🔊 사운드 켜고 재생 재개');
+                        }).catch(e => {
+                            console.log('사운드 전환 중 재생 실패, 음소거로 복귀');
+                            heroVideo.muted = true;
+                            heroVideo.play();
+                        });
+                    }
+                    
+                    updateSoundButton(true);
+                    soundTooltip.textContent = '클릭하여 음소거';
+                    localStorage.setItem('preferSound', 'true');
+                } else {
+                    // 음소거
+                    heroVideo.muted = true;
+                    updateSoundButton(false);
+                    soundTooltip.textContent = '클릭하여 사운드 켜기';
+                    localStorage.setItem('preferSound', 'false');
+                    
+                    // 음소거 후에도 재생 유지
+                    if (heroVideo.paused) {
+                        heroVideo.play();
+                    }
+                }
+            });
+        }
+        
+        // 자동 소리 활성화 제거 (재생 중단 방지)
+        // 사용자가 명시적으로 사운드 버튼을 클릭해야만 소리 활성화
+        
+    }
+    
+    // 사운드 버튼 UI 업데이트
+    function updateSoundButton(soundOn) {
+        if (soundOn) {
+            soundOffIcon.style.display = 'none';
+            soundOnIcon.style.display = 'block';
+            soundControlBtn.classList.add('active');
+            soundControlBtn.title = '음소거';
+        } else {
+            soundOffIcon.style.display = 'block';
+            soundOnIcon.style.display = 'none';
+            soundControlBtn.classList.remove('active');
+            soundControlBtn.title = '사운드 켜기';
+        }
+    }
+    
+    // 사운드 활성화 안내 표시
+    function showSoundPrompt() {
+        if (soundControlBtn && !localStorage.getItem('soundPromptShown')) {
+            // 버튼에 주목 애니메이션 추가
+            soundControlBtn.style.animation = 'pulse 2s infinite';
+            
+            // 3초 후 애니메이션 제거
+            setTimeout(() => {
+                soundControlBtn.style.animation = '';
+                localStorage.setItem('soundPromptShown', 'true');
+            }, 3000);
+        }
+    }
+});
+
+
+
+// Stage 카드 클릭 이벤트 리스너 추가
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Stage 카드 이벤트 리스너 설정 시작');
+    
+    // Stage 카드 클릭 이벤트 바인딩
+    const stageCards = document.querySelectorAll('[data-stage-action]');
+    console.log('찾은 Stage 카드 수:', stageCards.length);
+    
+    stageCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const action = this.getAttribute('data-stage-action');
+            console.log('🖱️ Stage 카드 클릭됨:', action);
+            
+            switch(action) {
+                case 'stage2':
+                    if (typeof window.goToStoryboardWithImport === 'function') {
+                        window.goToStoryboardWithImport();
+                    } else {
+                        console.error('goToStoryboardWithImport 함수를 찾을 수 없습니다');
+                    }
+                    break;
+                case 'stage4':
+                    if (typeof window.goToConceptArtWithStage4Import === 'function') {
+                        window.goToConceptArtWithStage4Import();
+                    } else {
+                        console.error('goToConceptArtWithStage4Import 함수를 찾을 수 없습니다');
+                    }
+                    break;
+                case 'stage5':
+                    if (typeof window.goToStoryboardWithStage5Import === 'function') {
+                        window.goToStoryboardWithStage5Import();
+                    } else {
+                        console.error('goToStoryboardWithStage5Import 함수를 찾을 수 없습니다');
+                    }
+                    break;
+                case 'stage6':
+                    if (typeof window.goToStoryboardWithStage6Import === 'function') {
+                        window.goToStoryboardWithStage6Import();
+                    } else {
+                        console.error('goToStoryboardWithStage6Import 함수를 찾을 수 없습니다');
+                    }
+                    break;
+                case 'stage7':
+                    if (typeof window.goToStoryboardWithStage7Import === 'function') {
+                        window.goToStoryboardWithStage7Import();
+                    } else {
+                        console.error('goToStoryboardWithStage7Import 함수를 찾을 수 없습니다');
+                    }
+                    break;
+                case 'stage8':
+                    if (typeof window.goToStoryboardWithStage8Import === 'function') {
+                        window.goToStoryboardWithStage8Import();
+                    } else {
+                        console.error('goToStoryboardWithStage8Import 함수를 찾을 수 없습니다');
+                    }
+                    break;
+                default:
+                    console.warn('알 수 없는 stage action:', action);
+            }
+        });
+    });
+    
+    console.log('✅ Stage 카드 이벤트 리스너 설정 완료');
+});
+
+// 모바일 메뉴 토글 함수
+function toggleMobileMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    
+    if (menuToggle && navMenu) {
+        menuToggle.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    }
+}
+
+// 모바일 메뉴 닫기 함수
+function closeMobileMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    
+    if (menuToggle && navMenu) {
+        menuToggle.classList.remove('active');
+        navMenu.classList.remove('active');
+    }
+}
+
+// 전역 함수로 내보내기
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;

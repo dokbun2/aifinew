@@ -1,495 +1,1833 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI 기반 영상 제작 및 컨셉아트 관리 시스템 - AIFI 영상프레임워크 대시보드">
-    <meta name="keywords" content="AI, 영상제작, 컨셉아트, 스토리보드, 프롬프트">
-    <title>AIFI 프로젝트 대시보드</title>
+    <meta name="description" content="AI 기반 영상 제작 및 컨셉아트 관리 시스템 - AIFI Creative Platform">
+    <meta name="keywords" content="AI, 영상제작, 컨셉아트, 스토리보드, 프롬프트, 미디어">
+    <title>AIFI - AI Creative Platform</title>
+    
+    <!-- Google Sign-In -->
+    <meta name="google-signin-client_id" content="325933740145-8ubka8q1fobrdv8hf5t196btkog8fnas.apps.googleusercontent.com">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://aifiwb.netlify.app/">
-    <meta property="og:title" content="AIFI 영상프레임워크 대시보드">
-    <meta property="og:description" content="AI 기반 영상 제작 및 컨셉아트 관리 시스템. 스토리보드부터 컨셉아트까지 종합 제작 도구">
-    <meta property="og:image" content="https://aifiwb.netlify.app/og-image.jpg">
+    <meta property="og:url" content="https://aifimulty.netlify.app/">
+    <meta property="og:title" content="AIFI Creative Platform">
+    <meta property="og:description" content="AI로 창작하는 새로운 방법. 영상 제작부터 컨셉아트까지 모든 창작 과정을 지원합니다.">
+    <meta property="og:image" content="https://aifimulty.netlify.app/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="ko_KR">
-    <meta property="og:site_name" content="AIFI 프로젝트">
-
+    <meta property="og:image:alt" content="AIFI - AI Creative Platform">
+    
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://aifiwb.netlify.app/">
-    <meta property="twitter:title" content="AIFI 영상프레임워크 대시보드">
-    <meta property="twitter:description" content="AI 기반 영상 제작 및 컨셉아트 관리 시스템. 스토리보드부터 컨셉아트까지 종합 제작 도구">
-    <meta property="twitter:image" content="https://aifiwb.netlify.app/og-image.jpg">
-
-    <!-- 카카오톡 -->
-    <meta property="kakao:title" content="AIFI 영상프레임워크 대시보드">
-    <meta property="kakao:description" content="AI 기반 영상 제작 및 컨셉아트 관리 시스템">
-    <meta property="kakao:image" content="https://aifiwb.netlify.app/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://aifimulty.netlify.app/">
+    <meta name="twitter:title" content="AIFI Creative Platform">
+    <meta name="twitter:description" content="AI로 창작하는 새로운 방법. 영상 제작부터 컨셉아트까지 모든 창작 과정을 지원합니다.">
+    <meta name="twitter:image" content="https://aifimulty.netlify.app/og-image.jpg">
 
     <!-- 파비콘 -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
     
-    <link rel="stylesheet" href="design-system.css">
-    <link rel="stylesheet" href="styles-dark.css">
+    <!-- Apple Developer Style -->
+    <link rel="stylesheet" href="apple-developer-style.css">
+    <!-- Mobile Video Fix -->
+    <link rel="stylesheet" href="mobile-video-fix.css">
+    
+    <style>
+        /* 모바일 최적화 기본 설정 */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* 모바일 네비게이션 버튼 */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        /* 모바일 메뉴 */
+        @media screen and (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-menu {
+                display: none;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                width: 100%;
+                background: rgba(20, 20, 20, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 1000;
+            }
+            
+            .nav-menu.active {
+                display: flex;
+            }
+            
+            .nav-menu li {
+                width: 100%;
+                margin: 10px 0;
+            }
+            
+            .nav-menu .nav-link {
+                display: block;
+                padding: 12px;
+                text-align: center;
+                border-radius: 8px;
+                transition: background 0.3s;
+            }
+            
+            .nav-menu .nav-link:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+        
+        /* Google 로그인 관련 스타일 */
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-modal.show {
+            display: flex;
+        }
+        
+        .login-modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .login-header h2 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .login-header p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+        
+        .login-note {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+        
+        #google-signin-button {
+            display: inline-block;
+            margin: 20px auto;
+        }
+        
+        /* nav-content 레이아웃 조정 */
+        .nav-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            justify-content: space-between;
+            padding: 0 15px;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .nav-content {
+                padding: 0 10px;
+            }
+            
+            .nav-brand {
+                font-size: 14px !important;
+            }
+            
+            .nav-brand img {
+                width: 20px !important;
+                height: 20px !important;
+            }
+        }
+        
+        .nav-content #user-info {
+            margin-left: auto;
+        }
+        
+        /* 사용자 아이콘 헤더 스타일 */
+        .user-icon-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .user-icon:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 드롭다운 메뉴 스타일 */
+        .user-dropdown-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            min-width: 280px;
+            background: rgba(20, 20, 20, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .user-dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+        }
+        
+        .dropdown-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dropdown-user-details {
+            flex: 1;
+        }
+        
+        .dropdown-user-name {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .dropdown-user-email {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        
+        .dropdown-user-status {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .dropdown-user-status.approved {
+            color: #4ecdc4;
+        }
+        
+        .dropdown-user-status.pending {
+            color: #ffd93d;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 15px 0;
+        }
+        
+        .dropdown-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .dropdown-logout-btn:hover {
+            background: rgba(255, 107, 107, 0.25);
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+        
+        .approval-pending-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100001;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .approval-pending-modal.show {
+            opacity: 1;
+        }
+        
+        .approval-pending-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .pending-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .approval-pending-content h3 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .approval-pending-content p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .approval-pending-content .user-email {
+            color: #4ecdc4;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+        
+        .close-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(78, 205, 196, 0.3);
+        }
+        
+        /* 비활성화된 카드 스타일 */
+        .stage-card.disabled,
+        .stage-upload-card.disabled,
+        .feature-card-detailed.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+        
+        .stage-card.disabled::after,
+        .stage-upload-card.disabled::after,
+        .feature-card-detailed.disabled::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            background: rgba(0, 0, 0, 0.8);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .protected-link.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        /* 알림 스타일 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(20, 20, 20, 0.95);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100002;
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.success {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+        
+        .notification.error {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        /* 관리자 링크 스타일 */
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+        
+        .admin-link:hover {
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+
+        /* 비밀번호 모달 스타일 */
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .password-modal.show {
+            display: flex;
+        }
+        
+        .password-modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .password-modal h3 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .password-modal p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .password-input-wrapper {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #007AFF;
+            box-shadow: 0 0 20px rgba(0, 122, 255, 0.3);
+        }
+        
+        .password-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: normal;
+        }
+        
+        .password-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .password-modal-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .password-modal-btn-confirm {
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+        }
+        
+        .password-modal-btn-confirm:hover {
+            background: linear-gradient(135deg, #0051D5, #003FA3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.4);
+        }
+        
+        .password-modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .password-modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .password-error {
+            color: #ff6b35;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .password-error.show {
+            display: block;
+        }
+        
+        /* 모바일 반응형 스타일 */
+        @media screen and (max-width: 768px) {
+            /* Hero Section */
+            .hero-section {
+                min-height: 100vh;
+                padding: 80px 20px 40px;
+            }
+            
+            .hero-title {
+                font-size: 36px !important;
+                line-height: 1.2 !important;
+                margin-bottom: 20px;
+            }
+            
+            .hero-subtitle {
+                font-size: 16px !important;
+                line-height: 1.5 !important;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                gap: 15px;
+                margin-top: 30px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                padding: 15px 30px !important;
+                font-size: 16px !important;
+            }
+            
+            /* Features Section */
+            .features-content-wrapper {
+                flex-direction: column !important;
+                gap: 40px;
+            }
+            
+            .features-left-section,
+            .features-right-section {
+                width: 100% !important;
+            }
+            
+            .features-grid-detailed {
+                grid-template-columns: 1fr !important;
+                gap: 20px;
+            }
+            
+            .feature-card-detailed {
+                margin: 0 !important;
+            }
+            
+            .stage-cards-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px;
+            }
+            
+            .stage-upload-card {
+                padding: 15px !important;
+            }
+            
+            .stage-upload-card h4 {
+                font-size: 12px !important;
+            }
+            
+            .stage-upload-card p {
+                font-size: 11px !important;
+            }
+            
+            /* Tools Section */
+            .tools-grid {
+                grid-template-columns: 1fr !important;
+                gap: 30px;
+            }
+            
+            .tab-navigation {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .tab-button {
+                flex: 1;
+                min-width: 120px;
+                padding: 12px 16px !important;
+                font-size: 14px !important;
+            }
+            
+            .stage-buttons-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px;
+            }
+            
+            /* Modals */
+            .login-modal-content,
+            .password-modal-content,
+            .approval-pending-content {
+                width: 95% !important;
+                padding: 30px 20px !important;
+            }
+            
+            .modal-content {
+                width: 95% !important;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            /* User dropdown */
+            .user-dropdown-menu {
+                right: 10px !important;
+                left: auto !important;
+                min-width: 240px !important;
+            }
+            
+            /* Banana button */
+            .banana-button-wrapper {
+                margin-top: 20px;
+            }
+            
+            .banana-button {
+                padding: 15px !important;
+            }
+            
+            /* Admin link */
+            .admin-link {
+                bottom: 10px !important;
+                right: 10px !important;
+                padding: 8px 15px !important;
+                font-size: 12px !important;
+            }
+            
+            /* Clear button */
+            .clear-temp-data-btn {
+                padding: 8px !important;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            /* Extra small devices */
+            .hero-title {
+                font-size: 28px !important;
+            }
+            
+            .hero-subtitle {
+                font-size: 14px !important;
+            }
+            
+            .features-title {
+                font-size: 24px !important;
+            }
+            
+            .section-title {
+                font-size: 20px !important;
+            }
+            
+            .stage-cards-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .stage-upload-main-btn {
+                width: 100%;
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+            }
+            
+            .tool-item {
+                padding: 12px !important;
+            }
+            
+            .tool-info h4 {
+                font-size: 14px !important;
+            }
+            
+            .tool-info p {
+                font-size: 12px !important;
+            }
+        }
+        
+        /* 터치 친화적 버튼 크기 */
+        @media (hover: none) and (pointer: coarse) {
+            button, .btn-primary, .btn-secondary, .stage-button {
+                min-height: 44px;
+            }
+            
+            .nav-link {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+    
+    <!-- Prefetch prompt builders for faster loading -->
+    <link rel="prefetch" href="prompt-builder.html">
+    <link rel="prefetch" href="video-prompt-builder.html">
+    
+    <!-- Tabler Icons Library -->
+    <script src="tabler-icons.js"></script>
+    <!-- Configuration -->
+    <script src="config.js"></script>
 </head>
-
-<body class="dark-theme">
-    <!-- Gradient Mesh Background -->
-    <div class="gradient-mesh-bg"></div>
-    <div class="container">
-        <header class="header">
-            <div class="header-content">
-                <div class="header-text">
-                    <h1>AIFI 영상프레임워크 대시보드 ver2.0 BETA</h1>
-                    <p>AI 기반 영상 제작 및 컨셉아트 관리 시스템</p>
-                </div>
-                <button class="clear-temp-data-btn icon-btn" onclick="clearAllTempData()" title="모든 임시 JSON 데이터 초기화" aria-label="데이터 초기화">
-                    <span class="icon-rotate">🔄</span>
-                </button>
+<body>
+    <!-- 관리자 링크 (관리자만 표시) -->
+    <a href="admin.html" class="admin-link" id="admin-link" style="display: none;">🛡️ 관리자</a>
+    <!-- Navigation -->
+    <nav class="apple-nav">
+        <div class="nav-content">
+            <a href="#features" class="nav-brand" style="display: flex; align-items: center; gap: 8px;">
+                <img src="favicon_io/favicon-32x32.png" alt="AIFI Logo" width="24" height="24" style="display: inline-block;">
+                <span class="nav-brand-text">AIFI FRAME WORK</span>
+            </a>
+            <!-- 햄버거 메뉴 버튼 -->
+            <button class="menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#features" class="nav-link" onclick="closeMobileMenu()">영상제작</a></li>
+                <li><a href="#tools" class="nav-link" onclick="closeMobileMenu()">TOOL</a></li>
+                <li><a href="https://aifimanual.netlify.app/" target="_blank" rel="noopener noreferrer" class="nav-link">MANUAL</a></li>
+                <li><a href="https://cafe.naver.com/f-e/cafes/31511526/menus/90?viewType=L" target="_blank" rel="noopener noreferrer" class="nav-link">FAQ</a></li>
+            </ul>
+            <!-- 사용자 정보 표시 영역 -->
+            <div id="user-info"></div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <!-- Video Background -->
+        <video class="hero-video-background" id="heroVideo" autoplay muted loop playsinline poster="">
+            <source src="hero-background.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <!-- Sound Control Button -->
+        <button class="sound-control-btn" id="soundControlBtn" title="사운드 켜기">
+            <svg class="sound-icon sound-off" id="soundOffIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+            <svg class="sound-icon sound-on" id="soundOnIcon" style="display: none;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <span class="sound-tooltip">클릭하여 사운드 켜기</span>
+        </button>
+        <!-- Video Overlay -->
+        <div class="hero-video-overlay"></div>
+        <div class="hero-background"></div>
+        <div class="hero-image"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">AI로 창작하는<br>새로운 방법</h1>
+            <p class="hero-subtitle">
+                영상 제작부터 컨셉아트까지,<br>
+                AIFI는 당신의 창의적인 아이디어를 현실로 만들어주는<br>
+                종합 AI 창작 플랫폼입니다.
+            </p>
+            <div class="hero-buttons">
+                <a href="#features" class="btn-primary">
+                    시작하기
+                    <span class="btn-icon">→</span>
+                </a>
+                <a href="#tools" class="btn-secondary">
+                    도구 살펴보기
+                    <span class="btn-icon">→</span>
+                </a>
             </div>
-        </header>
+        </div>
+    </section>
 
-        <main class="main-content">
-            <section class="projects-grid all-in-one-line" role="main" aria-label="프로젝트 목록">
-                <article class="project-card compact-card" tabindex="0" role="button" aria-label="영상 프레임워크 스토리보드 프로젝트로 이동">
-                    <a href="storyboard/index.html" aria-hidden="true" tabindex="-1">
-                        <h2 class="project-title">
-                            <span class="project-icon" aria-hidden="true">🎬</span>
-                            영상 프레임워크 스토리보드
-                        </h2>
-                        <p class="project-description">
-                            AI 기반 영상 제작을 위한 종합적인 스토리보드 관리 시스템입니다. 시퀀스, 씬, 샷 단위로 체계적으로 관리하며 다양한 AI 도구와 연동됩니다.
+    <!-- Features Section with Detailed Cards -->
+    <section class="features-section" id="features">
+        <div class="features-container">
+            <div class="features-header">
+                <h2 class="features-title">AIFI Creative Platform</h2>
+                <button class="clear-temp-data-btn" onclick="clearAllTempData()" title="캐시 데이터 초기화">
+                    <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 2v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3 22v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <p class="features-subtitle">
+                    당신의 아이디어를 현실로. AI 기술과 창의성이 만나는 곳입니다.<br>
+                </p>
+            </div>
+            <div class="features-content-wrapper">
+                <!-- Left Section: AI Creation Tools -->
+                <div class="features-left-section">
+                    <h3 class="section-title">강력한 AI 창작 도구</h3>
+                    <div class="features-grid-detailed">
+                <!-- Storyboard Card -->
+                <div class="feature-card-detailed protected-link" id="video-production" data-protected="true" onclick="window.location.href='storyboard/index.html'">
+                    <div class="card-gradient-header card-header-dark">
+                        <div class="card-icon-large" id="icon-storyboard"></div>
+                        <h3>영상 프레임워크 스토리보드</h3>
+                    </div>
+                    <div class="card-detailed-content">
+                        <p class="card-description">
+                            AI 기반 영상 제작을 위한 종합적 스토리보드 관리 시스템입니다. 
+                            시퀀스, 씬, 샷 단위로 체계적 관리 다양한 AI 도구와 연동됩니다.
                         </p>
-                        <ul class="project-features">
-                            <li>시퀀스/씬/샷 계층 구조 관리</li>
-                            <li>AI 영상 생성 도구 통합 (Luma, Kling, Veo2, Runway)</li>
-                            <li>이미지 및 오디오 관리</li>
-                            <li>프롬프트 엔지니어링 지원</li>
+                        <ul class="feature-list">
+                            <li><span class="list-icon-check1"></span> 시퀀스/씬/샷 계층 구조 관리</li>
+                            <li><span class="list-icon-check2"></span> AI 영상 생성 도구 통합 </li>
+                            <li><span class="list-icon-check3"></span> 갤러리 및 오디오 관리</li>
+                            <li><span class="list-icon-check4"></span> 프롬프트 엔지니어링 지원</li>
                         </ul>
-                        <span class="project-status">활성 프로젝트</span>
-                    </a>
-                </article>
+                        <div class="feature-button feature-button-primary">
+                            ✓ 진행 데이터 준비 완료
+                        </div>
+                    </div>
+                </div>
 
-                <article class="project-card compact-card" tabindex="0" role="button" aria-label="컨셉아트 프롬프트 라이브러리 프로젝트로 이동">
-                    <a href="your_title_storyboard_v9.4_c.html" aria-hidden="true" tabindex="-1">
-                        <h2 class="project-title">
-                            <span class="project-icon" aria-hidden="true">🎨</span>
-                            컨셉아트 프롬프트 라이브러리
-                        </h2>
-                        <p class="project-description">
-                            캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 이미지 갤러리 시스템입니다.
+                <!-- Concept Art Card -->
+                <div class="feature-card-detailed protected-link" data-protected="true" onclick="window.location.href='concept-art/index.html'">
+                    <div class="card-gradient-header card-header-dark">
+                        <div class="card-icon-large" id="icon-conceptart"></div>
+                        <h3>컨셉아트 프롬프트 라이브러리</h3>
+                    </div>
+                    <div class="card-detailed-content">
+                        <p class="card-description">
+                            캐릭터, 장소, 소품의 컨셉아트 생성을 위한 프롬프트 관리 및 
+                            이미지 갤러리 시스템입니다.
                         </p>
-                        <ul class="project-features">
-                            <li>캐릭터/장소/소품 카테고리 관리</li>
-                            <li>다중 AI 도구 프롬프트 지원</li>
-                            <li>캐릭터 변형 프롬프트 생성</li>
-                            <li>이미지 갤러리 및 데이터 관리</li>
+                        <ul class="feature-list">
+                            <li><span class="list-icon-check5"></span> 캐릭터/장소/소품 카테고리 관리</li>
+                            <li><span class="list-icon-check6"></span> 다중 AI 도구 프롬프트 지원</li>
+                            <li><span class="list-icon-check7"></span> 캐릭터 변형 프롬프트 생성</li>
+                            <li><span class="list-icon-check8"></span> 갤러리 및 데이터 관리</li>
                         </ul>
-                        <span class="project-status">활성 프로젝트</span>
-                    </a>
-                </article>
+                        <div class="feature-button feature-button-primary">
+                            활성 프로젝트
+                        </div>
+                    </div>
+                </div>
 
-                <article class="project-card compact-card" tabindex="0" role="button" aria-label="이미지 프롬프트 생성기로 이동">
-                    <a href="image_prompt_generator.html" aria-hidden="true" tabindex="-1">
-                        <h2 class="project-title">
-                            <span class="project-icon" aria-hidden="true">🖼️</span>
-                            이미지 프롬프트 생성기
-                        </h2>
-                        <p class="project-description">
-                            AI 이미지 생성을 위한 전문적인 프롬프트 작성 도구입니다. 구조화된 프롬프트 편집기로 체계적으로 관리합니다.
+                <!-- Prompt Generator Card -->
+                <div class="feature-card-detailed protected-link" data-protected="true" onclick="window.location.href='prompt-builder.html'">
+                    <div class="card-gradient-header card-header-dark">
+                        <div class="card-icon-large" id="icon-prompt"></div>
+                        <h3>Image Studio</h3>
+                    </div>
+                    <div class="card-detailed-content">
+                        <p class="card-description">
+                            AI 이미지 생성을 위한 전문적인 프롬프트 작성 도구입니다.
+                            구조화된 프롬프트 편집기로 체계적으로 관리합니다.
                         </p>
-                        <ul class="project-features">
-                            <li>텍스트 및 이미지 기반 프롬프트 생성</li>
-                            <li>구조별 카드 편집기 (STYLE, MEDIUM, CAMERA 등)</li>
-                            <li>실시간 프롬프트 미리보기</li>
-                            <li>CSV 내보내기 및 데이터 관리</li>
+                        <ul class="feature-list">
+                            <li><span class="list-icon-check9"></span> 텍스트 및 이미지 기반 프롬프트 생성</li>
+                            <li><span class="list-icon-check10"></span> 구조별 카드 편집기 (STYLE, MEDIUM, CAMERA)</li>
+                            <li><span class="list-icon-check11"></span> 실시간 프롬프트 미리보기</li>
+                            <li><span class="list-icon-check12"></span> CSV 내보내기 및 데이터 관리</li>
                         </ul>
-                        <span class="project-status">활성 프로젝트</span>
-                    </a>
-                </article>
+                        <div class="feature-button feature-button-primary">
+                            활성 프로젝트
+                        </div>
+                    </div>
+                </div>
 
-                <article class="project-card compact-card" tabindex="0" role="button" aria-label="미디어 갤러리">
-                    <a href="media-gallery.html" aria-hidden="true" tabindex="-1">
-                        <h2 class="project-title">
-                            <span class="project-icon" aria-hidden="true">🖼️</span>
-                            미디어 갤러리
-                        </h2>
-                        <p class="project-description">
-                            스토리보드와 컨셉아트의 모든 이미지와 영상을 한 곳에서 확인할 수 있는 통합 갤러리입니다.
+                <!-- Video Prompt Generator Card -->
+                <div class="feature-card-detailed protected-link" data-protected="true" onclick="window.location.href='video-prompt-builder.html'">
+                    <div class="card-gradient-header card-header-dark">
+                        <div class="card-icon-large" id="icon-video-prompt"></div>
+                        <h3>Video Studio</h3>
+                    </div>
+                    <div class="card-detailed-content">
+                        <p class="card-description">
+                            AI 비디오 생성을 위한 전문적인 프롬프트 작성 도구입니다.
+                            동적 시퀀스와 타임라인 기반 편집을 지원합니다.
                         </p>
-                        <ul class="project-features">
-                            <li>스토리보드 이미지/영상 모음</li>
-                            <li>컨셉아트 갤러리</li>
-                            <li>필터링 및 정렬 기능</li>
-                            <li>라이트박스 뷰어</li>
+                        <ul class="feature-list">
+                            <li><span class="list-icon-check17"></span> 텍스트 기반 비디오 프롬프트 생성</li>
+                            <li><span class="list-icon-check18"></span> 씬 전환 및 움직임 설정</li>
+                            <li><span class="list-icon-check19"></span> 카메라 앵글 및 효과 관리</li>
+                            <li><span class="list-icon-check20"></span> 타임라인 기반 프롬프트 편집</li>
                         </ul>
-                        <span class="project-status">활성 프로젝트</span>
-                    </a>
-                </article>
-            </section>
+                        <div class="feature-button feature-button-primary">
+                            활성 프로젝트
+                        </div>
+                    </div>
+                </div>
 
-            <section class="stage-section" role="region" aria-label="프로젝트 스테이지">
-                <h2 class="stage-title">프로젝트 스테이지 JSON 업로드</h2>
-                
-                <!-- 단계별 업로드 시작 버튼 추가 -->
-                <div class="stage-upload-button-container">
-                    <button class="stage-upload-start-btn" onclick="startSequentialUpload()">
+                    </div>
+                </div>
+            
+                <!-- Right Section: Project Workflow -->
+                <div class="features-right-section">
+                    <h3 class="section-title">프로젝트 워크플로우</h3>
+                    <p class="section-subtitle">8단계의 체계적인 워크플로우</p>
+                    <button class="stage-upload-main-btn" onclick="startSequentialUpload()">
                         단계별 업로드 시작
                     </button>
+                    
+                    <div class="stage-cards-grid">
+                <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage2" title="시나리오">
+                    <div class="stage-icon-wrapper">
+                        <span class="stage-emoji stage-icon-2"></span>
+                    </div>
+                    <div>
+                        <h4>STAGE 2</h4>
+                        <p>시나리오 작성</p>
+                    </div>
                 </div>
                 
-                <div class="stage-grid">
-                    <div class="stage-card" onclick="goToStoryboardWithImport()">
-                        <div class="stage-number">2</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 2</h3>
-                            <p class="stage-description">시나리오 작성단계</p>
-                        </div>
+                <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage4" title="컨셉아트">
+                    <div class="stage-icon-wrapper">
+                        <span class="stage-emoji stage-icon-4"></span>
                     </div>
-
-                    <div class="stage-card" onclick="goToConceptArtWithStage4Import()">
-                        <div class="stage-number">4</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 4</h3>
-                            <p class="stage-description">컨셉아트 프롬프트 생성단계</p>
-                        </div>
+                    <div>
+                        <h4>STAGE 4</h4>
+                        <p>컨셉아트 생성</p>
                     </div>
-
-                    <div class="stage-card" onclick="goToStoryboardWithStage5Import()">
-                        <div class="stage-number">5</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 5</h3>
-                            <p class="stage-description">장면 분할단계</p>
-                        </div>
-                    </div>
-
-                    <div class="stage-card" onclick="goToStoryboardWithStage6Import()">
-                        <div class="stage-number">6</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 6</h3>
-                            <p class="stage-description">샷이미지 프롬프트 생성단계</p>
-                        </div>
-                    </div>
-
-                    <div class="stage-card" onclick="goToStoryboardWithStage7Import()">
-                        <div class="stage-number">7</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 7</h3>
-                            <p class="stage-description">영상프롬프트 생성단계</p>
-                        </div>
-                    </div>
-
-                    <div class="stage-card" onclick="goToStoryboardWithStage8Import()">
-                        <div class="stage-number">8</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 8</h3>
-                            <p class="stage-description">오디오 프롬프트 생성단계</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 스테이지 바로가기 버튼 섹션 -->
-            <section class="stage-links-section" role="region" aria-label="스테이지 바로가기">
-                <h2 class="stage-title">스테이지 바로가기</h2>
-                <div class="stage-links-grid">
-                    <a href="https://example.com/stage1" target="_blank" class="stage-link-card" aria-label="Stage 1 바로가기">
-                        <div class="stage-number">1</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 1</h3>
-                            <p class="stage-description">프로젝트 기획단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage2" target="_blank" class="stage-link-card" aria-label="Stage 2 바로가기">
-                        <div class="stage-number">2</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 2</h3>
-                            <p class="stage-description">시나리오 작성단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage3" target="_blank" class="stage-link-card" aria-label="Stage 3 바로가기">
-                        <div class="stage-number">3</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 3</h3>
-                            <p class="stage-description">시퀀스 구성단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage4" target="_blank" class="stage-link-card" aria-label="Stage 4 바로가기">
-                        <div class="stage-number">4</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 4</h3>
-                            <p class="stage-description">컨셉아트 프롬프트 생성단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage5" target="_blank" class="stage-link-card" aria-label="Stage 5 바로가기">
-                        <div class="stage-number">5</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 5</h3>
-                            <p class="stage-description">장면 분할단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage6" target="_blank" class="stage-link-card" aria-label="Stage 6 바로가기">
-                        <div class="stage-number">6</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 6</h3>
-                            <p class="stage-description">샷이미지 프롬프트 생성단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage7" target="_blank" class="stage-link-card" aria-label="Stage 7 바로가기">
-                        <div class="stage-number">7</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 7</h3>
-                            <p class="stage-description">영상프롬프트 생성단계</p>
-                        </div>
-                    </a>
-                    <a href="https://example.com/stage8" target="_blank" class="stage-link-card" aria-label="Stage 8 바로가기">
-                        <div class="stage-number">8</div>
-                        <div class="stage-content">
-                            <h3 class="stage-name">STAGE 8</h3>
-                            <p class="stage-description">오디오 프롬프트 생성단계</p>
-                        </div>
-                    </a>
-                </div>
-            </section>
-        </main>
-
-        <!-- 업로드 완료 알림 섹션 -->
-        <section id="upload-notification-section" class="upload-notification-section" style="display: none;">
-            <div class="upload-notification-container">
-                <div class="upload-notification-header">
-                    <h3>업로드 완료</h3>
-                </div>
-                <div class="upload-notification-content">
-                    <div id="upload-status-list" class="upload-status-list">
-                        <!-- 업로드 상태가 여기에 동적으로 추가됩니다 -->
-                    </div>
-                    <div class="upload-notification-footer">
-                        <button class="close-notification-btn" onclick="closeUploadNotification()" aria-label="알림 닫기">닫기</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- 단계별 업로드 모달 팝업 -->
-        <div id="sequential-upload-modal" class="sequential-upload-modal">
-            <div class="modal-overlay" onclick="closeSequentialUploadModal()"></div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>📂 프로젝트 Stage 업로드</h2>
-                    <button class="modal-close-btn" onclick="closeSequentialUploadModal()">✕</button>
                 </div>
                 
-                <div class="modal-body">
-                    <!-- 중요 사항 안내 -->
-                    <div class="upload-notice">
-                        <div class="notice-content">
-                            <h3><span class="notice-icon">⚠️</span> 중요!</h3>
-                            <p>스테이지8 까지 모든 제이슨 파일이 준비되셨을 때 실행하세요.</p>
-                            <p>아니시면 랜덤 스테이지별로 업로드를 이용해 주세요.</p>
-                        </div>
+                <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage5" title="장면분할">
+                    <div class="stage-icon-wrapper">
+                        <span class="stage-emoji stage-icon-5"></span>
                     </div>
-                    
-                    <!-- 전체 진행률 표시 -->
-                    <div class="overall-progress">
-                        <div class="progress-info">
-                            <span class="progress-label">전체 진행률</span>
-                            <span class="progress-percentage" id="overall-progress-percentage">0%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="overall-progress-fill" style="width: 0%"></div>
-                        </div>
+                    <div>
+                        <h4>STAGE 5</h4>
+                        <p>장면 분할</p>
                     </div>
-                    
-                    <!-- Stage 업로드 리스트 -->
-                    <div class="stage-upload-list">
-                        <!-- Stage 2 -->
-                        <div class="stage-upload-item" data-stage="2">
-                            <div class="stage-status">
-                                <span class="status-icon waiting">⏳</span>
-                            </div>
-                            <div class="stage-info">
-                                <h3>Stage 2 - 시나리오 작성 단계</h3>
-                                <p class="stage-description">프로젝트의 기본 시나리오 구조를 업로드합니다.</p>
-                            </div>
-                            <div class="stage-action">
-                                <button class="stage-upload-btn" onclick="uploadStage(2)" disabled>
-                                    파일 선택
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Stage 4 -->
-                        <div class="stage-upload-item" data-stage="4">
-                            <div class="stage-status">
-                                <span class="status-icon waiting">⏳</span>
-                            </div>
-                            <div class="stage-info">
-                                <h3>Stage 4 - 컨셉아트 프롬프트 생성 단계</h3>
-                                <p class="stage-description">캐릭터, 장소, 소품의 컨셉아트 프롬프트를 업로드합니다.</p>
-                            </div>
-                            <div class="stage-action">
-                                <button class="stage-upload-btn" onclick="uploadStage(4)" disabled>
-                                    파일 선택
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Stage 5 -->
-                        <div class="stage-upload-item" data-stage="5">
-                            <div class="stage-status">
-                                <span class="status-icon waiting">⏳</span>
-                            </div>
-                            <div class="stage-info">
-                                <h3>Stage 5 - 장면 분할 단계</h3>
-                                <p class="stage-description">시퀀스와 씬을 샷 단위로 분할한 데이터를 업로드합니다. (여러 파일 가능)</p>
-                            </div>
-                            <div class="stage-action">
-                                <button class="stage-upload-btn" onclick="uploadStage(5)" disabled>
-                                    파일 선택
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Stage 6 -->
-                        <div class="stage-upload-item" data-stage="6">
-                            <div class="stage-status">
-                                <span class="status-icon waiting">⏳</span>
-                            </div>
-                            <div class="stage-info">
-                                <h3>Stage 6 - 샷이미지 프롬프트 생성 단계</h3>
-                                <p class="stage-description">각 샷의 이미지 생성 프롬프트를 업로드합니다. (여러 파일 가능)</p>
-                            </div>
-                            <div class="stage-action">
-                                <button class="stage-upload-btn" onclick="uploadStage(6)" disabled>
-                                    파일 선택
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Stage 7 -->
-                        <div class="stage-upload-item" data-stage="7">
-                            <div class="stage-status">
-                                <span class="status-icon waiting">⏳</span>
-                            </div>
-                            <div class="stage-info">
-                                <h3>Stage 7 - 영상프롬프트 생성 단계</h3>
-                                <p class="stage-description">동영상 생성을 위한 프롬프트를 업로드합니다. (여러 파일 가능)</p>
-                            </div>
-                            <div class="stage-action">
-                                <button class="stage-upload-btn" onclick="uploadStage(7)" disabled>
-                                    파일 선택
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Stage 8 -->
-                        <div class="stage-upload-item" data-stage="8">
-                            <div class="stage-status">
-                                <span class="status-icon waiting">⏳</span>
-                            </div>
-                            <div class="stage-info">
-                                <h3>Stage 8 - 오디오 프롬프트 생성 단계</h3>
-                                <p class="stage-description">대화, 내레이션, 음향효과 데이터를 업로드합니다. (여러 파일 가능)</p>
-                            </div>
-                            <div class="stage-action">
-                                <button class="stage-upload-btn" onclick="uploadStage(8)" disabled>
-                                    파일 선택
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 메시지 영역 -->
-                    <div class="upload-message" id="upload-message"></div>
                 </div>
                 
-                <div class="modal-footer">
-                    <button class="modal-action-btn" id="modal-action-btn" onclick="handleModalAction()" style="display: none;">
-                        완료
-                    </button>
+                <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage6" title="샷이미지">
+                    <div class="stage-icon-wrapper">
+                        <span class="stage-emoji stage-icon-6"></span>
+                    </div>
+                    <div>
+                        <h4>STAGE 6</h4>
+                        <p>샷이미지 생성</p>
+                    </div>
+                </div>
+                
+                <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage7" title="영상">
+                    <div class="stage-icon-wrapper">
+                        <span class="stage-emoji stage-icon-7"></span>
+                    </div>
+                    <div>
+                        <h4>STAGE 7</h4>
+                        <p>영상 생성</p>
+                    </div>
+                </div>
+                
+                <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage8" title="오디오">
+                    <div class="stage-icon-wrapper">
+                        <span class="stage-emoji stage-icon-8"></span>
+                    </div>
+                    <div>
+                        <h4>STAGE 8</h4>
+                        <p>오디오 생성</p>
+                    </div>
+                    </div>
+                    
+                    <!-- AIFI 바나나 버튼 -->
+                    <div class="banana-button-wrapper">
+                        <a href="#" onclick="openBananaPage(event)" class="banana-button">
+                            <div class="banana-icon-wrapper">
+                                <span class="banana-emoji">🍌</span>
+                            </div>
+                            <div class="banana-content">
+                                <h3>AIFI 바나나</h3>
+                                <p>특별한 AI 도구 모음</p>
+                            </div>
+                            <span class="banana-arrow">→</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <footer class="footer">
-            <section class="external-tools" aria-label="외부 도구">
-                <nav class="tool-buttons" role="navigation" aria-label="외부 창작 도구">
-                    <a href="https://cafe.naver.com/aifi" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    class="tool-btn"
-                    style="color: #4ade80; border-color: rgba(74, 222, 128, 0.3);"
-                    aria-label="AIFI 네이버카페(새 창에서 열림)">
-                     AIFI 네이버카페
-                 </a>
-                 <a href="https://www.youtube.com/@AiFi79" 
-                 target="_blank" 
-                 rel="noopener noreferrer"
-                 class="tool-btn"
-                 style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);"
-                 aria-label="AIFI(아이파이) 유튜브 (새 창에서 열림)">
-                 AIFI 유튜브
-              </a>
-                    <a href="https://chatgpt.com/g/g-67b6834763f48191a1835094c4ffa350-potori-myujig" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       class="tool-btn"
-                       style="color: #eab308; border-color: rgba(234, 179, 8, 0.3);"
-                       aria-label="음악 만들기 도구 (새 창에서 열림)">
-                        포토리뮤직
-                    </a>
-                    <a href="https://jsoneditoronline.org/" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       class="tool-btn"
-                       style="color: #a855f7; border-color: rgba(168, 85, 247, 0.3);"
-                       aria-label="json 에디터 도구 (새 창에서 열림)">
-                        JSON에디터
-                    </a>
-                    <a href="https://aififrame.netlify.app/" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       class="tool-btn"
-                       style="color: #3b82f6; border-color: rgba(59, 130, 246, 0.3);"
-                       aria-label="프레임 추출기 도구 (새 창에서 열림)">
-                        프레임 추출기
-                    </a>
-                  
-                </nav>
-            </section>
+    <!-- Tools Section -->
+    <section class="tools-section" id="tools">
+        <div class="tools-container">
+            <div class="tools-header">
+                <h2 class="tools-title">AIFI TOOL 바로가기</h2>
+                <!-- <p class="tools-subtitle">
+                    작업하실 스테이지를 선택해주세요
+                </p> -->
+            </div>
             
-            <div class="footer-info">
-                <p><strong>AIFI 프로젝트</strong> - AI 기반 창작 도구 모음</p>
-                <p>효율적인 영상 제작과 컨셉아트 관리를 위한 통합 솔루션</p>
-
-                <div class="tech-stack" role="list" aria-label="사용 기술">
-                    <span class="tech-tag" role="listitem">HTML5</span>
-                    <span class="tech-tag" role="listitem">CSS3</span>
-                    <span class="tech-tag" role="listitem">JavaScript</span>
-                    <span class="tech-tag" role="listitem">AI Integration</span>
-                    <span class="tech-tag" role="listitem">Responsive Design</span>
+            <div class="tools-grid">
+                <!-- Community Tools -->
+                <div class="tool-category">
+                    <h3 class="tool-category-title">커뮤니티</h3>
+                    <div class="tool-items">
+                        <a href="https://cafe.naver.com/aifi" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-chat"></span>
+                            <div class="tool-info">
+                                <h4>AIFI 네이버카페</h4>
+                                <p>커뮤니티 & 지원</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                        <a href="https://www.youtube.com/@AiFi79" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-youtube"></span>
+                            <div class="tool-info">
+                                <h4>AIFI 유튜브</h4>
+                                <p>튜토리얼 & 가이드</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- AI Tools -->
+                <div class="tool-category">
+                    <h3 class="tool-category-title">AI 도구</h3>
+                    <div class="tool-items">
+                        <a href="https://chatgpt.com/g/g-67b6834763f48191a1835094c4ffa350-potori-myujig" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-music"></span>
+                            <div class="tool-info">
+                                <h4>포토리뮤직</h4>
+                                <p>AI 음악 생성</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                        <a href="https://www.midjourney.com/home" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-midjourney"></span>
+                            <div class="tool-info">
+                                <h4>미드저니</h4>
+                                <p>바로가기</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                        <a href="https://suno.com/" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-suno"></span>
+                            <div class="tool-info">
+                                <h4>음악만들기</h4>
+                                <p>SUNO AI</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Development Tools -->
+                <div class="tool-category">
+                    <h3 class="tool-category-title">유용한툴</h3>
+                    <div class="tool-items">
+                        <a href="https://midstudy.netlify.app/" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-prompt-builder"></span>
+                            <div class="tool-info">
+                                <h4>프롬프트 빌더</h4>
+                                <p>미드저니 SREF</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                        <a href="https://aififrame.netlify.app/" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-frame"></span>
+                            <div class="tool-info">
+                                <h4>프레임 추출기</h4>
+                                <p>비디오 프레임 추출</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                        <a href="https://www.deepl.com/ko/translator" target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-translator"></span>
+                            <div class="tool-info">
+                                <h4>번역 프로그램</h4>
+                                <p>DeepL</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                        <a href="https://jsoneditor-jade.vercel.app/
+                        " target="_blank" class="tool-item">
+                            <span class="tool-icon tool-icon-json"></span>
+                            <div class="tool-info">
+                                <h4>JSON 에디터</h4>
+                                <p>데이터 편집 도구</p>
+                            </div>
+                            <span class="tool-arrow">→</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </footer>
+            
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="video-production">
+                    <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                        <line x1="7" y1="2" x2="7" y2="22"></line>
+                        <line x1="17" y1="2" x2="17" y2="22"></line>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <line x1="2" y1="7" x2="7" y2="7"></line>
+                        <line x1="2" y1="17" x2="7" y2="17"></line>
+                        <line x1="17" y1="17" x2="22" y2="17"></line>
+                        <line x1="17" y1="7" x2="22" y2="7"></line>
+                    </svg>
+                    영화제작
+                </button>
+                <button class="tab-button" data-tab="cf-production">
+                    <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    CF제작
+                </button>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Video Production Tab -->
+                <div class="tab-panel active" id="video-production-tab">
+                    <div class="stage-buttons-grid">
+                        <a href="https://chatgpt.com/g/g-68a880f074c481919ad41295aed41547-yeonghwa-peureimweokeu-seuteiji1" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 1</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a888d3c1248191bb832b47eb302a0b-yeonghwa-peureimweokeu-seuteiji2" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 2</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a889758e0c819191f7dedd0f603d78-yeonghwa-cf-peureimweokeu-seuteiji3" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 3</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a889ef375c819182848d6b3bb8caf9-yeonghwa-cf-peureimweokeu-seuteiji4" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 4</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a88a8d56308191855c29bb6d3584d2-yeonghwa-peureimweokeu-seuteiji-5a-ceosbeonjjae" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 5A</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68aa7abb0a288191ad124bb1bb7cfb59-yeonghwa-peureimweokeu-seuteiji-5b-dubeonjjae" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 5B</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68aa7b99326c8191a0eb4e0b67c9ccac-yeonghwa-peureimweokeu-seuteiji-5c-sebeonjjae" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 5C</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a3b146b7688191b53e98f4cf810a16-stage-6dangye-aifi-yeongsangpeureimweokeu" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 6</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a3b399a6408191be66d00a9a50cf1e-stage-7dangye-aifi-yeongsangpeureimweokeu" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 7</span>
+                        </a>
+                        <a href="https://chatgpt.com/g/g-68a3b601cbc881919067f5f5874a49e6-stage-8dangye-aifi-yeongsangpeureimweokeu" target="_blank" class="stage-button">
+                            <span class="stage-text">STAGE 8</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- CF Production Tab -->
+                <div class="tab-panel" id="cf-production-tab">
+                    <div class="stage-buttons-grid">
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 1</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 2</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 3</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 4</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 5</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 6</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 7</span>
+                        </a>
+                        <a href="#" target="_blank" class="stage-button cf-stage">
+                            <span class="stage-text">STAGE 8</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sequential Upload Modal -->
+    <div id="sequential-upload-modal" class="sequential-upload-modal">
+        <div class="modal-overlay" onclick="closeSequentialUploadModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📂 프로젝트 Stage 업로드</h2>
+                <button class="modal-close-btn" onclick="closeSequentialUploadModal()">✕</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- 중요 사항 안내 -->
+                <div class="upload-notice">
+                    <div class="notice-content">
+                        <h3>⚠️ 중요!</h3>
+                        <p>스테이지8 까지 모든 제이슨 파일이 준비되셨을 때 실행하세요.</p>
+                        <p>아니시면 랜덤 스테이지별로 업로드를 이용해 주세요.</p>
+                    </div>
+                </div>
+                
+                <!-- 전체 진행률 표시 -->
+                <div class="overall-progress">
+                    <div class="progress-info">
+                        <span class="progress-label">전체 진행률</span>
+                        <span class="progress-percentage" id="overall-progress-percentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="overall-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Stage 업로드 리스트 -->
+                <div class="stage-upload-list">
+                    <!-- Stage 2 -->
+                    <div class="stage-upload-item" data-stage="2">
+                        <div class="stage-status">
+                            <span class="status-icon waiting">⏳</span>
+                        </div>
+                        <div class="stage-info">
+                            <h3>Stage 2 - 시나리오 작성 단계</h3>
+                            <p>프로젝트의 기본 시나리오 구조를 업로드합니다.</p>
+                        </div>
+                        <div class="stage-action">
+                            <button class="stage-upload-btn" onclick="uploadStage(2)" disabled>
+                                파일 선택
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 4 -->
+                    <div class="stage-upload-item" data-stage="4">
+                        <div class="stage-status">
+                            <span class="status-icon waiting">⏳</span>
+                        </div>
+                        <div class="stage-info">
+                            <h3>Stage 4 - 컨셉아트 프롬프트 생성 단계</h3>
+                            <p>캐릭터, 장소, 소품의 컨셉아트 프롬프트를 업로드합니다.</p>
+                        </div>
+                        <div class="stage-action">
+                            <button class="stage-upload-btn" onclick="uploadStage(4)" disabled>
+                                파일 선택
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 5 -->
+                    <div class="stage-upload-item" data-stage="5">
+                        <div class="stage-status">
+                            <span class="status-icon waiting">⏳</span>
+                        </div>
+                        <div class="stage-info">
+                            <h3>Stage 5 - 장면 분할 단계</h3>
+                            <p>시퀀스와 씬을 샷 단위로 분할한 데이터를 업로드합니다. (여러 파일 가능)</p>
+                        </div>
+                        <div class="stage-action">
+                            <button class="stage-upload-btn" onclick="uploadStage(5)" disabled>
+                                파일 선택
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 6 -->
+                    <div class="stage-upload-item" data-stage="6">
+                        <div class="stage-status">
+                            <span class="status-icon waiting">⏳</span>
+                        </div>
+                        <div class="stage-info">
+                            <h3>Stage 6 - 샷이미지 프롬프트 생성 단계</h3>
+                            <p>각 샷의 이미지 생성 프롬프트를 업로드합니다. (여러 파일 가능)</p>
+                        </div>
+                        <div class="stage-action">
+                            <button class="stage-upload-btn" onclick="uploadStage(6)" disabled>
+                                파일 선택
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 7 -->
+                    <div class="stage-upload-item" data-stage="7">
+                        <div class="stage-status">
+                            <span class="status-icon waiting">⏳</span>
+                        </div>
+                        <div class="stage-info">
+                            <h3>Stage 7 - 영상프롬프트 생성 단계</h3>
+                            <p>동영상 생성을 위한 프롬프트를 업로드합니다. (여러 파일 가능)</p>
+                        </div>
+                        <div class="stage-action">
+                            <button class="stage-upload-btn" onclick="uploadStage(7)" disabled>
+                                파일 선택
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 8 -->
+                    <div class="stage-upload-item" data-stage="8">
+                        <div class="stage-status">
+                            <span class="status-icon waiting">⏳</span>
+                        </div>
+                        <div class="stage-info">
+                            <h3>Stage 8 - 오디오 프롬프트 생성 단계</h3>
+                            <p>대화, 내레이션, 음향효과 데이터를 업로드합니다. (여러 파일 가능)</p>
+                        </div>
+                        <div class="stage-action">
+                            <button class="stage-upload-btn" onclick="uploadStage(8)" disabled>
+                                파일 선택
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 메시지 영역 -->
+                <div class="upload-message" id="upload-message"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-action-btn" id="modal-action-btn" onclick="handleModalAction()" style="display: none;">
+                    완료
+                </button>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
-    <!-- ES6 모듈은 HTTP 서버를 통해 실행해야 합니다 -->
-    <!-- 로컬 파일로 열 경우 (file://) CORS 오류가 발생할 수 있습니다 -->
-    <!-- 해결 방법: python -m http.server 8000 또는 npx serve . -->
-    
-    <!-- Hidden file input for JSON import -->
+    <!-- Footer -->
+    <footer style="background: #000; padding: 40px 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px;">
+        <div style="max-width: 1440px; margin: 0 auto; padding: 0 22px; text-align: center;">
+            <p style="color: #86868b; font-size: 12px; margin: 0;">
+                © 2025 AIFI Project. AI 기반 창작 도구 플랫폼.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Hidden file inputs for JSON import -->
     <input type="file" id="stage2-json-input" accept=".json" style="display: none;">
     <input type="file" id="stage4-json-input" accept=".json" style="display: none;">
     <input type="file" id="stage5-json-input" accept=".json" multiple style="display: none;">
     <input type="file" id="stage6-json-input" accept=".json" multiple style="display: none;">
     <input type="file" id="stage7-json-input" accept=".json" multiple style="display: none;">
     <input type="file" id="stage8-json-input" accept=".json" multiple style="display: none;">
-</body>
 
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script>
+        // 모바일 메뉴 토글
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.classList.toggle('active');
+        }
+        
+        function closeMobileMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.classList.remove('active');
+        }
+        
+        // 화면 크기 변경 시 모바일 메뉴 닫기
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeMobileMenu();
+            }
+        });
+        
+        // 모바일에서 외부 클릭 시 메뉴 닫기
+        document.addEventListener('click', function(e) {
+            const navMenu = document.getElementById('nav-menu');
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            
+            if (navMenu && navMenu.classList.contains('active')) {
+                if (!navMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+                    closeMobileMenu();
+                }
+            }
+        });
+        
+        // 바나나 페이지 열기 함수 (비밀번호 없이 바로 열기)
+        function openBananaPage(event) {
+            event.preventDefault();
+            
+            // 바로 새 탭에서 페이지 열기
+            window.open('https://aifibana.netlify.app/', '_blank');
+        }
+        
+        // 비밀번호 확인 함수 (현재 사용하지 않음)
+        /*
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            const password = input.value;
+            
+            // 비밀번호 검증
+            if (window.AIFI_CONFIG && window.AIFI_CONFIG.validateBananaPassword(password)) {
+                // 비밀번호가 맞으면 모달 닫고 새 탭에서 페이지 열기
+                closePasswordModal();
+                window.open('https://aifibana.netlify.app/', '_blank');
+            } else {
+                // 비밀번호가 틀리면 에러 메시지 표시
+                error.classList.add('show');
+                input.value = '';
+                input.focus();
+            }
+        }
+        
+        // 모달 닫기 함수
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            
+            modal.classList.remove('show');
+            input.value = '';
+            error.classList.remove('show');
+        }
+        */
+        
+        // Enter 키로 비밀번호 확인 (현재 사용하지 않음)
+        /*
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        checkPassword();
+                    }
+                });
+            }
+            
+            // 모달 외부 클릭으로 닫기
+            const modal = document.getElementById('passwordModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closePasswordModal();
+                    }
+                });
+            }
+        })
+        */
+        
+        // 함수들이 제대로 로드되었는지 확인
+        window.addEventListener('load', function() {
+            console.log('🔍 페이지 로드 완료');
+            console.log('goToStoryboardWithImport:', typeof window.goToStoryboardWithImport);
+            console.log('goToConceptArtWithStage4Import:', typeof window.goToConceptArtWithStage4Import);
+            console.log('goToStoryboardWithStage5Import:', typeof window.goToStoryboardWithStage5Import);
+            console.log('goToStoryboardWithStage6Import:', typeof window.goToStoryboardWithStage6Import);
+            console.log('goToStoryboardWithStage7Import:', typeof window.goToStoryboardWithStage7Import);
+            console.log('goToStoryboardWithStage8Import:', typeof window.goToStoryboardWithStage8Import);
+            
+            // 클릭 이벤트 수동 바인딩 (fallback)
+            const stage2Card = document.querySelector('.stage-upload-card[title="시나리오"]');
+            if (stage2Card && typeof window.goToStoryboardWithImport === 'undefined') {
+                console.warn('⚠️ goToStoryboardWithImport 함수가 정의되지 않음');
+            }
+        });
+    </script>
+    <script>
+        // Smooth scroll for anchor links with full viewport sections
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const navHeight = document.querySelector('.apple-nav').offsetHeight;
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Add active state to navigation items based on scroll position
+        function updateActiveNav() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const navHeight = document.querySelector('.apple-nav').offsetHeight;
+            
+            let current = '';
+            const scrollPosition = window.pageYOffset + navHeight + 10;
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                const sectionBottom = sectionTop + sectionHeight;
+                
+                // Check if the scroll position is within this section
+                if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            // If we're at the bottom of the page, highlight the last section
+            if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight - 2) {
+                const lastSection = sections[sections.length - 1];
+                if (lastSection) {
+                    current = lastSection.getAttribute('id');
+                }
+            }
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const href = link.getAttribute('href');
+                if (href && href.substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', updateActiveNav);
+        // window.addEventListener('load', updateActiveNav); // 페이지 로드 시 active 클래스 추가 비활성화
+        
+        // Update active state when clicking nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                setTimeout(updateActiveNav, 100);
+            });
+        });
+        
+        // Smooth scroll for anchor links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle smooth scrolling for hash links
+            if (window.location.hash) {
+                const targetId = window.location.hash.substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    setTimeout(() => {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
+            }
+        });
+        
+        // Tab Switching Functionality
+        function initTabNavigation() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all buttons and panels
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanels.forEach(panel => panel.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Show corresponding panel
+                    const targetPanel = document.getElementById(targetTab + '-tab');
+                    if (targetPanel) {
+                        targetPanel.classList.add('active');
+                    }
+                });
+            });
+        }
+        
+        // Tabler Icons Rendering
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tab navigation
+            initTabNavigation();
+            
+            // 스테이지 카드 업로드 상태 체크
+            if (typeof checkAndUpdateStageCards === 'function') {
+                checkAndUpdateStageCards();
+            }
+            // Navigation brand icon
+            const brandIcon = document.querySelector('.brand-icon');
+            if (brandIcon) {
+                brandIcon.innerHTML = getTablerIcon('movie', 20);
+            }
+            
+            // Card icons
+            const iconStoryboard = document.getElementById('icon-storyboard');
+            if (iconStoryboard) {
+                iconStoryboard.innerHTML = getTablerIcon('movie', 30);
+            }
+            
+            const iconConceptart = document.getElementById('icon-conceptart');
+            if (iconConceptart) {
+                iconConceptart.innerHTML = getTablerIcon('palette', 30);
+            }
+            
+            const iconPrompt = document.getElementById('icon-prompt');
+            if (iconPrompt) {
+                iconPrompt.innerHTML = getTablerIcon('edit', 30);
+            }
+            
+            const iconGallery = document.getElementById('icon-gallery');
+            if (iconGallery) {
+                iconGallery.innerHTML = getTablerIcon('photo', 30);
+            }
+            
+            const iconVideoPrompt = document.getElementById('icon-video-prompt');
+            if (iconVideoPrompt) {
+                iconVideoPrompt.innerHTML = getTablerIcon('video', 30);
+            }
+            
+            // Check icons in lists
+            for (let i = 1; i <= 20; i++) {
+                const checkIcons = document.querySelectorAll('.list-icon-check' + i);
+                checkIcons.forEach(icon => {
+                    icon.innerHTML = getTablerIcon('check', 16);
+                    icon.style.display = 'inline-block';
+                    icon.style.marginRight = '6px';
+                    icon.style.color = '#10b981';
+                });
+            }
+            
+            // Stage icons
+            const stageIcon2 = document.querySelector('.stage-icon-2');
+            if (stageIcon2) {
+                stageIcon2.innerHTML = getTablerIcon('file', 32);
+            }
+            
+            const stageIcon4 = document.querySelector('.stage-icon-4');
+            if (stageIcon4) {
+                stageIcon4.innerHTML = getTablerIcon('palette', 32);
+            }
+            
+            const stageIcon5 = document.querySelector('.stage-icon-5');
+            if (stageIcon5) {
+                stageIcon5.innerHTML = getTablerIcon('cut', 32);
+                if (!stageIcon5.innerHTML || stageIcon5.innerHTML === '') {
+                    // Fallback if 'cut' icon doesn't exist
+                    stageIcon5.innerHTML = getTablerIcon('scissors', 32);
+                }
+            }
+            
+            const stageIcon6 = document.querySelector('.stage-icon-6');
+            if (stageIcon6) {
+                stageIcon6.innerHTML = getTablerIcon('photo', 32);
+            }
+            
+            const stageIcon7 = document.querySelector('.stage-icon-7');
+            if (stageIcon7) {
+                stageIcon7.innerHTML = getTablerIcon('video', 32);
+            }
+            
+            const stageIcon8 = document.querySelector('.stage-icon-8');
+            if (stageIcon8) {
+                stageIcon8.innerHTML = getTablerIcon('headphones', 32);
+                if (!stageIcon8.innerHTML || stageIcon8.innerHTML === '') {
+                    // Fallback if 'headphones' icon doesn't exist
+                    stageIcon8.innerHTML = getTablerIcon('volume', 32);
+                }
+            }
+            
+            // Tool icons
+            const toolIconChat = document.querySelector('.tool-icon-chat');
+            if (toolIconChat) {
+                toolIconChat.innerHTML = getTablerIcon('messageCircle', 24);
+            }
+            
+            const toolIconYoutube = document.querySelector('.tool-icon-youtube');
+            if (toolIconYoutube) {
+                toolIconYoutube.innerHTML = getTablerIcon('brandYoutube', 24);
+                if (!toolIconYoutube.innerHTML || toolIconYoutube.innerHTML === '') {
+                    toolIconYoutube.innerHTML = getTablerIcon('video', 24);
+                }
+            }
+            
+            const toolIconMusic = document.querySelector('.tool-icon-music');
+            if (toolIconMusic) {
+                toolIconMusic.innerHTML = getTablerIcon('music', 24);
+            }
+            
+            const toolIconFrame = document.querySelector('.tool-icon-frame');
+            if (toolIconFrame) {
+                toolIconFrame.innerHTML = getTablerIcon('photo', 24);
+            }
+            
+            const toolIconJson = document.querySelector('.tool-icon-json');
+            if (toolIconJson) {
+                toolIconJson.innerHTML = getTablerIcon('fileCode', 24);
+                if (!toolIconJson.innerHTML || toolIconJson.innerHTML === '') {
+                    toolIconJson.innerHTML = getTablerIcon('code', 24);
+                }
+            }
+            
+            const toolIconPromptBuilder = document.querySelector('.tool-icon-prompt-builder');
+            if (toolIconPromptBuilder) {
+                toolIconPromptBuilder.innerHTML = getTablerIcon('sparkles', 24);
+                if (!toolIconPromptBuilder.innerHTML || toolIconPromptBuilder.innerHTML === '') {
+                    toolIconPromptBuilder.innerHTML = getTablerIcon('edit', 24);
+                }
+            }
+            
+            const toolIconTranslator = document.querySelector('.tool-icon-translator');
+            if (toolIconTranslator) {
+                toolIconTranslator.innerHTML = getTablerIcon('world', 24);
+                if (!toolIconTranslator.innerHTML || toolIconTranslator.innerHTML === '') {
+                    toolIconTranslator.innerHTML = getTablerIcon('fileText', 24);
+                }
+            }
+            
+            const toolIconMidjourney = document.querySelector('.tool-icon-midjourney');
+            if (toolIconMidjourney) {
+                toolIconMidjourney.innerHTML = getTablerIcon('palette', 24);
+                if (!toolIconMidjourney.innerHTML || toolIconMidjourney.innerHTML === '') {
+                    toolIconMidjourney.innerHTML = getTablerIcon('photo', 24);
+                }
+            }
+            
+            const toolIconSuno = document.querySelector('.tool-icon-suno');
+            if (toolIconSuno) {
+                toolIconSuno.innerHTML = getTablerIcon('headphones', 24);
+                if (!toolIconSuno.innerHTML || toolIconSuno.innerHTML === '') {
+                    toolIconSuno.innerHTML = getTablerIcon('music', 24);
+                }
+            }
+        });
+    </script>
+    <!-- 비밀번호 입력 모달 (현재 사용하지 않음) -->
+    <!-- 
+    <div id="passwordModal" class="password-modal">
+        <div class="password-modal-content">
+            <h3>🍌 AIFI 바나나</h3>
+            <p>특별한 AI 도구 모음에 접근하려면<br>비밀번호를 입력하세요</p>
+            <div class="password-input-wrapper">
+                <input type="password" class="password-input" id="passwordInput" placeholder="비밀번호 입력" maxlength="10">
+                <div class="password-error" id="passwordError">비밀번호가 일치하지 않습니다</div>
+            </div>
+            <div class="password-modal-buttons">
+                <button class="password-modal-btn password-modal-btn-cancel" onclick="closePasswordModal()">취소</button>
+                <button class="password-modal-btn password-modal-btn-confirm" onclick="checkPassword()">확인</button>
+            </div>
+        </div>
+    </div>
+    -->
+
+    <!-- Auth Scripts -->
+    <script src="js/auth.js"></script>
+    <script>
+        // 관리자 이메일 확인 및 관리자 링크 표시
+        document.addEventListener('DOMContentLoaded', function() {
+            // 관리자 이메일 목록
+            const ADMIN_EMAILS = [
+                'ggamsire@gmail.com'  // 관리자 이메일
+                // 추가 관리자 이메일을 여기에 추가 가능
+            ];
+            
+            // 사용자 정보 확인
+            const userInfo = localStorage.getItem('user_info');
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    if (ADMIN_EMAILS.includes(user.email)) {
+                        document.getElementById('admin-link').style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Error checking admin status:', e);
+                }
+            }
+        });
+    </script>
+</body>
 </html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CF Stage 5 v6.0 로드 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .button-group {
+            margin: 20px 0;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        button.success {
+            background: #4caf50;
+        }
+        button.warning {
+            background: #ff9800;
+        }
+        .console-log {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+        .data-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .data-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .data-box h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .hierarchy-display {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .sequence-item {
+            background: #e3f2fd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #1976d2;
+        }
+        .scene-item {
+            background: #fff3e0;
+            padding: 8px;
+            margin: 5px 0 5px 20px;
+            border-radius: 5px;
+            border-left: 4px solid #ff9800;
+        }
+        .shot-item {
+            background: #e8f5e9;
+            padding: 6px;
+            margin: 3px 0 3px 40px;
+            border-radius: 3px;
+            border-left: 4px solid #4caf50;
+            font-size: 13px;
+        }
+        .success-msg {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #4caf50;
+        }
+        .error-msg {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #f44336;
+        }
+        .warning-msg {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 CF Stage 5 v6.0 로드 테스트</h1>
+        
+        <div class="test-section">
+            <div class="test-title">📂 파일 로드</div>
+            <div class="button-group">
+                <button onclick="loadStage2()">Stage 2 로드</button>
+                <button onclick="loadStage4()">Stage 4 로드</button>
+                <button onclick="loadStage5()" class="success">Stage 5 로드</button>
+                <button onclick="clearAll()" class="warning">전체 초기화</button>
+            </div>
+            <div id="loadStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 데이터 구조 분석</div>
+            <div class="data-display">
+                <div class="data-box">
+                    <h3>원본 데이터</h3>
+                    <div id="originalData"></div>
+                </div>
+                <div class="data-box">
+                    <h3>변환된 데이터</h3>
+                    <div id="convertedData"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🌳 계층 구조</div>
+            <div id="hierarchyDisplay" class="hierarchy-display">
+                계층 구조가 여기에 표시됩니다...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📝 콘솔 로그</div>
+            <div id="consoleLog" class="console-log">로그가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+
+    <script>
+        let stage2Data = null;
+        let stage4Data = null;
+        let stage5Data = null;
+        let convertedData = null;
+
+        // 로그 함수
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : 
+                          type === 'success' ? '✅' : 
+                          type === 'warning' ? '⚠️' : 'ℹ️';
+            logEl.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Stage 2 로드
+        async function loadStage2() {
+            try {
+                const response = await fetch('/Users/sohee/Downloads/음원/하루음악 전부/괜찮은하루/영상/인트로/cori/무제 폴더/용의숨결/아이파이/영상테스트/s2.json');
+                if (!response.ok) throw new Error('파일을 읽을 수 없습니다');
+                
+                stage2Data = await response.json();
+                log('Stage 2 파일 로드 성공', 'success');
+                showStatus('Stage 2 로드 완료', 'success');
+                displayDataInfo();
+            } catch (error) {
+                log(`Stage 2 로드 실패: ${error.message}`, 'error');
+                showStatus('Stage 2 로드 실패', 'error');
+            }
+        }
+
+        // Stage 4 로드
+        async function loadStage4() {
+            try {
+                const response = await fetch('/Users/sohee/Downloads/음원/하루음악 전부/괜찮은하루/영상/인트로/cori/무제 폴더/용의숨결/아이파이/영상테스트/s4.json');
+                if (!response.ok) throw new Error('파일을 읽을 수 없습니다');
+                
+                stage4Data = await response.json();
+                log('Stage 4 파일 로드 성공', 'success');
+                showStatus('Stage 4 로드 완료', 'success');
+                displayDataInfo();
+            } catch (error) {
+                log(`Stage 4 로드 실패: ${error.message}`, 'error');
+                showStatus('Stage 4 로드 실패', 'error');
+            }
+        }
+
+        // Stage 5 로드 및 변환
+        async function loadStage5() {
+            try {
+                const response = await fetch('/Users/sohee/Downloads/음원/하루음악 전부/괜찮은하루/영상/인트로/cori/무제 폴더/용의숨결/아이파이/영상테스트/s5.json');
+                if (!response.ok) throw new Error('파일을 읽을 수 없습니다');
+                
+                stage5Data = await response.json();
+                log('Stage 5 파일 로드 성공', 'success');
+                
+                // 원본 데이터 표시
+                displayOriginalData();
+                
+                // 변환 및 검증
+                convertedData = convertAndValidate(stage5Data);
+                
+                // 변환된 데이터 표시
+                displayConvertedData();
+                
+                // 계층 구조 표시
+                displayHierarchy();
+                
+                showStatus('Stage 5 로드 및 변환 완료', 'success');
+            } catch (error) {
+                log(`Stage 5 로드 실패: ${error.message}`, 'error');
+                showStatus('Stage 5 로드 실패', 'error');
+            }
+        }
+
+        // 데이터 변환 및 검증
+        function convertAndValidate(data) {
+            log('=== 데이터 변환 시작 ===', 'info');
+            
+            const result = JSON.parse(JSON.stringify(data)); // Deep copy
+            
+            // v6.0 형식 확인
+            if (result.stage === 5 && result.version === "6.0") {
+                log('Stage 5 v6.0 형식 감지', 'success');
+                
+                // sequence_id → id 변환
+                if (result.breakdown_data.sequences) {
+                    result.breakdown_data.sequences = result.breakdown_data.sequences.map(seq => {
+                        if (seq.sequence_id && !seq.id) {
+                            log(`시퀀스 ID 정규화: ${seq.sequence_id} → id`, 'warning');
+                            seq.id = seq.sequence_id;
+                            delete seq.sequence_id;
+                        }
+                        // title 확인
+                        if (!seq.title && seq.name) {
+                            seq.title = seq.name;
+                            log(`시퀀스 title 설정: ${seq.title}`, 'info');
+                        }
+                        return seq;
+                    });
+                }
+                
+                // scenes와 shots ID 검증
+                validateDataIntegrity(result);
+            }
+            
+            return result;
+        }
+
+        // 데이터 정합성 검증
+        function validateDataIntegrity(data) {
+            log('=== 데이터 정합성 검증 ===', 'info');
+            
+            const bd = data.breakdown_data;
+            let errors = 0;
+            let warnings = 0;
+            
+            // 시퀀스 검증
+            const sequenceIds = new Set();
+            bd.sequences.forEach(seq => {
+                if (!seq.id) {
+                    log(`오류: 시퀀스에 ID가 없음`, 'error');
+                    errors++;
+                } else {
+                    sequenceIds.add(seq.id);
+                    log(`시퀀스 확인: ${seq.id} - ${seq.title || seq.name || 'no title'}`, 'success');
+                }
+            });
+            
+            // 씬 검증
+            const sceneIds = new Set();
+            bd.scenes.forEach(scene => {
+                if (!scene.id) {
+                    log(`오류: 씬에 ID가 없음`, 'error');
+                    errors++;
+                } else {
+                    sceneIds.add(scene.id);
+                    if (!sequenceIds.has(scene.sequence_id)) {
+                        log(`경고: 씬 ${scene.id}의 sequence_id(${scene.sequence_id})가 유효하지 않음`, 'warning');
+                        warnings++;
+                    } else {
+                        log(`씬 확인: ${scene.id} → 시퀀스 ${scene.sequence_id}`, 'success');
+                    }
+                }
+            });
+            
+            // 샷 검증
+            bd.shots.forEach(shot => {
+                if (!shot.id) {
+                    log(`오류: 샷에 ID가 없음`, 'error');
+                    errors++;
+                } else if (!sceneIds.has(shot.scene_id)) {
+                    log(`경고: 샷 ${shot.id}의 scene_id(${shot.scene_id})가 유효하지 않음`, 'warning');
+                    warnings++;
+                }
+            });
+            
+            log(`\n검증 완료: ${errors}개 오류, ${warnings}개 경고`, errors > 0 ? 'error' : 'success');
+        }
+
+        // 원본 데이터 표시
+        function displayOriginalData() {
+            if (!stage5Data) return;
+            
+            const el = document.getElementById('originalData');
+            el.innerHTML = `
+                <strong>Stage:</strong> ${stage5Data.stage}<br>
+                <strong>Version:</strong> ${stage5Data.version}<br>
+                <strong>Sequences:</strong> ${stage5Data.breakdown_data?.sequences?.length || 0}개<br>
+                <strong>Scenes:</strong> ${stage5Data.breakdown_data?.scenes?.length || 0}개<br>
+                <strong>Shots:</strong> ${stage5Data.breakdown_data?.shots?.length || 0}개<br>
+                <br>
+                <strong>첫 번째 시퀀스:</strong><br>
+                ${stage5Data.breakdown_data?.sequences?.[0] ? 
+                    `- ID 필드: ${stage5Data.breakdown_data.sequences[0].id || 'undefined'}<br>
+                     - sequence_id 필드: ${stage5Data.breakdown_data.sequences[0].sequence_id || 'undefined'}<br>
+                     - title: ${stage5Data.breakdown_data.sequences[0].title || 'undefined'}<br>
+                     - name: ${stage5Data.breakdown_data.sequences[0].name || 'undefined'}` 
+                    : '없음'}
+            `;
+        }
+
+        // 변환된 데이터 표시
+        function displayConvertedData() {
+            if (!convertedData) return;
+            
+            const el = document.getElementById('convertedData');
+            el.innerHTML = `
+                <strong>Stage:</strong> ${convertedData.stage}<br>
+                <strong>Version:</strong> ${convertedData.version}<br>
+                <strong>Sequences:</strong> ${convertedData.breakdown_data?.sequences?.length || 0}개<br>
+                <strong>Scenes:</strong> ${convertedData.breakdown_data?.scenes?.length || 0}개<br>
+                <strong>Shots:</strong> ${convertedData.breakdown_data?.shots?.length || 0}개<br>
+                <br>
+                <strong>첫 번째 시퀀스 (변환 후):</strong><br>
+                ${convertedData.breakdown_data?.sequences?.[0] ? 
+                    `- ID: ${convertedData.breakdown_data.sequences[0].id || 'undefined'}<br>
+                     - title: ${convertedData.breakdown_data.sequences[0].title || 'undefined'}<br>
+                     - sequence_id: ${convertedData.breakdown_data.sequences[0].sequence_id || '(제거됨)'}` 
+                    : '없음'}
+            `;
+        }
+
+        // 계층 구조 표시
+        function displayHierarchy() {
+            if (!convertedData) return;
+            
+            const el = document.getElementById('hierarchyDisplay');
+            let html = '';
+            
+            const bd = convertedData.breakdown_data;
+            
+            // 시퀀스별로 표시
+            bd.sequences.forEach(seq => {
+                const sequenceTitle = seq.title || seq.name || seq.id;
+                html += `<div class="sequence-item">
+                    <strong>시퀀스:</strong> ${seq.id} - ${sequenceTitle}
+                `;
+                
+                // 해당 시퀀스의 씬들
+                const scenes = bd.scenes.filter(scene => scene.sequence_id === seq.id);
+                scenes.forEach(scene => {
+                    html += `<div class="scene-item">
+                        <strong>씬:</strong> ${scene.id} - ${scene.title || scene.name || ''}
+                    `;
+                    
+                    // 해당 씬의 샷들
+                    const shots = bd.shots.filter(shot => shot.scene_id === scene.id);
+                    shots.forEach(shot => {
+                        html += `<div class="shot-item">
+                            샷: ${shot.id} - ${shot.title || ''}
+                        </div>`;
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+            });
+            
+            el.innerHTML = html || '계층 구조가 없습니다';
+        }
+
+        // 상태 표시
+        function showStatus(message, type) {
+            const el = document.getElementById('loadStatus');
+            el.className = `${type}-msg`;
+            el.textContent = message;
+        }
+
+        // 데이터 정보 표시
+        function displayDataInfo() {
+            log('로드된 파일 정보:', 'info');
+            if (stage2Data) log(`- Stage 2: ${stage2Data.cf_id || 'N/A'}`, 'info');
+            if (stage4Data) log(`- Stage 4: ${stage4Data.project_info?.project_id || 'N/A'}`, 'info');
+            if (stage5Data) log(`- Stage 5: ${stage5Data.project_id || 'N/A'}`, 'info');
+        }
+
+        // 초기화
+        function clearAll() {
+            stage2Data = null;
+            stage4Data = null;
+            stage5Data = null;
+            convertedData = null;
+            document.getElementById('consoleLog').textContent = '로그가 여기에 표시됩니다...\n';
+            document.getElementById('originalData').innerHTML = '';
+            document.getElementById('convertedData').innerHTML = '';
+            document.getElementById('hierarchyDisplay').innerHTML = '계층 구조가 여기에 표시됩니다...';
+            document.getElementById('loadStatus').textContent = '';
+            log('모든 데이터가 초기화되었습니다', 'warning');
+        }
+
+        // 페이지 로드 시 자동 실행
+        window.onload = () => {
+            log('CF Stage 5 v6.0 로드 테스트 준비 완료', 'success');
+        };
+    </script>
+</body>
+</html>

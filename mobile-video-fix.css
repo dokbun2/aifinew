@@ -1,0 +1,167 @@
+/* 모바일 비디오 위치 수정 패치 */
+/* 이 파일을 apple-developer-style.css 다음에 로드하세요 */
+
+@media (max-width: 768px) {
+  /* Hero Section - 일반 문서 플로우 유지 */
+  .hero-section {
+    position: relative !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important; /* 동적 뷰포트 */
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* 비디오 - hero-section 내에서 absolute positioning */
+  .hero-video-background {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    z-index: 1 !important;
+  }
+  
+  /* 오버레이 - hero-section 내에서 absolute */
+  .hero-video-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 2 !important;
+  }
+  
+  /* 컨텐츠 중앙 정렬 */
+  .hero-content {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 3 !important;
+    width: 90% !important;
+    max-width: 500px !important;
+    text-align: center !important;
+  }
+  
+  /* 네비게이션 바 최상단 */
+  .apple-nav {
+    z-index: 9999 !important;
+  }
+  
+  /* 사운드 버튼 위치 */
+  .sound-control-btn {
+    position: absolute !important;
+    bottom: 40px !important;
+    right: 20px !important;
+    top: auto !important;
+    z-index: 100 !important;
+  }
+  
+  /* Features 섹션 - 겹침 방지 */
+  .features-section {
+    position: relative !important;
+    z-index: 10 !important;
+    background: #000000 !important;
+    margin-top: 0 !important;
+    padding-top: 40px !important;
+  }
+  
+  /* 네비게이션 바 조정 */
+  .apple-nav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+  }
+  
+  /* Hero Section 상단 패딩 추가 (네비게이션 바 높이만큼) */
+  .hero-section {
+    padding-top: 48px !important; /* nav-height */
+  }
+}
+
+/* iPhone 노치 대응 */
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (max-width: 768px) {
+    .hero-section {
+      padding-top: env(safe-area-inset-top) !important;
+    }
+    
+    .apple-nav {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+}
+
+/* 세로 모드 특별 처리 */
+@media (max-width: 768px) and (orientation: portrait) {
+  .hero-video-background {
+    /* 세로 비율에서 화면 전체 채우기 */
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+  
+  /* 세로 모드에서 컨텐츠 위치 조정 */
+  .hero-content {
+    padding: 20px !important;
+    width: 90% !important;
+  }
+}
+
+/* 가로 모드 특별 처리 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .hero-video-background {
+    /* 가로 비율에서 화면 전체 채우기 */
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+  
+  /* 가로 모드에서 hero 높이 조정 */
+  .hero-section {
+    height: 100vh !important;
+    min-height: 500px !important;
+  }
+  
+  /* 가로 모드에서 컨텐츠 위치 조정 */
+  .hero-content {
+    top: 45% !important;
+  }
+}
+
+/* 아주 작은 화면 (iPhone SE 등) */
+@media (max-width: 375px) {
+  .hero-content {
+    width: 95% !important;
+    padding: 10px !important;
+  }
+  
+  .hero-title {
+    font-size: 32px !important;
+  }
+  
+  .hero-subtitle {
+    font-size: 14px !important;
+  }
+  
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100% !important;
+    margin: 5px 0 !important;
+  }
+}

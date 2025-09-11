@@ -1,0 +1,1001 @@
+/* Apple Developer Style for Storyboard */
+
+/* Body and Base Styles */
+body {
+    background: #000000 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    padding-top: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important; /* Changed from hidden to auto */
+    min-height: 100vh !important; /* Changed from height to min-height */
+}
+
+/* Apple Navigation Bar */
+.apple-nav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 48px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Apple Nav Content Layout */
+.apple-nav-content {
+    width: 100% !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+    padding: 0 22px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 100% !important;
+}
+
+/* Nav Brand and Menu Layout */
+.nav-brand {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+}
+
+.nav-menu {
+    display: flex !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 30px !important;
+}
+
+.nav-menu li {
+    margin: 0 !important;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-decoration: none !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    transition: color 0.2s ease !important;
+}
+
+.nav-link:hover {
+    color: rgba(255, 255, 255, 1) !important;
+}
+
+/* Full Width Application Container */
+.app-container {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-height: 100vh !important; /* Changed from height to min-height */
+    position: relative !important;
+    margin: 0 !important;
+    padding-top: 48px !important;
+    background: #000000 !important;
+    box-sizing: border-box !important;
+}
+
+/* Main Layout Container */
+.main-layout {
+    display: flex !important;
+    width: 100% !important;
+    position: relative !important;
+    gap: 20px !important;
+    padding: 20px !important;
+    padding-left: 360px !important; /* 320px (sidebar width) + 20px (gap) + 20px (padding) */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    align-items: flex-start !important;
+}
+
+/* Navigation Sidebar Apple Style */
+.navigation {
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.8), rgba(0, 0, 0, 0.9)) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    width: 320px !important;
+    position: fixed !important; /* Changed to fixed for absolute positioning */
+    left: 20px !important; /* Match the padding of main-layout */
+    top: 68px !important; /* 48px nav + 20px padding */
+    bottom: 20px !important; /* Match bottom padding */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05) !important;
+    z-index: 100 !important; /* Ensure it stays above other content */
+}
+
+/* Custom Scrollbar for Navigation Container */
+.navigation::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.navigation::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 10px !important;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 10px !important;
+    transition: background 0.3s ease !important;
+}
+
+.navigation::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav-header {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 24px 20px !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+.project-header {
+    background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 15px !important;
+}
+
+#nav-project-title {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin-bottom: 5px !important;
+}
+
+#nav-project-description {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 13px !important;
+}
+
+.nav-controls {
+    display: flex !important;
+    gap: 8px !important;
+    margin-bottom: 15px !important;
+}
+
+.nav-controls .btn {
+    flex: 1 !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 6px !important;
+    transition: all 0.2s !important;
+}
+
+.nav-controls .btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.search-box {
+    position: relative !important;
+}
+
+.search-box::before {
+    content: "🔎" !important;
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 14px !important;
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}
+
+.search-box input {
+    width: 100% !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+    padding: 10px 16px 10px 38px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 13px !important;
+    transition: all 0.3s ease !important;
+}
+
+.search-box input:focus {
+    outline: none !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    border-color: var(--apple-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Navigation Content */
+.nav-content,
+#navigation-content {
+    padding: 20px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    /* Dynamic height calculation for proper scrolling */
+    height: 100% !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Custom Scrollbar for WebKit */
+.nav-content::-webkit-scrollbar,
+#navigation-content::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.nav-content::-webkit-scrollbar-track,
+#navigation-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 10px !important;
+}
+
+.nav-content::-webkit-scrollbar-thumb,
+#navigation-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 10px !important;
+}
+
+.nav-content::-webkit-scrollbar-thumb:hover,
+#navigation-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav-sequence {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+    overflow: visible !important; /* Changed from hidden to visible for proper expansion */
+    transition: all 0.3s ease !important;
+}
+
+.nav-sequence:hover {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1) !important;
+}
+
+.nav-sequence-header {
+    background: rgba(255, 255, 255, 0.03) !important;
+    padding: 10px 15px !important;
+    border-bottom: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.nav-sequence-header:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.nav-sequence-title {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+.nav-scene {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-bottom: none !important;
+    overflow: visible !important; /* Ensure scene content is visible */
+}
+
+.nav-scene-header {
+    padding: 8px 15px 8px 25px !important; /* Added indent for hierarchy */
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    border-left: none !important;
+}
+
+.nav-scene-header:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.nav-scene-title {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 13px !important;
+}
+
+.nav-shot {
+    padding: 6px 15px 6px 30px !important; /* Added indent for better hierarchy */
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    border-left: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.nav-shot:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.nav-shot.active {
+    background: rgba(0, 122, 255, 0.15) !important;
+}
+
+.nav-shot-title {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 12px !important;
+}
+
+/* Main Content Area */
+.main-content {
+    background: linear-gradient(135deg, rgba(5, 5, 5, 0.8), rgba(10, 10, 10, 0.9)) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 1 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important; /* Changed from auto to visible for sticky to work */
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.content-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.content-header {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    padding: 28px 32px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 20px 20px 0 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+.content-title {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    margin-bottom: 5px !important;
+}
+
+.content-subtitle {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 14px !important;
+}
+
+#content-area {
+    padding: 24px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    flex: 1 !important;
+    display: block !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+}
+
+/* Tabs Styles for Full Width */
+.tabs {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.tab-buttons {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 20px !important;
+}
+
+.tab-content {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.info-section {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.info-table {
+    width: 100% !important;
+}
+
+.scenario-preview {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Shot Cards Apple Style */
+.shot-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-bottom: 20px !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.shot-card::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, #007AFF, #A855F7, #EC4899) !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.shot-card:hover::before {
+    opacity: 1 !important;
+}
+
+.shot-card:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.1) !important;
+}
+
+.shot-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 15px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.shot-number {
+    background: var(--apple-blue) !important;
+    color: white !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.shot-actions {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+.shot-actions .btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 6px !important;
+    transition: all 0.2s !important;
+}
+
+.shot-actions .btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    transform: scale(1.02) !important;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 20px !important;
+}
+
+.form-label {
+    display: block !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    margin-bottom: 6px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.form-control,
+.form-textarea {
+    width: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 14px !important;
+    transition: all 0.2s !important;
+}
+
+.form-control:focus,
+.form-textarea:focus {
+    outline: none !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    border-color: var(--apple-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center !important;
+    padding: 80px 20px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    background: radial-gradient(circle at center, rgba(0, 122, 255, 0.05), transparent) !important;
+    border-radius: 16px !important;
+}
+
+.empty-state-icon {
+    font-size: 64px !important;
+    margin-bottom: 20px !important;
+    opacity: 0.3 !important;
+    animation: pulse 2s ease-in-out infinite !important;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.05); opacity: 0.5; }
+}
+
+/* Action Buttons */
+.btn-primary {
+    background: var(--apple-blue) !important;
+    border: 1px solid var(--apple-blue) !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+
+.btn-primary:hover {
+    background: #0051D5 !important;
+    border-color: #0051D5 !important;
+    transform: scale(1.02) !important;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.btn-danger {
+    background: rgba(220, 38, 38, 0.9) !important;
+    border: 1px solid rgba(220, 38, 38, 0.9) !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+
+.btn-danger:hover {
+    background: rgba(220, 38, 38, 1) !important;
+    border-color: rgba(220, 38, 38, 1) !important;
+}
+
+/* Message Container */
+.message-container {
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    z-index: 1000 !important;
+}
+
+/* Enhanced Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 10px !important;
+    margin: 10px 0 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)) !important;
+    border-radius: 10px !important;
+    border: 2px solid transparent !important;
+    background-clip: content-box !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2)) !important;
+}
+
+/* Loading Animation */
+@keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+
+/* Responsive Design Improvements */
+@media (max-width: 1024px) {
+    .navigation {
+        width: 260px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-layout {
+        flex-direction: column !important;
+        padding-left: 20px !important; /* Reset padding for mobile */
+    }
+    
+    .navigation {
+        position: relative !important; /* Change back to relative on mobile */
+        width: 100% !important;
+        height: auto !important;
+        max-height: 40vh !important;
+        left: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .main-content {
+        margin: 0 !important;
+        min-height: auto !important;
+    }
+    
+    .content-header {
+        padding: 20px !important;
+    }
+}
+
+/* Tree View Enhancements */
+.nav-tree-item {
+    position: relative !important;
+    transition: all 0.3s ease !important;
+}
+
+.nav-tree-item::before {
+    content: "" !important;
+    position: absolute !important;
+    left: -20px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 3px !important;
+    background: transparent !important;
+    transition: background 0.3s ease !important;
+}
+
+.nav-tree-item:hover::before {
+    background: linear-gradient(180deg, #007AFF, #A855F7) !important;
+}
+
+.nav-tree-item.active::before {
+    background: #007AFF !important;
+}
+
+/* Glassmorphism Effects */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Hover Effects */
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 32px rgba(0, 122, 255, 0.2) !important;
+}
+
+/* Focus Visibility */
+*:focus-visible {
+    outline: 2px solid #007AFF !important;
+    outline-offset: 3px !important;
+    border-radius: 4px !important;
+}
+
+.message {
+    background: rgba(0, 0, 0, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    color: white !important;
+    padding: 15px 20px !important;
+    border-radius: 10px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    animation: slideInRight 0.3s ease !important;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Footer */
+footer {
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Storyboard Header */
+.storyboard-header {
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    position: sticky !important;
+    top: 60px !important;
+    z-index: 100 !important;
+    padding: 12px 0 !important;
+    margin-bottom: 20px !important;
+}
+
+.storyboard-header-content {
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+    padding: 0 22px !important;
+}
+
+.storyboard-header-title {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Container Layout */
+.container {
+    display: flex !important;
+    height: calc(100vh - 120px) !important;
+    background: #000000 !important;
+    position: relative !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navigation {
+        width: 100% !important;
+        position: fixed !important;
+        z-index: 100 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+        top: 60px !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        height: calc(100vh - 60px) !important;
+    }
+    
+    .navigation.active {
+        transform: translateX(0) !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    
+    .main-layout {
+        flex-direction: column !important;
+    }
+}
+
+/* Modals and Overlays */
+.modal, .modal-overlay {
+    background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.modal-content {
+    background: rgba(30, 30, 30, 0.98) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+}
+
+.modal-header {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 20px !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.modal-title {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+}
+
+.modal-body {
+    padding: 20px !important;
+}
+
+.modal-footer {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 15px 20px !important;
+    border-radius: 0 0 16px 16px !important;
+}
+
+/* Image Display Modal */
+#imageDisplayModal {
+    background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.image-modal-close {
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 24px !important;
+    transition: all 0.2s !important;
+}
+
+.image-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.1) !important;
+}
+
+/* AI Tool Buttons */
+.ai-tool-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.ai-tool-btn:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+    transform: scale(1.02) !important;
+}
+
+/* Tag and Badge Styles */
+.tag, .badge {
+    display: inline-block !important;
+    padding: 3px 8px !important;
+    background: rgba(0, 122, 255, 0.2) !important;
+    color: var(--apple-blue) !important;
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    margin-right: 5px !important;
+}
+
+.tag-success, .badge-success {
+    background: rgba(52, 199, 89, 0.2) !important;
+    color: #34c759 !important;
+}
+
+.tag-warning, .badge-warning {
+    background: rgba(255, 204, 0, 0.2) !important;
+    color: #ffcc00 !important;
+}
+
+.tag-danger, .badge-danger {
+    background: rgba(255, 59, 48, 0.2) !important;
+    color: #ff3b30 !important;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important;
+    transition: background 0.2s !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Focus States */
+*:focus {
+    outline: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+}
+
+/* Transitions for all interactive elements */
+button,
+.btn,
+a,
+input,
+textarea,
+select,
+.nav-shot,
+.nav-scene-header,
+.nav-sequence-header,
+.shot-card {
+    transition: all 0.2s ease !important;
+}
+
+/* Ensure text is readable */
+* {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}

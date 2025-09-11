@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미디어 갤러리 - AIFI</title>
+    
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/x-icon" href="../favicon_io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
+    
+    <link rel="stylesheet" href="../apple-developer-style.css">
+    <style>
+        /* 서브 탭 스타일 */
+        .sub-tab-navigation {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+        
+        .sub-tab-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .sub-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .sub-tab-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .sub-tab-count {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        /* 카테고리 필터 스타일 */
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+        
+        .filter-btn {
+            padding: 6px 14px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .filter-btn.active {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: white;
+        }
+        
+        .filter-btn-count {
+            margin-left: 4px;
+            opacity: 0.8;
+            font-size: 11px;
+        }
+        
+        .filter-divider {
+            width: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 8px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --dark-bg: #000;
+            --dark-text: #f5f5f7;
+            --apple-blue: #007AFF;
+            --apple-blue-hover: #0051D5;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--dark-bg);
+            color: var(--dark-text);
+            padding-top: 60px;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+        }
+        
+        /* Header */
+        .gallery-header {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky;
+            top: 48px;
+            z-index: 100;
+        }
+        
+        .gallery-header-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 22px;
+        }
+        
+        .gallery-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .gallery-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .gallery-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin: 0;
+        }
+        
+        .header-subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.06);
+            padding: 4px;
+            border-radius: 10px;
+        }
+        
+        .tab-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tab-btn:hover {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .tab-btn.active {
+            background: var(--apple-blue);
+            color: white;
+        }
+        
+        .tab-count {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1440px;
+            margin: 30px auto;
+            padding: 0 22px;
+        }
+        
+        /* Gallery Grid - 스토리보드/컨셉아트와 동일한 스타일 */
+        .gallery-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 20px !important;
+            min-height: 400px;
+            padding: 20px 0;
+            width: 100%;
+            position: relative;
+        }
+        
+        /* Empty state가 있을 때 grid를 flex로 변경 */
+        .gallery-grid:has(.empty-state) {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 갤러리 아이템 - 세로형 카드 스타일 */
+        .gallery-item {
+            display: block !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: auto !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 20px;
+        }
+        
+        .gallery-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.1);
+        }
+        
+        /* 이미지 컨테이너 - 고정 높이 */
+        .gallery-item-image-container {
+            width: 100% !important;
+            height: 250px !important;
+            background: rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .gallery-item-image {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+            border-radius: 4px;
+        }
+        
+        /* 비디오 컨테이너 */
+        .gallery-item-video {
+            width: 100% !important;
+            height: 250px !important;
+            background: rgba(0, 0, 0, 0.6);
+            position: relative;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .video-thumbnail {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.7;
+        }
+        
+        .video-play-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #000;
+            transition: all 0.3s;
+            z-index: 2;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .gallery-item:hover .video-play-btn {
+            transform: scale(1.1);
+            background: white;
+        }
+        
+        /* 아이템 정보 */
+        .gallery-item-info {
+            flex: 0 0 auto;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background: transparent;
+            min-height: auto;
+            border-top: none;
+        }
+        
+        .gallery-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
+        }
+        
+        .gallery-item-subtitle {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 8px;
+        }
+        
+        .gallery-item-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .gallery-item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* Scene Group - 스토리보드용 */
+        .scene-group {
+            grid-column: 1 / -1;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .scene-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .scene-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 4px;
+        }
+        
+        .scene-subtitle {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .scene-shots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            width: 100%;
+            grid-column: 1 / -1;  /* 전체 그리드 너비 차지 */
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .empty-state-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .lightbox.active {
+            display: flex;
+        }
+        
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+        
+        .lightbox-video {
+            width: 90%;
+            height: 90vh;
+            max-width: 1200px;
+            border: none;
+            border-radius: 12px;
+            background: black;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        
+        /* Import Button Hover Effects */
+        .import-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.15) !important;
+            border-color: rgba(255,255,255,0.3) !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            
+            .scene-shots {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .scene-shots {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .gallery-header-top {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .action-buttons {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+            
+            .action-buttons button {
+                flex: 1;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            
+            .scene-shots {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+    </style>
+    <!-- Tabler Icons Library -->
+    <script src="../tabler-icons.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="apple-nav">
+        <div class="nav-content" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="../index.html#features" class="nav-link" style="font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <span class="nav-icon-mg" style="display: flex; align-items: center;"></span>
+                    홈
+                </a>
+                <script>
+                    document.querySelector('.nav-icon-mg').innerHTML = getIcon('home', 18);
+                </script>
+            </div>
+            <a href="#" onclick="event.preventDefault(); return false;" class="nav-brand" style="cursor: pointer; position: absolute; left: 50%; transform: translateX(-50%);">MEDIA GALLERY</a>
+            <ul class="nav-menu">
+                <li><a href="../storyboard/index.html" class="nav-link">스토리보드</a></li>
+                <li><a href="../concept-art/index.html" class="nav-link">컨셉아트</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="gallery-header">
+        <div class="gallery-header-content">
+            <div class="gallery-header-top">
+                <div class="gallery-header-left">
+                    <div>
+                        <h1 class="gallery-header-title">미디어 갤러리</h1>
+                        <p class="header-subtitle">스토리보드와 컨셉아트의 모든 이미지와 영상</p>
+                    </div>
+                </div>
+                <div class="tab-navigation">
+                    <button class="tab-btn active" data-tab="storyboard" onclick="switchTab('storyboard')">
+                        <span class="tab-icon-film"></span> 스토리보드
+                        <span class="tab-count" id="storyboard-count">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="conceptart" onclick="switchTab('conceptart')">
+                        <span class="tab-icon-palette"></span> 컨셉아트
+                        <span class="tab-count" id="conceptart-count">0</span>
+                    </button>
+                    <script>
+                        setTimeout(() => {
+                            document.querySelector('.tab-icon-film').innerHTML = getIcon('movie', 16);
+                            document.querySelector('.tab-icon-palette').innerHTML = getIcon('palette', 16);
+                        }, 100);
+                    </script>
+                </div>
+                <div class="action-buttons" style="display: flex; gap: 8px; margin-left: 16px;">
+                    <button class="import-btn" onclick="syncFromLocalStorage()" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;" title="스토리보드와 컨셉아트에서 데이터 가져오기">
+                        <span class="icon-sync"></span> 가져오기
+                    </button>
+                    <script>
+                        setTimeout(() => {
+                            document.querySelector('.icon-sync').innerHTML = getIcon('refresh', 16);
+                        }, 100);
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Storyboard Tab -->
+        <div id="storyboard-tab" class="tab-content active">
+            <!-- 스토리보드 내부 탭 (이미지/영상) -->
+            <div class="sub-tab-navigation" style="display: flex;">
+                <button class="sub-tab-btn active" data-subtab="images" onclick="switchSubTab('images')">
+                    <span class="icon-image"></span> 이미지
+                    <span class="sub-tab-count" id="storyboard-images-count">(0)</span>
+                </button>
+                <button class="sub-tab-btn" data-subtab="videos" onclick="switchSubTab('videos')">
+                    <span class="icon-video"></span> 영상
+                    <span class="sub-tab-count" id="storyboard-videos-count">(0)</span>
+                </button>
+            </div>
+            <!-- 스토리보드 필터 -->
+            <div class="category-filters" id="storyboard-filters" style="display: none;">
+                <button class="filter-btn active" onclick="filterStoryboard('all')">
+                    전체 보기 <span class="filter-btn-count" id="filter-all-count"></span>
+                </button>
+                <!-- 샷별 필터 버튼들이 동적으로 추가됨 -->
+            </div>
+            <div class="gallery-grid" id="storyboard-gallery">
+                <!-- 스토리보드 갤러리 아이템들이 여기에 동적으로 로드됨 -->
+            </div>
+        </div>
+
+        <!-- Concept Art Tab -->
+        <div id="conceptart-tab" class="tab-content">
+            <!-- 컨셉아트 필터 -->
+            <div class="category-filters" id="conceptart-filters">
+                <button class="filter-btn active" onclick="filterConceptArt('all')">
+                    전체 보기 <span class="filter-btn-count" id="ca-filter-all-count"></span>
+                </button>
+                <div class="filter-divider"></div>
+                <button class="filter-btn" onclick="filterConceptArt('characters')">
+                    캐릭터 <span class="filter-btn-count" id="ca-filter-characters-count"></span>
+                </button>
+                <button class="filter-btn" onclick="filterConceptArt('locations')">
+                    장소 <span class="filter-btn-count" id="ca-filter-locations-count"></span>
+                </button>
+                <button class="filter-btn" onclick="filterConceptArt('props')">
+                    소품 <span class="filter-btn-count" id="ca-filter-props-count"></span>
+                </button>
+                <div class="filter-divider" id="character-divider" style="display: none;"></div>
+                <div id="character-filters" style="display: inline-flex; gap: 8px;">
+                    <!-- 개별 캐릭터 필터 버튼들이 동적으로 추가됨 -->
+                </div>
+            </div>
+            <div class="gallery-grid" id="conceptart-gallery">
+                <!-- 컨셉아트 갤러리 아이템들이 여기에 동적으로 로드됨 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <div class="lightbox-content">
+            <img class="lightbox-image" id="lightbox-image" style="display: none;">
+            <iframe class="lightbox-video" id="lightbox-video" style="display: none;" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- Sync Status Modal -->
+    <div id="sync-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 20px; min-width: 300px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 10000;">
+        <div style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 15px;" class="icon-loading"></div>
+            <div id="sync-status-text" style="color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500;"></div>
+            <div id="sync-details" style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.6);"></div>
+        </div>
+    </div>
+
+    <script>
+        // 갤러리 데이터 관리
+        const galleryData = {
+            storyboard: {
+                images: '',
+                videos: '',
+                all: '',
+                shots: {} // 샷별 데이터
+            },
+            conceptart: [],
+            characterList: [], // 개별 캐릭터 리스트
+            categoryData: { // 카테고리별 데이터
+                characters: [],
+                locations: [],
+                props: []
+            }
+        };
+        
+        // 현재 활성화된 서브 탭
+        let currentSubTab = 'images';
+        let currentFilter = 'all'; // 현재 필터 상태
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('페이지 로드 완료');
+            loadAllMedia();
+            setupEventListeners();
+            
+            // 초기 상태 로그
+            console.log('탭 버튼들:', document.querySelectorAll('.tab-btn'));
+            console.log('서브 탭 버튼들:', document.querySelectorAll('.sub-tab-btn'));
+            
+            // 초기 탭 활성화
+            setTimeout(() => {
+                switchTab('storyboard');
+                switchSubTab('images');
+            }, 100);
+        });
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            console.log('이벤트 리스너 설정 시작');
+            
+            // 메인 탭 전환 - 이벤트 위임 사용
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            console.log('메인 탭 버튼 개수:', tabButtons.length);
+            
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const tabName = this.dataset.tab;
+                    console.log('메인 탭 클릭:', tabName);
+                    switchTab(tabName);
+                });
+            });
+            
+            // 서브 탭 전환 (스토리보드 내부) - 이벤트 위임 사용
+            const subTabNav = document.querySelector('.sub-tab-navigation');
+            if (subTabNav) {
+                subTabNav.addEventListener('click', function(e) {
+                    const btn = e.target.closest('.sub-tab-btn');
+                    if (btn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const subTabName = btn.dataset.subtab;
+                        console.log('서브 탭 클릭:', subTabName);
+                        switchSubTab(subTabName);
+                    }
+                });
+            }
+        }
+
+        // 메인 탭 전환 - window 스코프에 노출
+        window.switchTab = function(tabName) {
+            console.log('메인 탭 전환:', tabName);
+            
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeTabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            if (activeTabBtn) {
+                activeTabBtn.classList.add('active');
+            }
+
+            // 콘텐츠 표시 변경
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const activeTabContent = document.getElementById(`${tabName}-tab`);
+            if (activeTabContent) {
+                activeTabContent.classList.add('active');
+            }
+            
+            // 서브 탭 표시/숨김 처리
+            const subTabNav = document.querySelector('.sub-tab-navigation');
+            if (subTabNav) {
+                if (tabName === 'storyboard') {
+                    subTabNav.style.display = 'flex';
+                } else {
+                    subTabNav.style.display = 'none';
+                }
+            }
+        }
+        
+        // 서브 탭 전환 (스토리보드 내부) - window 스코프에 노출
+        window.switchSubTab = function(subTabName) {
+            console.log('서브 탭 전환:', subTabName);
+            currentSubTab = subTabName;
+            
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const activeBtn = document.querySelector(`.sub-tab-btn[data-subtab="${subTabName}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            
+            // 스토리보드 갤러리 필터링
+            filterStoryboardGallery(subTabName);
+        }
+        
+        // 스토리보드 갤러리 필터링
+        function filterStoryboardGallery(filterType) {
+            console.log('필터링 타입:', filterType);
+            console.log('갤러리 데이터:', galleryData.storyboard);
+            
+            const storyboardGallery = document.getElementById('storyboard-gallery');
+            
+            // galleryData가 문자열(HTML)인지 확인
+            if (galleryData.storyboard[filterType] && typeof galleryData.storyboard[filterType] === 'string' && galleryData.storyboard[filterType].trim() !== '') {
+                storyboardGallery.innerHTML = galleryData.storyboard[filterType];
+            } else {
+                const emptyIcon = filterType === 'images' ? '<span class="icon-photo-empty"></span>' : '<span class="icon-video-empty"></span>';
+                const emptyText = filterType === 'images' ? '이미지' : '영상';
+                storyboardGallery.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">${emptyIcon}</div>
+                        <div class="empty-state-title">스토리보드 ${emptyText}가 없습니다</div>
+                        <div class="empty-state-text">스토리보드에서 ${emptyText}를 추가하면 여기에 표시됩니다</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 모든 미디어 로드
+        function loadAllMedia() {
+            loadStoryboardMedia();
+            loadConceptArtMedia();
+        }
+
+        // 스토리보드 미디어 로드
+        function loadStoryboardMedia() {
+            let shotGroups = {};
+            let totalImages = 0;
+            let totalVideos = 0;
+
+            // localStorage에서 모든 breakdownData 가져오기
+            let storyboardData = null;
+            
+            // 모든 localStorage keys 확인하여 breakdownData 찾기
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('breakdownData_')) {
+                    storyboardData = localStorage.getItem(key);
+                    if (storyboardData) {
+                        console.log('스토리보드 데이터 찾음:', key);
+                        break;
+                    }
+                }
+            }
+            
+            if (storyboardData) {
+                try {
+                    const data = JSON.parse(storyboardData);
+                    
+                    if (data.breakdown_data && data.breakdown_data.shots) {
+                        const shots = data.breakdown_data.shots;
+                        
+                        shots.forEach(shot => {
+                            const shotId = shot.id || shot.shot_id;
+                            const shotNumber = shot.shot_number || shotId || '샷';
+                            const shotTitle = shot.shot_title || shot.description || '';
+                            const sceneId = shot.scene_id || '';
+                            
+                            // 샷별 미디어 그룹 초기화 - 제목 정보 포함
+                            if (!shotGroups[shotId]) {
+                                // shot.title이 있으면 사용, 없으면 shot_title 사용
+                                const displayTitle = shot.title || shotTitle || shot.description || '';
+                                shotGroups[shotId] = {
+                                    shotNumber: shotNumber,
+                                    shotTitle: displayTitle,
+                                    sceneId: sceneId,
+                                    images: [],
+                                    videos: [],
+                                    referenceImages: []
+                                };
+                            }
+                            
+                            // 디버깅을 위한 데이터 구조 확인
+                            console.log(`📊 Shot ${shotId} 데이터 구조:`, {
+                                hasImageDesign: !!shot.image_design,
+                                hasAiGeneratedImages: !!(shot.image_design && shot.image_design.ai_generated_images),
+                                imageDesignKeys: shot.image_design ? Object.keys(shot.image_design) : [],
+                                aiGeneratedKeys: shot.image_design && shot.image_design.ai_generated_images ? 
+                                    Object.keys(shot.image_design.ai_generated_images) : []
+                            });
+                            
+                            // 1. AI 생성 이미지 추출 (새로운 구조)
+                            if (shot.image_design && shot.image_design.ai_generated_images) {
+                                // 스토리보드에서 사용하는 모든 AI 도구들
+                                const aiTools = ['universal', 'nanobana', 'midjourney', 'ideogram', 'dalle3', 'flux', 'leonardo', 'imagefx', 'openart'];
+                                
+                                // 대소문자 변형 및 다른 형식도 처리
+                                const toolVariations = {
+                                    'universal': ['universal', 'Universal'],
+                                    'nanobana': ['nanobana', 'Nanobana'],
+                                    'midjourney': ['midjourney', 'Midjourney'],
+                                    'ideogram': ['ideogram', 'Ideogram'],
+                                    'dalle3': ['dalle3', 'dall-e-3', 'dalle-3', 'Dalle3', 'DALL-E 3'],
+                                    'flux': ['flux', 'Flux'],
+                                    'leonardo': ['leonardo', 'Leonardo'],
+                                    'imagefx': ['imagefx', 'ImageFX'],
+                                    'openart': ['openart', 'OpenArt']
+                                };
+                                
+                                aiTools.forEach(tool => {
+                                    // 도구 이름의 다양한 변형 시도
+                                    const variations = toolVariations[tool] || [tool];
+                                    let toolImages = null;
+                                    
+                                    for (const variant of variations) {
+                                        if (shot.image_design.ai_generated_images[variant]) {
+                                            toolImages = shot.image_design.ai_generated_images[variant];
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (toolImages) {
+                                        Object.entries(toolImages).forEach(([imageId, imageData]) => {
+                                            let url = '';
+                                            let description = '';
+                                            
+                                            if (typeof imageData === 'string') {
+                                                url = imageData;
+                                            } else if (imageData && typeof imageData === 'object') {
+                                                url = imageData.url || imageData.image_url || '';
+                                                description = imageData.description || '';
+                                            }
+                                            
+                                            if (url && url.trim()) {
+                                                console.log(`✅ Found ${tool} image:`, imageId, url);
+                                                shotGroups[shotId].images.push({
+                                                    url: url,
+                                                    title: `${tool.toUpperCase()} - ${imageId}`,
+                                                    description: description,
+                                                    tool: tool,
+                                                    imageId: imageId
+                                                });
+                                                totalImages++;
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                            
+                            // 1-2. 추가 경로에서 이미지 확인 (이미지탭 데이터)
+                            if (shot.images) {
+                                // shot.images 직접 확인
+                                if (Array.isArray(shot.images)) {
+                                    shot.images.forEach((img, idx) => {
+                                        if (img && img.url) {
+                                            shotGroups[shotId].images.push({
+                                                url: img.url,
+                                                title: `이미지 ${idx + 1}`,
+                                                description: img.description || '',
+                                                tool: 'shot-images',
+                                                imageId: `img-${idx}`
+                                            });
+                                            totalImages++;
+                                        }
+                                    });
+                                } else if (typeof shot.images === 'object') {
+                                    // 객체 형태인 경우
+                                    Object.entries(shot.images).forEach(([key, img]) => {
+                                        if (img && (img.url || typeof img === 'string')) {
+                                            const imgUrl = typeof img === 'string' ? img : img.url;
+                                            if (imgUrl) {
+                                                shotGroups[shotId].images.push({
+                                                    url: imgUrl,
+                                                    title: key,
+                                                    description: img.description || '',
+                                                    tool: 'shot-images',
+                                                    imageId: key
+                                                });
+                                                totalImages++;
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                            
+                            // 1-3. 이미지 디자인 플랜의 이미지들도 확인
+                            if (shot.image_design) {
+                                // universal, nanobana 등 직접 필드로 있는 경우
+                                ['universal', 'nanobana', 'midjourney', 'ideogram', 'dalle3', 'flux'].forEach(aiTool => {
+                                    if (shot.image_design[aiTool]) {
+                                        const toolData = shot.image_design[aiTool];
+                                        if (typeof toolData === 'object') {
+                                            Object.entries(toolData).forEach(([key, value]) => {
+                                                // images 필드가 있는 경우
+                                                if (value && value.images) {
+                                                    Object.entries(value.images).forEach(([imgId, imgUrl]) => {
+                                                        if (imgUrl) {
+                                                            shotGroups[shotId].images.push({
+                                                                url: imgUrl,
+                                                                title: `${aiTool.toUpperCase()} - ${imgId}`,
+                                                                description: value.prompt || '',
+                                                                tool: aiTool,
+                                                                imageId: imgId
+                                                            });
+                                                            totalImages++;
+                                                            console.log(`Found ${aiTool} image:`, imgId, imgUrl);
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            // 2. 메인 이미지 추출 (shot.main_images 사용)
+                            if (shot.main_images && Array.isArray(shot.main_images)) {
+                                shot.main_images.forEach((mainImage, idx) => {
+                                    if (mainImage.url && mainImage.url.trim()) {
+                                        if (!shotGroups[shotId].mainImages) {
+                                            shotGroups[shotId].mainImages = [];
+                                        }
+                                        shotGroups[shotId].mainImages.push({
+                                            url: mainImage.url,
+                                            title: `메인 이미지 ${idx + 1}`,
+                                            description: mainImage.description || '',
+                                            type: mainImage.type || 'style'
+                                        });
+                                        totalImages++;
+                                    }
+                                });
+                            }
+                            
+                            // 3. 참조 이미지 추출 (shot.reference_images 사용)
+                            if (shot.reference_images && Array.isArray(shot.reference_images)) {
+                                shot.reference_images.forEach((refImage, idx) => {
+                                    if (refImage.url && refImage.url.trim()) {
+                                        shotGroups[shotId].referenceImages.push({
+                                            url: refImage.url,
+                                            title: `참조 이미지 ${idx + 1}`,
+                                            description: refImage.description || '',
+                                            type: refImage.type || 'composition'
+                                        });
+                                        totalImages++;
+                                    }
+                                });
+                            }
+                            
+                            // 3. 비디오 URL 추출
+                            if (shot.video_urls) {
+                                Object.entries(shot.video_urls).forEach(([key, url]) => {
+                                    if (url && url.trim()) {
+                                        // key는 'aiType_imageId' 형식
+                                        const [aiType, ...imageIdParts] = key.split('_');
+                                        const imageId = imageIdParts.join('_');
+                                        
+                                        // 드롭박스 URL 확인 및 변환
+                                        if (url.includes('dropbox.com')) {
+                                            console.log('📦 스토리보드에서 드롭박스 URL 발견:', url);
+                                            
+                                            // Case 1: 이미 raw=1로 변환된 경우 - 그대로 사용
+                                            if (url.includes('raw=1')) {
+                                                console.log('✅ 이미 변환된 드롭박스 URL (raw=1)');
+                                            }
+                                            // Case 2: dl.dropboxusercontent.com으로 변환된 경우 - 그대로 사용
+                                            else if (url.includes('dl.dropboxusercontent.com')) {
+                                                console.log('✅ 이미 변환된 드롭박스 URL (dl.dropboxusercontent.com)');
+                                            }
+                                            // Case 3: dl=0이 포함된 경우 - raw=1로 변환
+                                            else if (url.includes('dl=0')) {
+                                                url = url.replace('dl=0', 'raw=1');
+                                                console.log('🔄 드롭박스 URL 변환 (dl=0 → raw=1):', url);
+                                            }
+                                            // Case 4: dl 파라미터가 없는 경우 - raw=1 추가
+                                            else if (!url.includes('dl=') && !url.includes('raw=')) {
+                                                url = url.includes('?') ? url + '&raw=1' : url + '?raw=1';
+                                                console.log('🔄 드롭박스 URL에 raw=1 추가:', url);
+                                            }
+                                        }
+                                        
+                                        shotGroups[shotId].videos.push({
+                                            url: url,
+                                            title: `${aiType.toUpperCase()} 영상 - ${imageId}`,
+                                            tool: aiType,
+                                            imageId: imageId
+                                        });
+                                        totalVideos++;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing storyboard data:', e);
+                }
+            }
+
+            // 갤러리 렌더링 준비
+            let imagesHTML = '';
+            let videosHTML = '';
+            
+            // 샷별로 그룹화하여 렌더링
+            Object.entries(shotGroups).forEach(([shotId, group]) => {
+                const hasMainImages = group.mainImages && group.mainImages.length > 0;
+                const hasImages = group.images.length > 0 || group.referenceImages.length > 0 || hasMainImages;
+                const hasVideos = group.videos.length > 0;
+                
+                // 이미지 HTML 생성
+                if (hasImages) {
+                    imagesHTML += `
+                        <div class="scene-group">
+                            <div class="scene-header">
+                                <div class="scene-title">📸 ${group.shotNumber}</div>
+                                <div class="scene-subtitle">${group.shotTitle}</div>
+                            </div>
+                            <div class="scene-shots">
+                    `;
+                    
+                    // 메인 이미지 (새로 추가)
+                    if (group.mainImages) {
+                        group.mainImages.forEach(mainImage => {
+                            imagesHTML += createGalleryItem({
+                                url: mainImage.url,
+                                title: `${group.shotNumber} - ${mainImage.title}`,
+                                subtitle: `${mainImage.type} | ${mainImage.description}`,
+                                type: 'image',
+                                tool: 'main'
+                            });
+                        });
+                    }
+                    
+                    // AI 생성 이미지
+                    group.images.forEach(image => {
+                        // 샷 제목이 있으면 사용, 없으면 기본 형식 사용
+                        const displayTitle = group.shotTitle ? 
+                            `${group.shotTitle}` : 
+                            `${group.shotNumber} - ${image.title}`;
+                        
+                        imagesHTML += createGalleryItem({
+                            url: image.url,
+                            title: displayTitle,
+                            subtitle: `${image.tool.toUpperCase()} - ${image.imageId}`,
+                            type: 'image',
+                            tool: image.tool,
+                            shotId: shotId
+                        });
+                    });
+                    
+                    // 참조 이미지
+                    group.referenceImages.forEach(refImage => {
+                        imagesHTML += createGalleryItem({
+                            url: refImage.url,
+                            title: `${group.shotNumber} - ${refImage.title}`,
+                            subtitle: `${refImage.type} | ${refImage.description}`,
+                            type: 'image',
+                            tool: 'reference'
+                        });
+                    });
+                    
+                    imagesHTML += `
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 비디오 HTML 생성
+                if (hasVideos) {
+                    videosHTML += `
+                        <div class="scene-group">
+                            <div class="scene-header">
+                                <div class="scene-title">🎥 ${group.shotNumber}</div>
+                                <div class="scene-subtitle">${group.shotTitle}</div>
+                            </div>
+                            <div class="scene-shots">
+                    `;
+                    
+                    group.videos.forEach(video => {
+                        // 샷 제목이 있으면 사용, 없으면 기본 형식 사용
+                        const displayTitle = group.shotTitle ? 
+                            `${group.shotTitle}` : 
+                            `${group.shotNumber} - ${video.title}`;
+                        
+                        videosHTML += createGalleryItem({
+                            url: video.url,
+                            title: displayTitle,
+                            subtitle: `${video.tool.toUpperCase()} 영상 - ${video.imageId}`,
+                            type: 'video',
+                            tool: video.tool
+                        });
+                    });
+                    
+                    videosHTML += `
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            // 데이터 저장
+            galleryData.storyboard.images = imagesHTML || `
+                <div class="empty-state">
+                    <div class="empty-state-icon icon-empty-image"></div>
+                    <div class="empty-state-title">스토리보드 이미지가 없습니다</div>
+                    <div class="empty-state-text">스토리보드에서 이미지를 추가하면 여기에 표시됩니다</div>
+                </div>
+            `;
+            
+            galleryData.storyboard.videos = videosHTML || `
+                <div class="empty-state">
+                    <div class="empty-state-icon icon-empty-video"></div>
+                    <div class="empty-state-title">스토리보드 영상이 없습니다</div>
+                    <div class="empty-state-text">스토리보드에서 영상을 추가하면 여기에 표시됩니다</div>
+                </div>
+            `;
+            
+            // 초기 표시 (이미지 탭)
+            filterStoryboardGallery(currentSubTab);
+            
+            // 카운트 업데이트
+            document.getElementById('storyboard-count').textContent = totalImages + totalVideos;
+            document.getElementById('storyboard-images-count').textContent = `(${totalImages})`;
+            document.getElementById('storyboard-videos-count').textContent = `(${totalVideos})`;
+            
+            // 디버깅 요약
+            console.log('📈 스토리보드 미디어 로드 완료:', {
+                총이미지: totalImages,
+                총비디오: totalVideos,
+                샷그룹수: Object.keys(shotGroups).length,
+                상세: shotGroups
+            });
+        }
+
+        // 컨셉아트 미디어 로드
+        function loadConceptArtMedia() {
+            console.log('🎨 === 컨셉아트 미디어 로드 시작 ===');
+            const conceptArtGallery = document.getElementById('conceptart-gallery');
+            console.log('📌 컨셉아트 갤러리 요소:', conceptArtGallery);
+            
+            let categoryGroups = {};
+            let totalMedia = 0;
+
+            // v1.3 먼저 시도, 없으면 v1.2 사용
+            let conceptArtData = localStorage.getItem('conceptArtManagerData_v1.3');
+            if (!conceptArtData) {
+                conceptArtData = localStorage.getItem('conceptArtManagerData_v1.2');
+                console.log('📚 v1.3 데이터 없음, v1.2 데이터 사용');
+            } else {
+                console.log('📚 v1.3 컨셉아트 데이터 사용');
+            }
+            console.log('📚 컨셉아트 localStorage 데이터 존재:', !!conceptArtData);
+            
+            if (conceptArtData) {
+                try {
+                    const parsedData = JSON.parse(conceptArtData);
+                    console.log('📝 파싱된 컨셉아트 데이터:', parsedData);
+                    console.log('🔍 데이터 구조 체크:');
+                    console.log('  - conceptArtData 필드 존재:', !!parsedData.conceptArtData);
+                    console.log('  - 직접 characters 필드 존재:', !!parsedData.characters);
+                    
+                    // 데이터 구조에 따라 적절한 경로 선택
+                    const actualData = parsedData.conceptArtData || parsedData;
+                    
+                    const categories = ['characters', 'locations', 'props'];
+                    const categoryNames = {
+                        characters: '캐릭터',
+                        locations: '장소',
+                        props: '소품'
+                    };
+                    
+                    categories.forEach(category => {
+                        console.log(`🔍 ${category} 카테고리 확인:`, actualData[category]);
+                        
+                        // characters, locations, props는 객체 형태
+                        const categoryData = actualData[category];
+                        
+                        if (categoryData && typeof categoryData === 'object') {
+                            const itemIds = Object.keys(categoryData);
+                            console.log(`✅ ${category} 카테고리 데이터 있음: ${itemIds.length}개`);
+                            
+                            // 카테고리별 그룹 초기화
+                            if (!categoryGroups[category]) {
+                                categoryGroups[category] = {
+                                    title: categoryNames[category],
+                                    items: []
+                                };
+                            }
+                            
+                            // 객체를 순회하며 각 아이템 처리
+                            itemIds.forEach((itemId, itemIndex) => {
+                                const item = categoryData[itemId];
+                                console.log(`  📌 ${category} 아이템 ${itemId}:`, item);
+                                
+                                // 메인 이미지 URL - v1.3 (main_image_url) 또는 구버전 (image_url) 체크
+                                let mainImageUrl = item.main_image_url || item.image_url;
+                                if (mainImageUrl) {
+                                    console.log(`    🖼️ 메인 이미지 URL:`, mainImageUrl);
+                                    
+                                    // 드롭박스 URL 변환
+                                    if (mainImageUrl.includes('dropbox.com')) {
+                                        if (mainImageUrl.includes('dl=0')) {
+                                            mainImageUrl = mainImageUrl.replace('dl=0', 'raw=1');
+                                            console.log('    🔄 드롭박스 URL 변환 (dl=0 → raw=1):', mainImageUrl);
+                                        } else if (!mainImageUrl.includes('dl=') && !mainImageUrl.includes('raw=')) {
+                                            const separator = mainImageUrl.includes('?') ? '&' : '?';
+                                            mainImageUrl = mainImageUrl + separator + 'raw=1';
+                                            console.log('    🔄 드롭박스 URL에 raw=1 추가:', mainImageUrl);
+                                        }
+                                    }
+                                    
+                                    const itemName = item.name || item.name_kr || '이름 없음';
+                                    categoryGroups[category].items.push({
+                                        url: mainImageUrl,
+                                        title: itemName,
+                                        description: item.description || '',
+                                        type: 'image',
+                                        category: category,
+                                        source: 'main',
+                                        characterName: category === 'characters' ? itemName : undefined
+                                    });
+                                    totalMedia++;
+                                    
+                                    // 캐릭터 리스트에 추가
+                                    if (category === 'characters' && !galleryData.characterList.includes(itemName)) {
+                                        galleryData.characterList.push(itemName);
+                                    }
+                                }
+                                
+                                // additional_images 필드 확인 (image_1, image_2, image_3)
+                                if (item.additional_images && typeof item.additional_images === 'object') {
+                                    console.log(`    🎨 추가 이미지:`, item.additional_images);
+                                    
+                                    // image_1, image_2 형식 처리
+                                    for (let i = 1; i <= 4; i++) {
+                                        const imageKey = `image_${i}`;
+                                        const imageData = item.additional_images[imageKey];
+                                        if (imageData && imageData.url) {
+                                            console.log(`      📸 추가 이미지 ${imageKey}:`, imageData.url);
+                                            
+                                            let additionalUrl = imageData.url;
+                                            // 드롭박스 URL 변환
+                                            if (additionalUrl.includes('dropbox.com')) {
+                                                if (additionalUrl.includes('dl=0')) {
+                                                    additionalUrl = additionalUrl.replace('dl=0', 'raw=1');
+                                                    console.log('      🔄 드롭박스 URL 변환 (dl=0 → raw=1):', additionalUrl);
+                                                } else if (!additionalUrl.includes('dl=') && !additionalUrl.includes('raw=')) {
+                                                    const separator = additionalUrl.includes('?') ? '&' : '?';
+                                                    additionalUrl = additionalUrl + separator + 'raw=1';
+                                                    console.log('      🔄 드롭박스 URL에 raw=1 추가:', additionalUrl);
+                                                }
+                                            }
+                                            
+                                            const conceptName = item.name || item.name_kr || '이름 없음';
+                                            categoryGroups[category].items.push({
+                                                url: additionalUrl,
+                                                title: imageData.title || conceptName,
+                                                description: imageData.description || `${conceptName} - 참조 ${i}`,
+                                                type: 'image',
+                                                category: category,
+                                                source: 'additional',
+                                                characterName: category === 'characters' ? conceptName : undefined
+                                            });
+                                            totalMedia++;
+                                        }
+                                    }
+                                    
+                                    // AI 도구별 추가 이미지 (하위 호환성)
+                                    Object.keys(item.additional_images).forEach(key => {
+                                        if (!key.startsWith('image_') && Array.isArray(item.additional_images[key])) {
+                                            item.additional_images[key].forEach((imgData, index) => {
+                                                if (imgData && imgData.url) {
+                                                    console.log(`      📸 AI 도구 ${key} 이미지 ${index}:`, imgData.url);
+                                                    const conceptName = item.name || item.name_kr || '이름 없음';
+                                                    categoryGroups[category].items.push({
+                                                        url: imgData.url,
+                                                        title: imgData.title || conceptName,
+                                                        description: imgData.description || `${conceptName} - ${key} ${index + 1}`,
+                                                        type: 'image',
+                                                        category: category,
+                                                        source: 'additional',
+                                                        characterName: category === 'characters' ? conceptName : undefined
+                                                    });
+                                                    totalMedia++;
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                                
+                                // generated_images 구조 처리 (하위 호환성)
+                                if (item.generated_images) {
+                                    console.log(`    🎯 Generated images:`, item.generated_images);
+                                    
+                                    // base_prompts 처리
+                                    if (item.generated_images.base_prompts) {
+                                        Object.entries(item.generated_images.base_prompts).forEach(([tool, url]) => {
+                                            if (url) {
+                                                console.log(`      🖼️ Generated base ${tool}:`, url);
+                                                const conceptName = item.name || item.name_kr || '이름 없음';
+                                                categoryGroups[category].items.push({
+                                                    url: url,
+                                                    title: `${conceptName} - ${tool}`,
+                                                    description: `${tool} 기본 생성 이미지`,
+                                                    type: 'image',
+                                                    category: category,
+                                                    source: 'generated'
+                                                });
+                                                totalMedia++;
+                                            }
+                                        });
+                                    }
+                                    
+                                    // variations 처리
+                                    if (item.generated_images.variations) {
+                                        Object.entries(item.generated_images.variations).forEach(([tool, variations]) => {
+                                            if (variations && typeof variations === 'object') {
+                                                Object.entries(variations).forEach(([varKey, url]) => {
+                                                    if (url) {
+                                                        console.log(`      🖼️ Generated variation ${tool}/${varKey}:`, url);
+                                                        const conceptName = item.name || item.name_kr || '이름 없음';
+                                                        categoryGroups[category].items.push({
+                                                            url: url,
+                                                            title: `${conceptName} - ${tool}`,
+                                                            description: `${tool} ${varKey}`,
+                                                            type: 'image',
+                                                            category: category,
+                                                            source: 'generated'
+                                                        });
+                                                        totalMedia++;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        } else {
+                            console.log(`❌ ${category} 카테고리 데이터 없음 또는 잘못된 형식`);
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error parsing concept art data:', e);
+                }
+            }
+
+            // 갤러리 렌더링 - 스토리보드와 동일한 그룹 기반 구조 사용
+            const hasMedia = totalMedia > 0;
+            console.log('🎨 컨셉아트 총 미디어 수:', totalMedia);
+            console.log('📦 카테고리별 그룹:', categoryGroups);
+            
+            if (hasMedia) {
+                let galleryHTML = '';
+                let totalCount = 0;
+                
+                // 각 카테고리별로 그룹 렌더링 (스토리보드와 동일한 스타일)
+                ['characters', 'locations', 'props'].forEach(category => {
+                    const group = categoryGroups[category];
+                    if (group && group.items && group.items.length > 0) {
+                        console.log(`📁 ${group.title} 카테고리: ${group.items.length}개 아이템`);
+                        
+                        // 카테고리 아이콘 설정
+                        const categoryIcon = category === 'characters' ? '👤' : 
+                                           category === 'locations' ? '🏛️' : '🎭';
+                        
+                        galleryHTML += `
+                            <div class="scene-group">
+                                <div class="scene-header">
+                                    <div class="scene-title">${categoryIcon} ${group.title}</div>
+                                    <div class="scene-subtitle">${group.items.length}개 아이템</div>
+                                </div>
+                                <div class="scene-shots">`;
+                        
+                        group.items.forEach(item => {
+                            console.log(`🖼️ ${group.title} 아이템:`, item.title, item.url);
+                            galleryHTML += createGalleryItem({
+                                url: item.url,
+                                title: item.title,
+                                subtitle: item.description,
+                                type: 'image',
+                                category: category,
+                                source: item.source
+                            });
+                        });
+                        
+                        galleryHTML += `
+                                </div>
+                            </div>`;
+                        totalCount += group.items.length;
+                    }
+                });
+                
+                conceptArtGallery.innerHTML = galleryHTML;
+                // 카운트 업데이트
+                document.getElementById('conceptart-count').textContent = totalCount;
+                
+                // 필터 카운트 업데이트
+                setTimeout(() => {
+                    updateFilterCounts();
+                }, 100);
+            } else {
+                console.log('⚠️ 컨셉아트 데이터 없음 - 빈 상태 표시');
+                console.log('   hasMedia:', hasMedia);
+                console.log('   categoryGroups:', categoryGroups);
+                console.log('   totalMedia:', totalMedia);
+                
+                conceptArtGallery.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎨</div>
+                        <div class="empty-state-title">컨셉아트가 없습니다</div>
+                        <div class="empty-state-text">컨셉아트를 추가하면 여기에 표시됩니다</div>
+                    </div>
+                `;
+                // 카운트 업데이트
+                document.getElementById('conceptart-count').textContent = 0;
+            }
+        }
+
+        // 갤러리 아이템 생성
+        function createGalleryItem(item) {
+            // 데이터 속성 준비
+            const dataAttrs = [];
+            if (item.shotId) dataAttrs.push(`data-shot-id="${item.shotId}"`);
+            if (item.category) dataAttrs.push(`data-category="${item.category}"`);
+            if (item.characterName) dataAttrs.push(`data-character="${item.characterName}"`);
+            const dataAttrString = dataAttrs.join(' ');
+            if (item.type === 'video') {
+                let videoUrl = item.url;
+                let thumbnailUrl = '';
+                let fileId = '';
+                let videoSource = 'unknown';
+                
+                // 영상 소스 판별 및 처리
+                if (videoUrl) {
+                    // Dropbox URL 처리
+                    if (videoUrl.includes('dropbox.com')) {
+                        videoSource = 'dropbox';
+                        console.log('🎬 드롭박스 URL 감지 (createGalleryItem):', videoUrl);
+                        
+                        // 드롭박스 URL 변환 로직 (loadStoryboardMedia와 동일하게)
+                        // Case 1: 이미 raw=1로 변환된 경우 - 그대로 사용
+                        if (videoUrl.includes('raw=1')) {
+                            console.log('✅ 이미 변환된 드롭박스 URL (raw=1)');
+                        }
+                        // Case 2: dl.dropboxusercontent.com으로 변환된 경우 - 그대로 사용
+                        else if (videoUrl.includes('dl.dropboxusercontent.com')) {
+                            console.log('✅ 이미 변환된 드롭박스 URL (dl.dropboxusercontent.com)');
+                        }
+                        // Case 3: dl=0이 포함된 경우 - raw=1로 변환
+                        else if (videoUrl.includes('dl=0')) {
+                            videoUrl = videoUrl.replace('dl=0', 'raw=1');
+                            console.log('🔄 드롭박스 URL 변환 (dl=0 → raw=1):', videoUrl);
+                        }
+                        // Case 4: dl 파라미터가 없는 경우 - raw=1 추가
+                        else if (!videoUrl.includes('dl=') && !videoUrl.includes('raw=')) {
+                            videoUrl = videoUrl.includes('?') ? videoUrl + '&raw=1' : videoUrl + '?raw=1';
+                            console.log('🔄 드롭박스 URL에 raw=1 추가:', videoUrl);
+                        }
+                        
+                        console.log('🔄 드롭박스 URL 변환 완료:', videoUrl);
+                        thumbnailUrl = ''; // 썸네일 대신 video 태그 사용
+                    }
+                    // Google Drive URL 처리
+                    else if (videoUrl.includes('drive.google.com')) {
+                        videoSource = 'google-drive';
+                        // 여러 형식의 Google Drive URL 처리
+                        const patterns = [
+                            /\/d\/([a-zA-Z0-9-_]+)/,  // /d/{fileId} 형식
+                            /id=([a-zA-Z0-9-_]+)/,     // id={fileId} 형식
+                            /\/file\/d\/([a-zA-Z0-9-_]+)/, // /file/d/{fileId} 형식
+                            /[-\w]{25,}/                // 기본 패턴
+                        ];
+                        
+                        for (const pattern of patterns) {
+                            const match = videoUrl.match(pattern);
+                            if (match) {
+                                fileId = match[1] || match[0];
+                                break;
+                            }
+                        }
+                        
+                        if (fileId) {
+                            // preview URL이 아닌 경우에만 변환
+                            if (!videoUrl.includes('/preview')) {
+                                videoUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+                            }
+                            // 썸네일 URL 생성
+                            thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+                        }
+                    } 
+                    // 미드저니 비디오 URL 처리 (직접 MP4 링크)
+                    else if (videoUrl.includes('.mp4') || videoUrl.includes('midjourney') || videoUrl.includes('cdn.')) {
+                        videoSource = 'midjourney';
+                        // 미드저니 비디오는 직접 재생 가능한 URL
+                        // 썸네일은 비디오 첫 프레임 사용 (video 태그로 처리)
+                        thumbnailUrl = ''; // 썸네일 대신 video 태그 사용
+                    }
+                    // 기타 비디오 플랫폼
+                    else if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                        videoSource = 'youtube';
+                        // YouTube 처리 로직 (필요시 추가)
+                    }
+                    else if (videoUrl.includes('vimeo.com')) {
+                        videoSource = 'vimeo';
+                        // Vimeo 처리 로직 (필요시 추가)
+                    }
+                }
+                
+                // 썸네일 처리 - 미드저니, 드롭박스는 video 태그 사용
+                let thumbnailHTML = '';
+                if (videoSource === 'midjourney' || videoSource === 'dropbox' || videoUrl.includes('.mp4')) {
+                    // 미드저니, 드롭박스 또는 직접 MP4 링크의 경우 video 태그로 썸네일 생성
+                    console.log(`📹 ${videoSource} 썸네일 생성:`, videoUrl);
+                    console.log(`🔍 최종 비디오 URL (썸네일용):`, videoUrl);
+                    console.log(`🎬 비디오 소스 타입:`, videoSource);
+                    
+                    // 드롭박스의 경우 crossorigin 제거 (CORS 문제 방지)
+                    const crossOrigin = videoSource === 'dropbox' ? '' : 'crossorigin="anonymous"';
+                    console.log(`🔒 CORS 설정:`, crossOrigin || '없음 (드롭박스)');
+                    
+                    thumbnailHTML = `
+                        <video class="video-thumbnail" 
+                               style="position: absolute; width: 100%; height: 100%; object-fit: cover; pointer-events: none;"
+                               muted
+                               preload="metadata"
+                               ${crossOrigin}
+                               onerror="console.error('⚠️ 비디오 썸네일 로드 실패:', '${videoUrl}')">
+                            <source src="${videoUrl}#t=0.1" type="video/mp4">
+                        </video>`;
+                } else if (thumbnailUrl) {
+                    // Google Drive 등 썸네일 URL이 있는 경우
+                    thumbnailHTML = `<img class="video-thumbnail" 
+                         src="${thumbnailUrl}" 
+                         alt="${item.title}" 
+                         onerror="this.style.display='none'; this.parentElement.classList.add('no-thumbnail')">`;
+                }
+                
+                return `
+                    <div class="gallery-item" data-type="${item.type}" data-video-source="${videoSource}" ${dataAttrString}>
+                        <div class="gallery-item-video ${!thumbnailHTML ? 'no-thumbnail' : ''}" 
+                             onclick="openLightbox('${videoUrl}', '${item.type}')"
+                             style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a);">
+                            ${thumbnailHTML}
+                            <div class="video-play-btn">▶</div>
+                            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; 
+                                       color: rgba(255,255,255,0.6); font-size: 11px; 
+                                       text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                🎥 ${item.tool ? item.tool.toUpperCase() : videoSource.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="gallery-item-info">
+                            <div class="gallery-item-title">${item.title || '영상 제목 없음'}</div>
+                            ${item.subtitle ? `<div class="gallery-item-subtitle">${item.subtitle}</div>` : ''}
+                            <div class="gallery-item-meta">
+                                <span>📌 ${item.tool || item.category || 'media'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 이미지 아이템
+                console.log('🖼️ 이미지 아이템 생성:', item.title, item.url);
+                return `
+                    <div class="gallery-item" data-type="${item.type}" ${dataAttrString}>
+                        <div class="gallery-item-image-container" onclick="openLightbox('${item.url}', '${item.type}')">
+                            <img class="gallery-item-image" 
+                                 src="${item.url}" 
+                                 alt="${item.title}" 
+                                 loading="lazy" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'225\\' viewBox=\\'0 0 400 225\\'%3E%3Crect width=\\'400\\' height=\\'225\\' fill=\\'%23222\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23666\\' font-family=\\'sans-serif\\' font-size=\\'14\\'%3E이미지 없음%3C/text%3E%3C/svg%3E'">
+                        </div>
+                        <div class="gallery-item-info">
+                            <div class="gallery-item-title">${item.title || '제목 없음'}</div>
+                            ${item.subtitle ? `<div class="gallery-item-subtitle">${item.subtitle}</div>` : ''}
+                            <div class="gallery-item-meta">
+                                <span>📌 ${item.source === 'main' ? '메인' : item.source === 'additional' ? '추가' : item.tool || item.category || 'media'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 라이트박스 열기
+        function openLightbox(url, type) {
+            const lightbox = document.getElementById('lightbox');
+            const image = document.getElementById('lightbox-image');
+            const video = document.getElementById('lightbox-video');
+            
+            if (type === 'image') {
+                image.src = url;
+                image.style.display = 'block';
+                video.style.display = 'none';
+                video.src = '';
+            } else if (type === 'video') {
+                image.style.display = 'none';
+                
+                // 드롭박스 URL 변환 (라이트박스용)
+                let finalUrl = url;
+                if (url.includes('dropbox.com')) {
+                    console.log('🎬 라이트박스 드롭박스 URL:', url);
+                    
+                    // 드롭박스 URL 변환 로직 (loadStoryboardMedia와 동일하게)
+                    // Case 1: 이미 raw=1로 변환된 경우 - 그대로 사용
+                    if (url.includes('raw=1')) {
+                        console.log('✅ 이미 변환된 드롭박스 URL (raw=1)');
+                        finalUrl = url;
+                    }
+                    // Case 2: dl.dropboxusercontent.com으로 변환된 경우 - 그대로 사용
+                    else if (url.includes('dl.dropboxusercontent.com')) {
+                        console.log('✅ 이미 변환된 드롭박스 URL (dl.dropboxusercontent.com)');
+                        finalUrl = url;
+                    }
+                    // Case 3: dl=0이 포함된 경우 - raw=1로 변환
+                    else if (url.includes('dl=0')) {
+                        finalUrl = url.replace('dl=0', 'raw=1');
+                        console.log('🔄 드롭박스 URL 변환 (dl=0 → raw=1):', finalUrl);
+                    }
+                    // Case 4: dl 파라미터가 없는 경우 - raw=1 추가
+                    else if (!url.includes('dl=') && !url.includes('raw=')) {
+                        finalUrl = url.includes('?') ? url + '&raw=1' : url + '?raw=1';
+                        console.log('🔄 드롭박스 URL에 raw=1 추가:', finalUrl);
+                    }
+                    
+                    console.log('🔄 라이트박스 변환된 URL:', finalUrl);
+                }
+                
+                // 미드저니, 드롭박스 또는 직접 MP4 링크인 경우 video 태그로 재생
+                if (finalUrl.includes('.mp4') || finalUrl.includes('midjourney') || finalUrl.includes('cdn.') || finalUrl.includes('dropbox.com')) {
+                    // 드롭박스의 경우 crossorigin 제거
+                    const crossOrigin = finalUrl.includes('dropbox.com') ? '' : 'crossorigin="anonymous"';
+                    
+                    // iframe 대신 video 태그 사용
+                    const videoHTML = `
+                        <video controls autoplay style="width: 100%; height: 100%; max-width: 90vw; max-height: 90vh;" ${crossOrigin}>
+                            <source src="${finalUrl}" type="video/mp4">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    `;
+                    // iframe을 video 태그로 교체
+                    const lightboxContent = document.querySelector('.lightbox-content');
+                    const existingVideo = lightboxContent.querySelector('video');
+                    if (existingVideo) {
+                        existingVideo.remove();
+                    }
+                    video.style.display = 'none';
+                    lightboxContent.insertAdjacentHTML('beforeend', videoHTML);
+                } else {
+                    // Google Drive 등 iframe으로 재생
+                    video.style.display = 'block';
+                    video.src = finalUrl;
+                    video.setAttribute('allowfullscreen', 'true');
+                    video.setAttribute('allow', 'autoplay; fullscreen');
+                }
+            }
+            
+            lightbox.classList.add('active');
+        }
+
+        // 라이트박스 닫기
+        function closeLightbox(event) {
+            if (event.target.classList.contains('lightbox') || event.target.classList.contains('lightbox-close')) {
+                const lightbox = document.getElementById('lightbox');
+                lightbox.classList.remove('active');
+                
+                // 소스 초기화
+                document.getElementById('lightbox-image').src = '';
+                document.getElementById('lightbox-video').src = '';
+                
+                // video 태그 제거 (미드저니 비디오용)
+                const lightboxContent = document.querySelector('.lightbox-content');
+                const videoElement = lightboxContent.querySelector('video');
+                if (videoElement) {
+                    videoElement.remove();
+                }
+            }
+        }
+
+        // localStorage에서 데이터 동기화
+        function syncFromLocalStorage() {
+            showSyncModal('데이터 가져오는 중...');
+            
+            let storyboardCount = 0;
+            let conceptArtCount = 0;
+            
+            // 스토리보드 데이터 확인
+            let storyboardData = null;
+            
+            // 모든 localStorage keys 확인하여 breakdownData 찾기
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('breakdownData_')) {
+                    storyboardData = localStorage.getItem(key);
+                    if (storyboardData) {
+                        console.log('동기화용 스토리보드 데이터 찾음:', key);
+                        break;
+                    }
+                }
+            }
+            if (storyboardData) {
+                try {
+                    const data = JSON.parse(storyboardData);
+                    if (data.breakdown_data && data.breakdown_data.shots) {
+                        data.breakdown_data.shots.forEach(shot => {
+                            // AI 생성 이미지 카운트
+                            if (shot.image_design && shot.image_design.ai_generated_images) {
+                                Object.values(shot.image_design.ai_generated_images).forEach(toolImages => {
+                                    if (toolImages && typeof toolImages === 'object') {
+                                        // 객체의 각 이미지가 실제로 URL을 가지고 있는지 확인
+                                        Object.values(toolImages).forEach(img => {
+                                            if ((typeof img === 'string' && img) || (img && img.url)) {
+                                                storyboardCount++;
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                            // 메인 이미지 카운트
+                            if (shot.main_images && Array.isArray(shot.main_images)) {
+                                storyboardCount += shot.main_images.filter(img => img && img.url).length;
+                            }
+                            // 참조 이미지 카운트
+                            if (shot.reference_images && Array.isArray(shot.reference_images)) {
+                                storyboardCount += shot.reference_images.filter(ref => ref && ref.url).length;
+                            }
+                            // 비디오 카운트
+                            if (shot.video_urls) {
+                                storyboardCount += Object.keys(shot.video_urls).filter(key => shot.video_urls[key]).length;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('스토리보드 데이터 파싱 오류:', e);
+                }
+            }
+            
+            // 컨셉아트 데이터 확인 - v1.3 버전 우선, 없으면 v1.2 확인
+            let conceptArtData = localStorage.getItem('conceptArtManagerData_v1.3');
+            if (!conceptArtData) {
+                conceptArtData = localStorage.getItem('conceptArtManagerData_v1.2');
+                console.log('v1.3 데이터 없음, v1.2 데이터 사용');
+            }
+            
+            if (conceptArtData) {
+                try {
+                    const data = JSON.parse(conceptArtData);
+                    console.log('📊 컨셉아트 데이터 구조:', data);
+                    
+                    // 데이터 구조에 따라 적절한 경로 선택
+                    const actualData = data.conceptArtData || data;
+                    
+                    ['characters', 'locations', 'props'].forEach(category => {
+                        const categoryData = actualData[category];
+                        if (categoryData && typeof categoryData === 'object') {
+                            Object.keys(categoryData).forEach(itemId => {
+                                const item = categoryData[itemId];
+                                
+                                // main_image_url (v1.3) 또는 image_url (구버전) 확인
+                                if (item.main_image_url || item.image_url) {
+                                    conceptArtCount++;
+                                    console.log(`${category}/${itemId}: 메인 이미지 발견`);
+                                }
+                                
+                                // additional_images 확인 (v1.3 구조)
+                                if (item.additional_images && typeof item.additional_images === 'object') {
+                                    // image_1, image_2 형식 체크
+                                    for (let i = 1; i <= 4; i++) {
+                                        const imageKey = `image_${i}`;
+                                        const imageData = item.additional_images[imageKey];
+                                        if (imageData && imageData.url) {
+                                            conceptArtCount++;
+                                            console.log(`${category}/${itemId}: 추가 이미지 ${i} 발견`);
+                                        }
+                                    }
+                                    
+                                    // AI 도구별 추가 이미지도 체크 (하위 호환성)
+                                    Object.keys(item.additional_images).forEach(key => {
+                                        if (!key.startsWith('image_') && Array.isArray(item.additional_images[key])) {
+                                            item.additional_images[key].forEach((img, index) => {
+                                                if (img && img.url) {
+                                                    conceptArtCount++;
+                                                    console.log(`${category}/${itemId}: AI 도구 ${key} 이미지 ${index} 발견`);
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                                
+                                // generated_images 확인 (하위 호환성)
+                                if (item.generated_images) {
+                                    // base_prompts 체크
+                                    if (item.generated_images.base_prompts) {
+                                        Object.entries(item.generated_images.base_prompts).forEach(([tool, url]) => {
+                                            if (url) {
+                                                conceptArtCount++;
+                                                console.log(`${category}/${itemId}: generated_images base ${tool} 발견`);
+                                            }
+                                        });
+                                    }
+                                    // variations 체크
+                                    if (item.generated_images.variations) {
+                                        Object.entries(item.generated_images.variations).forEach(([tool, variations]) => {
+                                            if (variations && typeof variations === 'object') {
+                                                Object.entries(variations).forEach(([varKey, url]) => {
+                                                    if (url) {
+                                                        conceptArtCount++;
+                                                        console.log(`${category}/${itemId}: generated_images variation ${tool}/${varKey} 발견`);
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } catch (e) {
+                    console.error('컨셉아트 데이터 파싱 오류:', e);
+                }
+            }
+            
+            // 갤러리 새로고침
+            loadAllMedia();
+            
+            // 동기화 완료 메시지
+            const totalCount = storyboardCount + conceptArtCount;
+            if (totalCount > 0) {
+                showSyncModal(
+                    `✅ 가져오기 완료!`,
+                    `스토리보드: ${storyboardCount}개 | 컨셉아트: ${conceptArtCount}개`
+                );
+            } else {
+                showSyncModal(
+                    `⚠️ 미디어가 없습니다`,
+                    `스토리보드나 컨셉아트에서 URL을 추가해주세요`
+                );
+            }
+            
+            // 모달 자동 닫기
+            setTimeout(() => {
+                closeSyncModal();
+            }, 2000);
+        }
+        
+        // 동기화 모달 표시
+        function showSyncModal(status, details = '') {
+            const modal = document.getElementById('sync-modal');
+            const statusText = document.getElementById('sync-status-text');
+            const detailsText = document.getElementById('sync-details');
+            
+            modal.style.display = 'block';
+            statusText.textContent = status;
+            detailsText.textContent = details;
+        }
+        
+        // 동기화 모달 닫기
+        function closeSyncModal() {
+            const modal = document.getElementById('sync-modal');
+            modal.style.display = 'none';
+        }
+        
+        // 스토리보드 필터링
+        function filterStoryboard(filter) {
+            currentFilter = filter;
+            const gallery = document.getElementById('storyboard-gallery');
+            const items = gallery.querySelectorAll('.gallery-item, .scene-group');
+            
+            // 필터 버튼 활성화 상태 업데이트
+            document.querySelectorAll('#storyboard-filters .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 필터링 적용
+            if (filter === 'all') {
+                items.forEach(item => {
+                    item.style.display = '';
+                });
+            } else {
+                items.forEach(item => {
+                    if (item.classList.contains('scene-group')) {
+                        // scene-group은 샷 ID 확인
+                        const shotItems = item.querySelectorAll('.gallery-item');
+                        let hasMatch = false;
+                        shotItems.forEach(shotItem => {
+                            if (shotItem.dataset.shotId === filter) {
+                                hasMatch = true;
+                            }
+                        });
+                        item.style.display = hasMatch ? '' : 'none';
+                    } else {
+                        // 개별 아이템
+                        item.style.display = item.dataset.shotId === filter ? '' : 'none';
+                    }
+                });
+            }
+        }
+        
+        // 컨셉아트 필터링
+        function filterConceptArt(filter) {
+            currentFilter = filter;
+            const gallery = document.getElementById('conceptart-gallery');
+            const items = gallery.querySelectorAll('.gallery-item, .scene-group');
+            
+            // 필터 버튼 활성화 상태 업데이트
+            document.querySelectorAll('#conceptart-filters .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // 캐릭터 개별 필터 표시/숨기기
+            const characterFilters = document.getElementById('character-filters');
+            const characterDivider = document.getElementById('character-divider');
+            
+            if (filter === 'characters' || galleryData.characterList.some(char => char === filter)) {
+                characterFilters.style.display = 'inline-flex';
+                characterDivider.style.display = 'block';
+            } else {
+                characterFilters.style.display = 'none';
+                characterDivider.style.display = 'none';
+            }
+            
+            // 필터링 적용
+            if (filter === 'all') {
+                items.forEach(item => {
+                    item.style.display = '';
+                });
+            } else if (filter === 'characters' || filter === 'locations' || filter === 'props') {
+                // 카테고리별 필터링
+                items.forEach(item => {
+                    if (item.classList.contains('scene-group')) {
+                        const groupItems = item.querySelectorAll('.gallery-item');
+                        let hasMatch = false;
+                        groupItems.forEach(groupItem => {
+                            if (groupItem.dataset.category === filter) {
+                                hasMatch = true;
+                            }
+                        });
+                        item.style.display = hasMatch ? '' : 'none';
+                    } else {
+                        item.style.display = item.dataset.category === filter ? '' : 'none';
+                    }
+                });
+            } else {
+                // 개별 캐릭터 필터링
+                items.forEach(item => {
+                    if (item.classList.contains('scene-group')) {
+                        const groupItems = item.querySelectorAll('.gallery-item');
+                        let hasMatch = false;
+                        groupItems.forEach(groupItem => {
+                            if (groupItem.dataset.character === filter) {
+                                hasMatch = true;
+                            }
+                        });
+                        item.style.display = hasMatch ? '' : 'none';
+                    } else {
+                        item.style.display = item.dataset.character === filter ? '' : 'none';
+                    }
+                });
+            }
+        }
+        
+        // 캐릭터 필터 버튼 생성
+        function createCharacterFilters() {
+            const characterFilters = document.getElementById('character-filters');
+            characterFilters.innerHTML = '';
+            
+            galleryData.characterList.forEach(character => {
+                const count = document.querySelectorAll(`.gallery-item[data-character="${character}"]`).length;
+                if (count > 0) {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    btn.innerHTML = `${character} <span class="filter-btn-count">(${count})</span>`;
+                    btn.onclick = () => filterConceptArt(character);
+                    characterFilters.appendChild(btn);
+                }
+            });
+        }
+        
+        // 필터 카운트 업데이트
+        function updateFilterCounts() {
+            // 컨셉아트 카테고리 카운트
+            const caAll = document.querySelectorAll('#conceptart-gallery .gallery-item').length;
+            const caCharacters = document.querySelectorAll('#conceptart-gallery .gallery-item[data-category="characters"]').length;
+            const caLocations = document.querySelectorAll('#conceptart-gallery .gallery-item[data-category="locations"]').length;
+            const caProps = document.querySelectorAll('#conceptart-gallery .gallery-item[data-category="props"]').length;
+            
+            document.getElementById('ca-filter-all-count').textContent = `(${caAll})`;
+            document.getElementById('ca-filter-characters-count').textContent = `(${caCharacters})`;
+            document.getElementById('ca-filter-locations-count').textContent = `(${caLocations})`;
+            document.getElementById('ca-filter-props-count').textContent = `(${caProps})`;
+            
+            // 캐릭터 개별 필터 생성
+            createCharacterFilters();
+        }
+        
+        // window 스코프에 함수 노출
+        window.filterStoryboard = filterStoryboard;
+        window.filterConceptArt = filterConceptArt;
+        
+        // Tabler Icons Rendering for Media Gallery
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sub-tab icons
+            const iconImage = document.querySelector('.icon-image');
+            if (iconImage) {
+                iconImage.innerHTML = getTablerIcon('photo', 16);
+            }
+            
+            const iconVideo = document.querySelector('.icon-video');
+            if (iconVideo) {
+                iconVideo.innerHTML = getTablerIcon('video', 16);
+            }
+            
+            // Loading icon
+            const iconLoading = document.querySelector('.icon-loading');
+            if (iconLoading) {
+                iconLoading.innerHTML = getTablerIcon('refresh', 48);
+            }
+            
+            // Empty state icons
+            const iconEmptyImage = document.querySelector('.icon-empty-image');
+            if (iconEmptyImage) {
+                iconEmptyImage.innerHTML = getTablerIcon('photo', 48);
+                iconEmptyImage.style.opacity = '0.5';
+            }
+            
+            const iconEmptyVideo = document.querySelector('.icon-empty-video');
+            if (iconEmptyVideo) {
+                iconEmptyVideo.innerHTML = getTablerIcon('video', 48);
+                iconEmptyVideo.style.opacity = '0.5';
+            }
+        });
+    </script>
+</body>
+</html>
