@@ -11,8 +11,12 @@ class GoogleAuth {
     }
 
     initializeAuth() {
+        console.log('🔄 Initializing Google Auth...');
+        console.log('Current domain:', window.location.hostname);
+        console.log('Current protocol:', window.location.protocol);
+        
         // Google Identity Services 초기화
-        window.addEventListener('load', () => {
+        const initGoogleAuth = () => {
             if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
                 try {
                     google.accounts.id.initialize({
@@ -22,15 +26,31 @@ class GoogleAuth {
                         cancel_on_tap_outside: true,
                     });
                     
-                    console.log('Google Auth initialized');
+                    console.log('✅ Google Auth initialized successfully');
+                    console.log('Client ID:', this.CLIENT_ID);
+                    
+                    // 초기화 성공 후 바로 버튼 렌더링 시도
+                    setTimeout(() => {
+                        this.renderButton('google-signin-button');
+                    }, 100);
                 } catch (error) {
-                    console.error('Error initializing Google Auth:', error);
+                    console.error('❌ Error initializing Google Auth:', error);
                 }
             } else {
-                console.warn('Google Identity Services not loaded yet, retrying...');
-                setTimeout(() => this.initializeAuth(), 1000);
+                console.warn('⏳ Google Identity Services not loaded yet, retrying...');
+                setTimeout(() => initGoogleAuth(), 1000);
             }
-        });
+        };
+        
+        // DOMContentLoaded와 load 이벤트 모두 처리
+        if (document.readyState === 'loading') {
+            window.addEventListener('load', initGoogleAuth);
+        } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+            // 이미 로드된 경우 즉시 실행
+            setTimeout(initGoogleAuth, 100);
+        } else {
+            window.addEventListener('load', initGoogleAuth);
+        }
     }
 
     renderButton(buttonId) {
@@ -409,7 +429,23 @@ class GoogleAuth {
         
         setTimeout(() => {
             modal.style.opacity = '1';
+            // 버튼 렌더링을 여러 번 시도
             this.renderButton('google-signin-button');
+            
+            // 추가 시도
+            setTimeout(() => {
+                if (!document.querySelector('#google-signin-button iframe')) {
+                    console.log('🔄 Retrying button render...');
+                    this.renderButton('google-signin-button');
+                }
+            }, 500);
+            
+            setTimeout(() => {
+                if (!document.querySelector('#google-signin-button iframe')) {
+                    console.log('🔄 Final retry button render...');
+                    this.renderButton('google-signin-button');
+                }
+            }, 1500);
         }, 100);
     }
 
