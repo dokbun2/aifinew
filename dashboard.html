@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIFI Dashboard - 프로젝트 관리</title>
+
+    <!-- SEO -->
+    <meta name="description" content="AIFI 대시보드 - AI 영상 제작 프로젝트 관리 시스템">
+    <meta name="keywords" content="AI, 영상제작, 프로젝트 관리, 스토리보드, 컨셉아트">
+
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
+
+    <!-- Apple Developer Style -->
+    <link rel="stylesheet" href="apple-developer-style.css">
+
+    <!-- Tabler Icons -->
+    <script src="tabler-icons.js"></script>
+
+    <!-- Dashboard Specific Styles -->
+    <style>
+        /* Dashboard Layout */
+        body {
+            padding-top: var(--nav-height);
+            min-height: 100vh;
+            background: var(--dark-bg);
+        }
+
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 30px 22px;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            margin-bottom: 40px;
+        }
+
+        .dashboard-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-title {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .dashboard-subtitle {
+            font-size: 18px;
+            color: var(--dark-text-secondary);
+            margin-top: 8px;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Project Type Tabs */
+        .project-tabs {
+            display: flex;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 2px;
+            margin-bottom: 30px;
+            width: fit-content;
+        }
+
+        .project-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--dark-text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-tab.active {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        .project-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: var(--dark-text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: var(--apple-blue);
+            border-color: var(--apple-blue);
+            color: white;
+        }
+
+        /* Project Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        /* Project Card */
+        .project-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .project-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .project-thumbnail-placeholder {
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        .project-type-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .project-type-badge.movie {
+            color: #4ecdc4;
+            border: 1px solid #4ecdc4;
+        }
+
+        .project-type-badge.cf {
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .project-info {
+            padding: 20px;
+        }
+
+        .project-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 8px;
+        }
+
+        .project-details {
+            font-size: 14px;
+            color: var(--dark-text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .project-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .project-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--dark-text-secondary);
+        }
+
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid var(--dark-border);
+        }
+
+        .project-updated {
+            font-size: 12px;
+            color: var(--dark-text-secondary);
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .project-action-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: var(--dark-text);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-action-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 12px;
+        }
+
+        .empty-state-subtitle {
+            font-size: 16px;
+            color: var(--dark-text-secondary);
+            margin-bottom: 30px;
+        }
+
+        /* New Project Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        /* Project Type Selector */
+        .project-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .type-card {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .type-card input[type="radio"] {
+            display: none;
+        }
+
+        .type-card-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .type-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 6px;
+        }
+
+        .type-card-desc {
+            font-size: 14px;
+            color: var(--dark-text-secondary);
+        }
+
+        input[type="radio"]:checked + .type-card {
+            background: rgba(0, 102, 204, 0.1);
+            border-color: var(--apple-blue);
+        }
+
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark-text);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: var(--dark-text);
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--apple-blue);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* CF Specific Fields */
+        .cf-fields {
+            display: none;
+            padding: 20px;
+            background: rgba(255, 107, 107, 0.05);
+            border: 1px solid rgba(255, 107, 107, 0.2);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .cf-fields.show {
+            display: block;
+        }
+
+        .duration-selector {
+            display: flex;
+            gap: 12px;
+        }
+
+        .duration-option {
+            flex: 1;
+        }
+
+        .duration-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--dark-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--apple-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            .dashboard-header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .project-type-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="apple-nav">
+        <div class="nav-content">
+            <a href="index.html" class="nav-brand">
+                <i class="ti ti-home"></i>
+                AIFI
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link active">대시보드</a></li>
+                <li><a href="storyboard/index.html" class="nav-link">스토리보드</a></li>
+                <li><a href="concept-art/index.html" class="nav-link">컨셉아트</a></li>
+                <li><a href="media-gallery/index.html" class="nav-link">갤러리</a></li>
+            </ul>
+            <div class="user-menu" id="user-menu">
+                <!-- User info will be inserted here -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="dashboard-header-top">
+                <div>
+                    <h1 class="dashboard-title">프로젝트 대시보드</h1>
+                    <p class="dashboard-subtitle" id="welcome-message">프로젝트를 로드하고 있습니다...</p>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="apple-btn apple-btn-primary" onclick="openNewProjectModal()">
+                        <i class="ti ti-plus"></i>
+                        새 프로젝트
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Type Tabs -->
+        <div class="project-tabs">
+            <button class="project-tab active" data-type="all" onclick="filterProjects('all')">
+                전체
+            </button>
+            <button class="project-tab" data-type="movie" onclick="filterProjects('movie')">
+                <i class="ti ti-movie"></i>
+                영화
+            </button>
+            <button class="project-tab" data-type="cf" onclick="filterProjects('cf')">
+                <i class="ti ti-speakerphone"></i>
+                CF/광고
+            </button>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="setView('grid')">
+                <i class="ti ti-layout-grid"></i>
+            </button>
+            <button class="view-btn" onclick="setView('list')">
+                <i class="ti ti-list"></i>
+            </button>
+        </div>
+
+        <!-- Projects Container -->
+        <div id="projects-container">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div id="new-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">새 프로젝트 만들기</h2>
+            </div>
+            <div class="modal-body">
+                <!-- Project Type Selector -->
+                <div class="project-type-selector">
+                    <label>
+                        <input type="radio" name="project_type" value="movie" checked onchange="toggleCFFields()">
+                        <div class="type-card">
+                            <div class="type-card-icon">🎬</div>
+                            <div class="type-card-title">영화</div>
+                            <div class="type-card-desc">장편/단편 영화 제작</div>
+                        </div>
+                    </label>
+                    <label>
+                        <input type="radio" name="project_type" value="cf" onchange="toggleCFFields()">
+                        <div class="type-card">
+                            <div class="type-card-icon">📺</div>
+                            <div class="type-card-title">CF/광고</div>
+                            <div class="type-card-desc">TV/온라인 광고 제작</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Basic Fields -->
+                <div class="form-group">
+                    <label class="form-label">프로젝트명 *</label>
+                    <input type="text" class="form-input" id="project-name" placeholder="예: 인셉션, 갤럭시 S24 광고">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">장르</label>
+                    <input type="text" class="form-input" id="project-genre" placeholder="예: SF 스릴러, 제품 광고">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">설명</label>
+                    <textarea class="form-input form-textarea" id="project-description" placeholder="프로젝트에 대한 간단한 설명을 입력하세요"></textarea>
+                </div>
+
+                <!-- CF Specific Fields -->
+                <div class="cf-fields" id="cf-fields">
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--dark-text);">CF 상세 정보</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">클라이언트명</label>
+                        <input type="text" class="form-input" id="cf-client" placeholder="예: 삼성전자">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">제품명</label>
+                        <input type="text" class="form-input" id="cf-product" placeholder="예: Galaxy S24">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">제작 버전</label>
+                        <div class="duration-selector">
+                            <div class="duration-option">
+                                <label class="duration-checkbox">
+                                    <input type="checkbox" id="duration-15" value="15">
+                                    <span>15초</span>
+                                </label>
+                            </div>
+                            <div class="duration-option">
+                                <label class="duration-checkbox">
+                                    <input type="checkbox" id="duration-30" value="30" checked>
+                                    <span>30초</span>
+                                </label>
+                            </div>
+                            <div class="duration-option">
+                                <label class="duration-checkbox">
+                                    <input type="checkbox" id="duration-60" value="60">
+                                    <span>60초</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="apple-btn apple-btn-secondary" onclick="closeNewProjectModal()">
+                    취소
+                </button>
+                <button class="apple-btn apple-btn-primary" onclick="createNewProject()">
+                    프로젝트 생성
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Dashboard JavaScript -->
+    <script type="module">
+        // Import configuration
+        import { SUPABASE_CONFIG, validateConfig } from './js/modules/supabase-config.js';
+
+        // Global variables
+        let currentUser = null;
+        let projects = [];
+        let currentFilter = 'all';
+        let currentView = 'grid';
+
+        // Initialize dashboard
+        async function initDashboard() {
+            try {
+                // Check authentication
+                const authenticated = await SupabaseClient.requireAuth();
+                if (!authenticated) return;
+
+                // Get current user
+                currentUser = await SupabaseClient.getCurrentUser();
+                updateUserInfo();
+
+                // Load projects
+                await loadProjects();
+
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                showError('대시보드 초기화 중 오류가 발생했습니다.');
+            }
+        }
+
+        // Update user info in UI
+        function updateUserInfo() {
+            const welcomeMessage = document.getElementById('welcome-message');
+            const userMenu = document.getElementById('user-menu');
+
+            if (currentUser) {
+                welcomeMessage.textContent = `안녕하세요, ${currentUser.user_metadata?.full_name || currentUser.email}님`;
+
+                userMenu.innerHTML = `
+                    <div class="user-dropdown">
+                        <button class="user-menu-trigger">
+                            <img src="${currentUser.user_metadata?.avatar_url || ''}" alt="User" class="user-avatar">
+                            <span class="user-name">${currentUser.user_metadata?.full_name || 'User'}</span>
+                        </button>
+                        <div class="user-dropdown-content">
+                            <button onclick="SupabaseClient.signOut()" class="dropdown-item">
+                                <i class="ti ti-logout"></i>
+                                로그아웃
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Load projects from Supabase
+        async function loadProjects() {
+            const container = document.getElementById('projects-container');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                projects = await SupabaseClient.getUserProjects();
+                renderProjects();
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                showError('프로젝트를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // Render projects
+        function renderProjects() {
+            const container = document.getElementById('projects-container');
+
+            // Filter projects
+            let filteredProjects = projects;
+            if (currentFilter !== 'all') {
+                filteredProjects = projects.filter(p => p.project_type === currentFilter);
+            }
+
+            if (filteredProjects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <div class="empty-state-title">프로젝트가 없습니다</div>
+                        <div class="empty-state-subtitle">새 프로젝트를 만들어 시작하세요</div>
+                        <button class="apple-btn apple-btn-primary" onclick="openNewProjectModal()">
+                            <i class="ti ti-plus"></i>
+                            첫 프로젝트 만들기
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render project cards
+            const projectsHTML = filteredProjects.map(project => createProjectCard(project)).join('');
+            container.innerHTML = `<div class="projects-grid">${projectsHTML}</div>`;
+        }
+
+        // Create project card HTML
+        function createProjectCard(project) {
+            const typeLabel = project.project_type === 'movie' ? '영화' : 'CF';
+            const stats = project.statistics || {};
+            const updatedAt = new Date(project.updated_at).toLocaleDateString('ko-KR');
+
+            return `
+                <div class="project-card" onclick="openProject('${project.id}')">
+                    <div class="project-thumbnail">
+                        ${project.thumbnail_url
+                            ? `<img src="${project.thumbnail_url}" alt="${project.project_name}">`
+                            : `<div class="project-thumbnail-placeholder">${project.project_type === 'movie' ? '🎬' : '📺'}</div>`
+                        }
+                        <div class="project-type-badge ${project.project_type}">${typeLabel}</div>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-name">${project.project_name}</div>
+                        <div class="project-details">${project.genre || '장르 미지정'} | ${project.film_id}</div>
+                        <div class="project-stats">
+                            <div class="project-stat">
+                                <i class="ti ti-layout-dashboard"></i>
+                                <span>${stats.total_shots || 0} 샷</span>
+                            </div>
+                            <div class="project-stat">
+                                <i class="ti ti-palette"></i>
+                                <span>${(stats.total_characters || 0) + (stats.total_locations || 0) + (stats.total_props || 0)} 아트워크</span>
+                            </div>
+                        </div>
+                        <div class="project-meta">
+                            <div class="project-updated">수정: ${updatedAt}</div>
+                            <div class="project-actions">
+                                <button class="project-action-btn" onclick="openStoryboard(event, '${project.id}')">
+                                    스토리보드
+                                </button>
+                                <button class="project-action-btn" onclick="openConceptArt(event, '${project.id}')">
+                                    컨셉아트
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Open project
+        window.openProject = function(projectId) {
+            // For now, open storyboard by default
+            window.location.href = `storyboard/index.html?project=${projectId}`;
+        };
+
+        // Open storyboard
+        window.openStoryboard = function(event, projectId) {
+            event.stopPropagation();
+            window.location.href = `storyboard/index.html?project=${projectId}`;
+        };
+
+        // Open concept art
+        window.openConceptArt = function(event, projectId) {
+            event.stopPropagation();
+            window.location.href = `concept-art/index.html?project=${projectId}`;
+        };
+
+        // Filter projects
+        window.filterProjects = function(type) {
+            currentFilter = type;
+
+            // Update tab styles
+            document.querySelectorAll('.project-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.type === type);
+            });
+
+            renderProjects();
+        };
+
+        // Set view mode
+        window.setView = function(view) {
+            currentView = view;
+
+            // Update button styles
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.view-btn').classList.add('active');
+
+            // TODO: Implement list view
+            renderProjects();
+        };
+
+        // Open new project modal
+        window.openNewProjectModal = function() {
+            document.getElementById('new-project-modal').classList.add('show');
+        };
+
+        // Close new project modal
+        window.closeNewProjectModal = function() {
+            document.getElementById('new-project-modal').classList.remove('show');
+            // Reset form
+            document.getElementById('project-name').value = '';
+            document.getElementById('project-genre').value = '';
+            document.getElementById('project-description').value = '';
+            document.querySelector('input[name="project_type"][value="movie"]').checked = true;
+            toggleCFFields();
+        };
+
+        // Toggle CF fields
+        window.toggleCFFields = function() {
+            const projectType = document.querySelector('input[name="project_type"]:checked').value;
+            const cfFields = document.getElementById('cf-fields');
+            cfFields.classList.toggle('show', projectType === 'cf');
+        };
+
+        // Create new project
+        window.createNewProject = async function() {
+            const projectName = document.getElementById('project-name').value.trim();
+
+            if (!projectName) {
+                alert('프로젝트명을 입력해주세요.');
+                return;
+            }
+
+            const projectType = document.querySelector('input[name="project_type"]:checked').value;
+            const projectData = {
+                project_name: projectName,
+                project_type: projectType,
+                genre: document.getElementById('project-genre').value.trim(),
+                description: document.getElementById('project-description').value.trim(),
+                status: 'planning'
+            };
+
+            // Add CF specific data
+            if (projectType === 'cf') {
+                projectData.cf_details = {
+                    client_name: document.getElementById('cf-client').value.trim(),
+                    product_name: document.getElementById('cf-product').value.trim(),
+                    versions: []
+                };
+
+                // Get selected durations
+                if (document.getElementById('duration-15').checked) {
+                    projectData.cf_details.versions.push('15초');
+                }
+                if (document.getElementById('duration-30').checked) {
+                    projectData.cf_details.versions.push('30초');
+                }
+                if (document.getElementById('duration-60').checked) {
+                    projectData.cf_details.versions.push('60초');
+                }
+            }
+
+            try {
+                const newProject = await SupabaseClient.createProject(projectData);
+                console.log('Project created:', newProject);
+
+                // Reload projects
+                await loadProjects();
+                closeNewProjectModal();
+
+                // Show success message
+                showSuccess('프로젝트가 생성되었습니다!');
+
+            } catch (error) {
+                console.error('Error creating project:', error);
+                showError('프로젝트 생성 중 오류가 발생했습니다.');
+            }
+        };
+
+        // Show success message
+        function showSuccess(message) {
+            // TODO: Implement toast notification
+            console.log('✅', message);
+        }
+
+        // Show error message
+        function showError(message) {
+            // TODO: Implement toast notification
+            console.error('❌', message);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Make SupabaseClient available globally for debugging
+        window.SupabaseClient = SupabaseClient;
+    </script>
+</body>
+</html>

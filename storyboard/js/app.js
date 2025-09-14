@@ -129,8 +129,8 @@ if (window.AppUtils && window.AppUtils.showMessage) {
 // copyToClipboard - AppUtils 모듈 사용 (app-utils.js가 먼저 로드됨)
 const copyToClipboard = window.AppUtils.copyToClipboard;
 
-  // Stage 5 v5.0.0 및 v3.0.0 형식 변환 함수 (Stage 2 호환성 개선)
-function convertStage5V5Format(data) {
+// Stage 변환 함수들을 모듈에서 가져오기
+const convertStage5V5Format = window.StageConverter ? window.StageConverter.convertStage5V5Format : function(data) {
     try {
         // v1.1.0 형식 체크 (이미 올바른 형식)
         if (data.schema_version === "1.1.0" && data.breakdown_data) {
@@ -549,9 +549,8 @@ function convertStage5V5Format(data) {
 				}
 			}
 
-// [DEPRECATED] 테스트용 JSON 데이터 생성 함수 - 더 이상 사용되지 않음
-// TODO: 향후 버전에서 제거 예정
-function createTestData() {
+// 테스트 데이터 생성 함수 - TestData 모듈 사용
+const createTestData = window.TestData ? window.TestData.createTestData : function() {
     
     return {
         "film_id": "FILM_TEST001",
