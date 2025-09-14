@@ -560,7 +560,7 @@ class GoogleAuth {
             margin: 10px 5px;
             font-size: 14px;
         `;
-        resendBtn.textContent = '🔄 가입 신청 다시 하기';
+        resendBtn.textContent = '재신청';
         resendBtn.onclick = async () => {
             if (confirm('가입 신청을 다시 하시겠습니까?\n\n관리자 페이지에서 확인할 수 있도록 데이터를 재전송합니다.')) {
                 await this.resendApplication();
