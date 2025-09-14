@@ -64,6 +64,9 @@ class ProjectBackupSystem {
         const keysToBackup = [
             'breakdownData_',
             'conceptArt_',
+            'conceptArtManagerData_', // 컨셉아트 매니저 데이터 추가
+            'editedConceptPrompts',   // 편집된 컨셉 프롬프트
+            'editedKoreanTranslations', // 편집된 한국어 번역
             'stage',
             'imageUrlCache_',
             'videoPrompts_',

@@ -49,10 +49,28 @@
                     <input type="file" id="upload-file" accept=".json" onchange="uploadBackupFile(event)">
                 </div>
             </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="dashboard-controls">
+                <div class="search-container">
+                    <i class="ti ti-search"></i>
+                    <input type="text" id="search-input" placeholder="프로젝트 검색..." onkeyup="filterProjects()">
+                </div>
+                <div class="view-toggles">
+                    <button class="view-btn active" data-view="list" onclick="changeView('list')">
+                        <i class="ti ti-list"></i>
+                        리스트
+                    </button>
+                    <button class="view-btn" data-view="grid" onclick="changeView('grid')">
+                        <i class="ti ti-layout-grid"></i>
+                        그리드
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Projects Container -->
-        <div id="projects-container">
+        <div id="projects-container" class="list-view">
             <div class="loading">
                 <div class="spinner"></div>
             </div>
@@ -79,6 +97,8 @@
     <!-- Dashboard JavaScript -->
     <script>
         let projects = [];
+        let filteredProjects = [];
+        let currentView = 'list'; // 기본 뷰는 리스트
 
         // 대시보드 초기화
         async function initDashboard() {
@@ -123,6 +143,7 @@
 
                 // 프로젝트 목록 가져오기
                 projects = await window.ProjectBackup.getProjectList();
+                filteredProjects = [...projects];
                 renderProjects();
 
             } catch (error) {
@@ -135,12 +156,12 @@
         function renderProjects() {
             const container = document.getElementById('projects-container');
 
-            if (projects.length === 0) {
+            if (filteredProjects.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📁</div>
-                        <h2 class="empty-state-title">저장된 프로젝트가 없습니다</h2>
-                        <p class="empty-state-desc">메인 페이지에서 프로젝트를 작업한 후 "프로젝트 저장" 버튼을 클릭하여 백업하세요.</p>
+                        <h2 class="empty-state-title">프로젝트가 없습니다</h2>
+                        <p class="empty-state-desc">검색 결과가 없거나 저장된 프로젝트가 없습니다.</p>
                         <button class="upload-btn" onclick="window.location.href='/'">
                             <i class="ti ti-home"></i>
                             메인 페이지로 이동
@@ -150,59 +171,191 @@
                 return;
             }
 
-            // 프로젝트 카드 생성
-            const cardsHTML = projects.map(project => {
-                const createdDate = new Date(project.created_at).toLocaleDateString('ko-KR');
-                const updatedDate = new Date(project.updated_at).toLocaleDateString('ko-KR');
-                const dataSize = project.metadata?.backup_size
-                    ? `${(project.metadata.backup_size / 1024).toFixed(1)} KB`
-                    : 'N/A';
+            if (currentView === 'list') {
+                // 리스트 뷰
+                const listHTML = filteredProjects.map(project => {
+                    const updatedDate = new Date(project.updated_at).toLocaleDateString('ko-KR');
+                    const updatedTime = new Date(project.updated_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                    const dataSize = project.metadata?.backup_size
+                        ? `${(project.metadata.backup_size / 1024).toFixed(1)} KB`
+                        : 'N/A';
 
-                return `
-                    <div class="project-card">
-                        <div class="project-card-header">
-                            <h3 class="project-card-title">${project.project_name || 'Untitled'}</h3>
-                            <span class="project-card-type">${project.project_type || 'movie'}</span>
-                        </div>
-                        <div class="project-card-meta">
-                            <div class="project-card-meta-item">
-                                <i class="ti ti-calendar"></i>
-                                ${createdDate}
+                    return `
+                        <div class="project-list-item">
+                            <div class="project-list-info">
+                                <div class="project-list-title-container">
+                                    <input type="text"
+                                           class="project-title-input"
+                                           id="title-${project.id}"
+                                           value="${project.project_name || 'Untitled'}"
+                                           onblur="updateProjectTitle('${project.id}')"
+                                           onkeypress="if(event.key==='Enter') this.blur()">
+                                    <span class="project-list-type">${project.project_type || 'movie'}</span>
+                                </div>
+                                <div class="project-list-meta">
+                                    <span><i class="ti ti-calendar"></i> ${updatedDate} ${updatedTime}</span>
+                                    <span><i class="ti ti-database"></i> ${dataSize}</span>
+                                    <span><i class="ti ti-files"></i> ${project.metadata?.keys_count || 0} items</span>
+                                </div>
                             </div>
-                            <div class="project-card-meta-item">
-                                <i class="ti ti-refresh"></i>
-                                ${updatedDate}
+                            <div class="project-list-actions">
+                                <button class="project-btn-sm project-btn-primary" onclick="restoreProject('${project.id}')" title="프로젝트 복원">
+                                    <i class="ti ti-player-play"></i>
+                                    <span class="btn-label">복원</span>
+                                </button>
+                                <button class="project-btn-sm" onclick="downloadProject('${project.id}', '${project.project_name}')" title="백업 다운로드">
+                                    <i class="ti ti-download"></i>
+                                    <span class="btn-label">다운로드</span>
+                                </button>
+                                <button class="project-btn-sm project-btn-danger" onclick="deleteProject('${project.id}')" title="프로젝트 삭제">
+                                    <i class="ti ti-trash"></i>
+                                    <span class="btn-label">삭제</span>
+                                </button>
                             </div>
                         </div>
-                        <div class="project-card-meta">
-                            <div class="project-card-meta-item">
-                                <i class="ti ti-database"></i>
-                                ${dataSize}
-                            </div>
-                            <div class="project-card-meta-item">
-                                <i class="ti ti-files"></i>
-                                ${project.metadata?.keys_count || 0} items
-                            </div>
-                        </div>
-                        <div class="project-card-actions">
-                            <button class="project-btn project-btn-primary" onclick="restoreProject('${project.id}')">
-                                <i class="ti ti-player-play"></i>
-                                복원
-                            </button>
-                            <button class="project-btn" onclick="downloadProject('${project.id}', '${project.project_name}')">
-                                <i class="ti ti-download"></i>
-                                다운로드
-                            </button>
-                            <button class="project-btn project-btn-danger" onclick="deleteProject('${project.id}')">
-                                <i class="ti ti-trash"></i>
-                                삭제
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
 
-            container.innerHTML = `<div class="projects-grid">${cardsHTML}</div>`;
+                container.innerHTML = `<div class="projects-list">${listHTML}</div>`;
+            } else {
+                // 그리드 뷰 (기존 카드 형식)
+                const cardsHTML = filteredProjects.map(project => {
+                    const createdDate = new Date(project.created_at).toLocaleDateString('ko-KR');
+                    const updatedDate = new Date(project.updated_at).toLocaleDateString('ko-KR');
+                    const dataSize = project.metadata?.backup_size
+                        ? `${(project.metadata.backup_size / 1024).toFixed(1)} KB`
+                        : 'N/A';
+
+                    return `
+                        <div class="project-card">
+                            <div class="project-card-header">
+                                <input type="text"
+                                       class="project-card-title-input"
+                                       id="card-title-${project.id}"
+                                       value="${project.project_name || 'Untitled'}"
+                                       onblur="updateProjectTitle('${project.id}')"
+                                       onkeypress="if(event.key==='Enter') this.blur()">
+                                <span class="project-card-type">${project.project_type || 'movie'}</span>
+                            </div>
+                            <div class="project-card-meta">
+                                <div class="project-card-meta-item">
+                                    <i class="ti ti-calendar"></i>
+                                    ${createdDate}
+                                </div>
+                                <div class="project-card-meta-item">
+                                    <i class="ti ti-refresh"></i>
+                                    ${updatedDate}
+                                </div>
+                            </div>
+                            <div class="project-card-meta">
+                                <div class="project-card-meta-item">
+                                    <i class="ti ti-database"></i>
+                                    ${dataSize}
+                                </div>
+                                <div class="project-card-meta-item">
+                                    <i class="ti ti-files"></i>
+                                    ${project.metadata?.keys_count || 0} items
+                                </div>
+                            </div>
+                            <div class="project-card-actions">
+                                <button class="project-btn project-btn-primary" onclick="restoreProject('${project.id}')">
+                                    <i class="ti ti-player-play"></i>
+                                    복원
+                                </button>
+                                <button class="project-btn" onclick="downloadProject('${project.id}', '${project.project_name}')">
+                                    <i class="ti ti-download"></i>
+                                    다운로드
+                                </button>
+                                <button class="project-btn project-btn-danger" onclick="deleteProject('${project.id}')">
+                                    <i class="ti ti-trash"></i>
+                                    삭제
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `<div class="projects-grid">${cardsHTML}</div>`;
+            }
+        }
+
+        // 뷰 변경
+        function changeView(view) {
+            currentView = view;
+            const container = document.getElementById('projects-container');
+
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.view === view) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 컨테이너 클래스 변경
+            container.className = view === 'list' ? 'list-view' : 'grid-view';
+
+            renderProjects();
+        }
+
+        // 프로젝트 필터링
+        function filterProjects() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+            if (searchTerm === '') {
+                filteredProjects = [...projects];
+            } else {
+                filteredProjects = projects.filter(project => {
+                    const name = (project.project_name || 'Untitled').toLowerCase();
+                    const type = (project.project_type || '').toLowerCase();
+                    return name.includes(searchTerm) || type.includes(searchTerm);
+                });
+            }
+
+            renderProjects();
+        }
+
+        // 프로젝트 제목 업데이트
+        async function updateProjectTitle(projectId) {
+            const inputId = currentView === 'list' ? `title-${projectId}` : `card-title-${projectId}`;
+            const newTitle = document.getElementById(inputId).value.trim();
+
+            if (!newTitle) {
+                document.getElementById(inputId).value = 'Untitled';
+                return;
+            }
+
+            try {
+                const project = projects.find(p => p.id === projectId);
+                if (project && project.project_name !== newTitle) {
+                    // Supabase 업데이트
+                    const { error } = await window.ProjectBackup.supabase
+                        .from('project_backups')
+                        .update({
+                            project_name: newTitle,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', projectId);
+
+                    if (error) throw error;
+
+                    // 로컬 데이터 업데이트
+                    project.project_name = newTitle;
+                    filteredProjects = filteredProjects.map(p =>
+                        p.id === projectId ? {...p, project_name: newTitle} : p
+                    );
+
+                    console.log('✅ 프로젝트 제목이 업데이트되었습니다.');
+                }
+            } catch (error) {
+                console.error('제목 업데이트 실패:', error);
+                alert('제목 업데이트에 실패했습니다.');
+                // 원래 값으로 되돌리기
+                const project = projects.find(p => p.id === projectId);
+                if (project) {
+                    document.getElementById(inputId).value = project.project_name || 'Untitled';
+                }
+            }
         }
 
         // 프로젝트 복원
@@ -276,14 +429,47 @@
             }
         }
 
-        // 백업 파일 업로드
+        // 백업 파일 업로드 및 자동 Supabase 저장
         async function uploadBackupFile(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             try {
-                await window.ProjectBackup.uploadAndRestore(file);
-                alert('✅ 백업 파일이 성공적으로 복원되었습니다!');
+                // 1. 먼저 파일을 localStorage에 복원
+                const restoredData = await window.ProjectBackup.uploadAndRestore(file);
+                console.log('✅ 백업 파일이 localStorage에 복원되었습니다!');
+
+                // 2. 프로젝트 이름 추출 (파일명 또는 데이터에서)
+                let projectName = file.name.replace('.json', '').replace(/_backup_.*/, '');
+
+                // 데이터에서 프로젝트 이름 찾기 시도
+                if (restoredData.data && restoredData.data.currentProject) {
+                    projectName = restoredData.data.currentProject.name || projectName;
+                }
+
+                // 3. 자동으로 Supabase에 저장
+                try {
+                    const user = window.ProjectBackup.getCurrentUser();
+                    if (!user) {
+                        // 로그인 상태가 아니면 localStorage에만 저장
+                        alert('✅ 백업이 로컬에 복원되었습니다.\n\n로그인하면 클라우드에도 자동 저장됩니다.');
+                    } else {
+                        // 로그인 상태면 Supabase에 자동 저장
+                        const saveResult = await window.ProjectBackup.backupToSupabase(projectName);
+                        if (saveResult) {
+                            alert(`✅ 백업이 성공적으로 복원되고 클라우드에 저장되었습니다!\n\n프로젝트: ${projectName}`);
+
+                            // 프로젝트 목록 새로고침
+                            if (typeof loadProjects === 'function') {
+                                await loadProjects();
+                            }
+                        }
+                    }
+                } catch (saveError) {
+                    console.error('Supabase 저장 실패:', saveError);
+                    // Supabase 저장 실패해도 localStorage 복원은 성공했으므로 계속 진행
+                    alert('✅ 백업이 로컬에 복원되었습니다.\n\n⚠️ 클라우드 저장은 실패했습니다: ' + saveError.message);
+                }
 
                 // 파일 입력 초기화
                 event.target.value = '';
