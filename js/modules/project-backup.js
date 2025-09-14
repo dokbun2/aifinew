@@ -140,10 +140,20 @@ class ProjectBackupSystem {
                 }
             };
 
-            // project_backups 테이블에 저장 (projects 테이블에 backup_data 컬럼이 없을 경우를 대비)
+            // projects 테이블에 저장 (컬럼 구조에 맞게 조정)
+            const projectRecord = {
+                user_email: user.email,
+                project_name: projectName,
+                film_id: projectData.data[`breakdownData_${projectName}`]?.project_info?.film_id || `FILM_${Date.now()}`,
+                // breakdown_data를 backup_data로 저장
+                backup_data: projectData.data,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
             const { data, error } = await this.supabase
-                .from('project_backups')
-                .upsert(backupData, {
+                .from('projects')
+                .upsert(projectRecord, {
                     onConflict: 'user_email,project_name'
                 })
                 .select();
@@ -176,9 +186,9 @@ class ProjectBackupSystem {
                 }
             }
 
-            // 프로젝트 데이터 가져오기
+            // projects 테이블에서 데이터 가져오기
             const { data, error } = await this.supabase
-                .from('project_backups')
+                .from('projects')
                 .select('*')
                 .eq('id', projectId)
                 .eq('user_email', user.email)
@@ -299,10 +309,9 @@ class ProjectBackupSystem {
             }
 
             const { data, error } = await this.supabase
-                .from('project_backups')
+                .from('projects')
                 .select('*')
                 .eq('user_email', user.email)
-                .eq('is_deleted', false)
                 .order('updated_at', { ascending: false });
 
             if (error) {
@@ -333,8 +342,8 @@ class ProjectBackupSystem {
             }
 
             const { error } = await this.supabase
-                .from('project_backups')
-                .update({ is_deleted: true, updated_at: new Date().toISOString() })
+                .from('projects')
+                .delete()
                 .eq('id', projectId)
                 .eq('user_email', user.email);
 
