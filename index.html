@@ -1867,14 +1867,8 @@
         });
     </script>
 
-    <!-- Supabase SDK -->
+    <!-- Supabase SDK - 먼저 로드 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Project Backup System -->
-    <script type="module">
-        import ProjectBackupSystem from './js/modules/project-backup.js';
-        window.ProjectBackup = new ProjectBackupSystem();
-    </script>
 
     <!-- Project Save/Load Functions -->
     <script>
@@ -1995,16 +1989,15 @@
     </div>
     -->
 
-    <!-- Auth Scripts -->
-    <!-- Supabase and Project Backup -->
-    <script src="js/modules/project-backup.js" type="module"></script>
-    <script>
-        // ProjectBackup 초기화
+    <!-- Project Backup System - Supabase 다음에 로드 -->
+    <script type="module">
+        import ProjectBackupSystem from './js/modules/project-backup.js';
+        // 전역 변수로 설정
+        window.ProjectBackupSystem = ProjectBackupSystem;
+        // 인스턴스 생성은 DOMContentLoaded 이후에
         window.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 ProjectBackup 초기화 시작...');
             try {
-                // ProjectBackup 인스턴스 생성
-                const { default: ProjectBackupSystem } = await import('./js/modules/project-backup.js');
                 window.ProjectBackup = new ProjectBackupSystem();
                 console.log('✅ ProjectBackup 초기화 완료');
             } catch (error) {
@@ -2013,14 +2006,8 @@
         });
     </script>
 
-    <!-- Enhanced Auth with offline support -->
-    <script src="js/auth-enhanced.js"></script>
-    <!-- Fallback to original auth if enhanced fails -->
-    <script>
-        if (!window.googleAuth) {
-            document.write('<script src="js/auth.js"><\/script>');
-        }
-    </script>
+    <!-- Google Auth Script - 마지막에 로드 -->
+    <script src="js/auth.js"></script>
     <script>
         // 관리자 이메일 확인 및 관리자 링크 표시
         document.addEventListener('DOMContentLoaded', function() {

@@ -14,9 +14,16 @@ class GoogleAuth {
         console.log('🔄 Initializing Google Auth...');
         console.log('Current domain:', window.location.hostname);
         console.log('Current protocol:', window.location.protocol);
-        
-        // Google Identity Services 초기화
+
+        // Google Identity Services 초기화 - 중복 초기화 방지
         const initGoogleAuth = () => {
+            // 이미 초기화되었는지 확인
+            if (window.googleAuthInitialized) {
+                console.log('⚠️ Google Auth already initialized, skipping...');
+                this.renderButton('google-signin-button');
+                return;
+            }
+
             if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
                 try {
                     google.accounts.id.initialize({
@@ -24,24 +31,30 @@ class GoogleAuth {
                         callback: this.handleCredentialResponse.bind(this),
                         auto_select: false,
                         cancel_on_tap_outside: true,
+                        context: 'signin',
+                        ux_mode: 'popup'
                     });
-                    
+
+                    // 초기화 플래그 설정
+                    window.googleAuthInitialized = true;
                     console.log('✅ Google Auth initialized successfully');
                     console.log('Client ID:', this.CLIENT_ID);
-                    
+
                     // 초기화 성공 후 바로 버튼 렌더링 시도
                     setTimeout(() => {
                         this.renderButton('google-signin-button');
                     }, 100);
                 } catch (error) {
                     console.error('❌ Error initializing Google Auth:', error);
+                    // 오류 발생 시 플래그 리셋
+                    window.googleAuthInitialized = false;
                 }
             } else {
                 console.warn('⏳ Google Identity Services not loaded yet, retrying...');
                 setTimeout(() => initGoogleAuth(), 1000);
             }
         };
-        
+
         // DOMContentLoaded와 load 이벤트 모두 처리
         if (document.readyState === 'loading') {
             window.addEventListener('load', initGoogleAuth);
@@ -164,7 +177,7 @@ class GoogleAuth {
                         .from('users')
                         .select('status, created_at, login_count')
                         .eq('email', email)
-                        .single();
+                        .maybeSingle();
 
                     if (!error && userData) {
                         this.isApproved = userData.status === 'approved';
@@ -251,15 +264,20 @@ class GoogleAuth {
         try {
             console.log('🔄 Supabase에 사용자 정보 저장 시작:', user.email);
 
-            // ProjectBackup 인스턴스 사용 또는 새로 생성
+            // Supabase 클라이언트 가져오기
             let supabaseClient = null;
 
-            // 방법 1: ProjectBackup 인스턴스가 있으면 사용
-            if (window.ProjectBackup && window.ProjectBackup.supabase) {
+            // 방법 1: 전역 supabaseClient 사용
+            if (window.supabaseClient) {
+                console.log('✅ 전역 Supabase 클라이언트 사용');
+                supabaseClient = window.supabaseClient;
+            }
+            // 방법 2: ProjectBackup 인스턴스가 있으면 사용
+            else if (window.ProjectBackup && window.ProjectBackup.supabase) {
                 console.log('✅ ProjectBackup Supabase 클라이언트 사용');
                 supabaseClient = window.ProjectBackup.supabase;
             } else {
-                // 방법 2: 직접 Supabase 클라이언트 생성
+                // 방법 3: 직접 Supabase 클라이언트 생성
                 console.log('🔄 새 Supabase 클라이언트 생성 시도');
 
                 // Supabase 라이브러리 로드 대기
@@ -282,7 +300,9 @@ class GoogleAuth {
                             module.SUPABASE_CONFIG.url,
                             module.SUPABASE_CONFIG.anonKey
                         );
-                        console.log('✅ 새 Supabase 클라이언트 생성됨');
+                        // 전역 변수로 저장
+                        window.supabaseClient = supabaseClient;
+                        console.log('✅ 새 Supabase 클라이언트 생성 및 전역 저장');
                     }
                 } catch (error) {
                     console.error('❌ Supabase 설정 로드 실패:', error);
@@ -300,10 +320,11 @@ class GoogleAuth {
                 .from('users')
                 .select('*')
                 .eq('email', user.email)
-                .single();
+                .maybeSingle(); // single() 대신 maybeSingle() 사용하여 null 허용
 
-            if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116은 데이터가 없을 때 발생
+            if (fetchError) {
                 console.error('❌ 사용자 조회 실패:', fetchError);
+                // 오류가 있어도 계속 진행 (새 사용자일 수 있음)
             }
 
             let userData = {
@@ -338,10 +359,10 @@ class GoogleAuth {
             const { data, error } = await supabaseClient
                 .from('users')
                 .upsert(userData, {
-                    onConflict: 'email',
-                    ignoreDuplicates: false
+                    onConflict: 'email'
                 })
-                .select();
+                .select()
+                .single();
 
             if (error) {
                 console.error('❌ Supabase 사용자 저장 실패:', error);
@@ -1013,15 +1034,24 @@ class GoogleAuth {
     }
 }
 
-// 전역 인스턴스 생성
-const googleAuth = new GoogleAuth();
+// 전역 인스턴스 생성 - 싱글톤 패턴
+let googleAuth;
+if (!window.googleAuth) {
+    googleAuth = new GoogleAuth();
+    window.googleAuth = googleAuth;
+} else {
+    googleAuth = window.googleAuth;
+}
 
-// DOM 로드 완료 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing Google Auth...');
-    
-    // 로그인 상태 확인
-    googleAuth.checkAuthStatus();
+// DOM 로드 완료 시 초기화 - 중복 방지
+if (!window.googleAuthDOMInitialized) {
+    window.googleAuthDOMInitialized = true;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing Google Auth...');
+
+        // 로그인 상태 확인
+        googleAuth.checkAuthStatus();
     
     // 보호된 링크 클릭 이벤트 처리
     document.addEventListener('click', function(e) {
@@ -1045,6 +1075,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+}
 
-// 전역 접근을 위한 export
-window.googleAuth = googleAuth;
+// 전역 접근을 위한 export (이미 설정되어 있지 않은 경우에만)
+if (!window.googleAuth) {
+    window.googleAuth = googleAuth;
+}
