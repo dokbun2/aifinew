@@ -137,7 +137,10 @@ class GoogleAuth {
     }
 
     async checkApprovalStatus(email) {
-        // 로컬 스토리지에서 승인된 사용자 목록 확인
+        // Supabase에 사용자 정보 저장/업데이트
+        await this.saveUserToSupabase(this.user);
+
+        // 로컬 스토리지에서 승인된 사용자 목록 확인 (임시 백업)
         const approvedUsers = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
         const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
 
@@ -185,6 +188,75 @@ class GoogleAuth {
         }
 
         return this.isApproved;
+    }
+
+    // Supabase에 사용자 정보 저장
+    async saveUserToSupabase(user) {
+        try {
+            // Supabase 클라이언트 초기화 대기
+            let retries = 0;
+            while (!window.supabase && retries < 10) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                retries++;
+            }
+
+            if (!window.supabase) {
+                console.warn('Supabase 클라이언트를 사용할 수 없습니다.');
+                return;
+            }
+
+            // Supabase config 로드
+            let supabaseClient = null;
+            try {
+                const module = await import('./modules/supabase-config.js');
+                if (module.SUPABASE_CONFIG) {
+                    supabaseClient = window.supabase.createClient(
+                        module.SUPABASE_CONFIG.url,
+                        module.SUPABASE_CONFIG.anonKey
+                    );
+                }
+            } catch (error) {
+                console.warn('Supabase 설정을 로드할 수 없습니다:', error);
+                return;
+            }
+
+            if (!supabaseClient) {
+                console.warn('Supabase 클라이언트를 생성할 수 없습니다.');
+                return;
+            }
+
+            // users 테이블에 사용자 정보 저장/업데이트
+            const { data, error } = await supabaseClient
+                .from('users')
+                .upsert({
+                    email: user.email,
+                    name: user.name,
+                    picture: user.picture,
+                    google_id: user.id,
+                    last_login: new Date().toISOString(),
+                    login_count: 1,
+                    metadata: {
+                        browser: navigator.userAgent,
+                        language: navigator.language
+                    }
+                }, {
+                    onConflict: 'email'
+                })
+                .select();
+
+            if (error) {
+                console.error('Supabase 사용자 저장 실패:', error);
+            } else {
+                console.log('✅ Supabase에 사용자 정보 저장됨:', data);
+
+                // 승인 상태 확인
+                if (data && data[0]) {
+                    this.isApproved = data[0].status === 'approved';
+                }
+            }
+        } catch (error) {
+            console.error('사용자 정보 저장 중 오류:', error);
+        }
     }
 
     parseJwt(token) {
