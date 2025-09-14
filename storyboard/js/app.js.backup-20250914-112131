@@ -52,8 +52,20 @@ const debugLog = DEBUG_MODE ? console.log : () => {};
 const debugWarn = DEBUG_MODE ? console.warn : () => {};
 const debugError = console.error; // 에러는 항상 표시
 
-// escapeHtmlAttribute - AppUtils 모듈 사용 (app-utils.js가 먼저 로드됨)
-const escapeHtmlAttribute = window.AppUtils.escapeHtmlAttribute;
+// escapeHtmlAttribute 함수는 AppUtils 모듈로 이동됨
+// 호환성을 위한 별칭
+const escapeHtmlAttribute = window.AppUtils ? window.AppUtils.escapeHtmlAttribute : function(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+};
 
 // 디버깅용 전역 변수 노출 (AppState 호환)
 window.debugData = {
@@ -89,8 +101,15 @@ const getProjectFileName = window.AppUtils ? window.AppUtils.getProjectFileName 
     }
 };
 
-// getProjectName - AppUtils 모듈 사용 (app-utils.js가 먼저 로드됨)
-const getProjectName = window.AppUtils.getProjectName;
+const getProjectName = window.AppUtils ? window.AppUtils.getProjectName : function() {
+    try {
+        return getProjectFileName()
+            .replace('_Manager.json', '')
+            .replace('Film_Production_Manager.json', 'Film Production Manager');
+    } catch (error) {
+        return 'Film Production Manager';
+    }
+};
 
 // showMessage 함수 - AppUtils 모듈이 로드되면 사용, 아니면 기본 구현 사용
 let showMessage;
@@ -126,8 +145,27 @@ if (window.AppUtils && window.AppUtils.showMessage) {
     };
 }
 
-// copyToClipboard - AppUtils 모듈 사용 (app-utils.js가 먼저 로드됨)
-const copyToClipboard = window.AppUtils.copyToClipboard;
+// copyToClipboard 함수는 AppUtils 모듈로 이동됨
+// 호환성을 위한 별칭
+const copyToClipboard = window.AppUtils ? window.AppUtils.copyToClipboard : async function(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (error) {
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return true;
+        } catch (fallbackError) {
+            showMessage('클립보드 복사에 실패했습니다.', 'error');
+            return false;
+        }
+    }
+}
 
   // Stage 5 v5.0.0 및 v3.0.0 형식 변환 함수 (Stage 2 호환성 개선)
 function convertStage5V5Format(data) {
@@ -6335,8 +6373,20 @@ try {
 }
     }
     
-    // convertDropboxUrl - AppUtils 모듈 사용 (app-utils.js가 먼저 로드됨)
-    const convertDropboxUrl = window.AppUtils.convertDropboxUrl;
+    // convertDropboxUrl 함수는 AppUtils 모듈로 이동됨
+    // 호환성을 위한 별칭
+    const convertDropboxUrl = window.AppUtils ? window.AppUtils.convertDropboxUrl : function(url) {
+        if (!url) return url;
+        if (url.includes('dropbox.com')) {
+            if (url.includes('dl=0')) {
+                return url.replace('dl=0', 'raw=1');
+            } else if (!url.includes('dl=') && !url.includes('raw=')) {
+                const separator = url.includes('?') ? '&' : '?';
+                return url + separator + 'raw=1';
+            }
+        }
+        return url;
+    };
     
     // 이미지별 URL 업데이트 (새로운 구조)
 	// imageId를 안전하게 인덱스로 변환하는 헬퍼 함수
