@@ -1940,7 +1940,14 @@
         });
     </script>
 
-    <script src="js/auth.js"></script>
+    <!-- Enhanced Auth with offline support -->
+    <script src="js/auth-enhanced.js"></script>
+    <!-- Fallback to original auth if enhanced fails -->
+    <script>
+        if (!window.googleAuth) {
+            document.write('<script src="js/auth.js"><\/script>');
+        }
+    </script>
     <script>
         // 관리자 이메일 확인 및 관리자 링크 표시
         document.addEventListener('DOMContentLoaded', function() {

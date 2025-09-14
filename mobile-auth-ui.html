@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>모바일 인증 상태 확인</title>
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #4caf50;
+        }
+
+        .status-dot.offline {
+            background: #f44336;
+        }
+
+        .status-dot.syncing {
+            background: #ff9800;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .sync-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .sync-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .sync-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sync-button.syncing {
+            background: #ff9800;
+        }
+
+        .queue-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .queue-info h3 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .queue-item {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .google-signin-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .debug-info {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 인증 상태 확인</h1>
+
+        <!-- 네트워크 상태 -->
+        <div class="status-card">
+            <div class="status-indicator">
+                <div class="status-dot" id="networkStatus"></div>
+                <span id="networkText">연결 상태 확인 중...</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">디바이스</span>
+                <span class="info-value" id="deviceType">-</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">네트워크</span>
+                <span class="info-value" id="connectionType">-</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">서버 연결</span>
+                <span class="info-value" id="serverStatus">확인 중...</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">로그인 상태</span>
+                <span class="info-value" id="loginStatus">-</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">승인 상태</span>
+                <span class="info-value" id="approvalStatus">-</span>
+            </div>
+        </div>
+
+        <!-- Google 로그인 버튼 -->
+        <div class="google-signin-container" id="googleSigninContainer">
+            <div id="google-signin-button"></div>
+        </div>
+
+        <!-- 동기화 버튼 -->
+        <button class="sync-button" id="syncButton" onclick="performSync()">
+            🔄 수동 동기화
+        </button>
+
+        <!-- 오프라인 큐 정보 -->
+        <div class="queue-info" id="queueInfo" style="display: none;">
+            <h3>📦 대기 중인 데이터</h3>
+            <div id="queueItems"></div>
+        </div>
+
+        <!-- 성공/에러 메시지 -->
+        <div class="success-message" id="successMessage"></div>
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- 디버그 정보 -->
+        <div class="debug-info" id="debugInfo"></div>
+    </div>
+
+    <!-- Enhanced Auth 모듈 로드 -->
+    <script src="js/auth-enhanced.js"></script>
+
+    <script>
+        // 초기화
+        let syncInProgress = false;
+
+        // 페이지 로드 시 상태 업데이트
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            setInterval(updateStatus, 5000); // 5초마다 상태 업데이트
+
+            // Google 로그인 버튼 렌더링
+            if (window.googleAuth) {
+                const checkGoogleLoaded = setInterval(() => {
+                    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+                        clearInterval(checkGoogleLoaded);
+                        window.googleAuth.renderButton('google-signin-button');
+                    }
+                }, 500);
+            }
+        });
+
+        function updateStatus() {
+            // 네트워크 상태
+            const isOnline = navigator.onLine;
+            const networkDot = document.getElementById('networkStatus');
+            const networkText = document.getElementById('networkText');
+
+            if (isOnline) {
+                networkDot.className = 'status-dot online';
+                networkText.textContent = '온라인';
+            } else {
+                networkDot.className = 'status-dot offline';
+                networkText.textContent = '오프라인';
+            }
+
+            // 디바이스 정보
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            document.getElementById('deviceType').textContent = isMobile ? '모바일' : '데스크톱';
+
+            // 연결 타입
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (connection) {
+                document.getElementById('connectionType').textContent =
+                    connection.effectiveType || connection.type || '알 수 없음';
+            }
+
+            // 서버 연결 상태
+            checkServerConnection();
+
+            // 로그인 상태
+            const userInfo = localStorage.getItem('user_info');
+            const loginStatus = document.getElementById('loginStatus');
+            const approvalStatus = document.getElementById('approvalStatus');
+
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                loginStatus.textContent = `${user.email}`;
+
+                const isApproved = localStorage.getItem('user_approved') === 'true';
+                if (isApproved) {
+                    approvalStatus.textContent = '✅ 승인됨';
+                    approvalStatus.style.color = '#28a745';
+                } else {
+                    approvalStatus.textContent = '⏳ 승인 대기중';
+                    approvalStatus.style.color = '#ffc107';
+                }
+
+                // Google 로그인 버튼 숨기기
+                document.getElementById('googleSigninContainer').style.display = 'none';
+            } else {
+                loginStatus.textContent = '로그인 필요';
+                approvalStatus.textContent = '-';
+                document.getElementById('googleSigninContainer').style.display = 'flex';
+            }
+
+            // 오프라인 큐 확인
+            updateQueueInfo();
+
+            // 디버그 정보 업데이트
+            updateDebugInfo();
+        }
+
+        async function checkServerConnection() {
+            const serverStatusEl = document.getElementById('serverStatus');
+
+            try {
+                // Supabase 연결 테스트
+                if (window.googleAuth && window.googleAuth.getSupabaseClients) {
+                    const clients = await window.googleAuth.getSupabaseClients();
+                    if (clients && clients.length > 0) {
+                        serverStatusEl.textContent = '✅ 연결됨';
+                        serverStatusEl.style.color = '#28a745';
+                    } else {
+                        serverStatusEl.textContent = '⚠️ 연결 실패';
+                        serverStatusEl.style.color = '#dc3545';
+                    }
+                }
+            } catch (error) {
+                serverStatusEl.textContent = '❌ 오류';
+                serverStatusEl.style.color = '#dc3545';
+            }
+        }
+
+        function updateQueueInfo() {
+            const offlineQueue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
+            const queueInfo = document.getElementById('queueInfo');
+            const queueItems = document.getElementById('queueItems');
+
+            if (offlineQueue.length > 0) {
+                queueInfo.style.display = 'block';
+                queueItems.innerHTML = '';
+
+                offlineQueue.forEach((item, index) => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'queue-item';
+                    itemEl.innerHTML = `
+                        <strong>항목 ${index + 1}:</strong> ${item.type}<br>
+                        <small>시간: ${new Date(item.timestamp).toLocaleString('ko-KR')}</small><br>
+                        <small>이메일: ${item.data?.email || '-'}</small>
+                    `;
+                    queueItems.appendChild(itemEl);
+                });
+            } else {
+                queueInfo.style.display = 'none';
+            }
+        }
+
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+
+            if (window.googleAuth && window.googleAuth.getDebugInfo) {
+                const info = window.googleAuth.getDebugInfo();
+                debugInfo.innerHTML = `
+                    <strong>디버그 정보:</strong><br>
+                    온라인: ${info.isOnline}<br>
+                    오프라인 큐: ${info.offlineQueueSize}개<br>
+                    로컬 대기 사용자: ${info.localStorage.pendingUsers}명<br>
+                    플랫폼: ${info.deviceInfo.platform}<br>
+                    화면: ${info.deviceInfo.screenSize}<br>
+                    연결: ${info.deviceInfo.connectionType}
+                `;
+            }
+        }
+
+        async function performSync() {
+            if (syncInProgress) return;
+
+            const button = document.getElementById('syncButton');
+            const successMsg = document.getElementById('successMessage');
+            const errorMsg = document.getElementById('errorMessage');
+
+            syncInProgress = true;
+            button.disabled = true;
+            button.innerHTML = '동기화 중... <span class="loading-spinner"></span>';
+            button.className = 'sync-button syncing';
+
+            // 메시지 숨기기
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            try {
+                if (window.syncAuthData) {
+                    const result = await window.syncAuthData();
+
+                    if (result) {
+                        successMsg.textContent = '✅ 동기화가 완료되었습니다!';
+                        successMsg.style.display = 'block';
+
+                        // 상태 업데이트
+                        setTimeout(updateStatus, 1000);
+                    } else {
+                        throw new Error('동기화 실패');
+                    }
+                }
+            } catch (error) {
+                console.error('동기화 오류:', error);
+                errorMsg.textContent = '❌ 동기화 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                errorMsg.style.display = 'block';
+            } finally {
+                syncInProgress = false;
+                button.disabled = false;
+                button.innerHTML = '🔄 수동 동기화';
+                button.className = 'sync-button';
+            }
+        }
+
+        // 네트워크 상태 변경 감지
+        window.addEventListener('online', () => {
+            updateStatus();
+            showNotification('네트워크가 연결되었습니다', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            updateStatus();
+            showNotification('네트워크 연결이 끊어졌습니다', 'error');
+        });
+
+        function showNotification(message, type) {
+            const successMsg = document.getElementById('successMessage');
+            const errorMsg = document.getElementById('errorMessage');
+
+            if (type === 'success') {
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+                setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+            } else {
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+                setTimeout(() => { errorMsg.style.display = 'none'; }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
