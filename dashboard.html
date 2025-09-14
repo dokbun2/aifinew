@@ -103,6 +103,11 @@
         // 대시보드 초기화
         async function initDashboard() {
             try {
+                // URL 파라미터 확인
+                const urlParams = new URLSearchParams(window.location.search);
+                const projectFromUrl = urlParams.get('project');
+                const userFromUrl = urlParams.get('user');
+
                 // 로그인 확인
                 const userInfo = localStorage.getItem('user_info');
                 if (!userInfo) {
@@ -112,8 +117,15 @@
                 }
 
                 const user = JSON.parse(userInfo);
-                document.getElementById('welcome-message').textContent =
-                    `안녕하세요, ${user.name}님! 저장된 프로젝트를 관리할 수 있습니다.`;
+
+                // 환영 메시지 설정
+                let welcomeMessage = `안녕하세요, ${user.name}님! `;
+                if (projectFromUrl) {
+                    welcomeMessage += `"${decodeURIComponent(projectFromUrl)}" 프로젝트가 성공적으로 저장되었습니다.`;
+                } else {
+                    welcomeMessage += `저장된 프로젝트를 관리할 수 있습니다.`;
+                }
+                document.getElementById('welcome-message').textContent = welcomeMessage;
 
                 // 프로젝트 목록 로드
                 await loadProjects();
@@ -143,7 +155,35 @@
 
                 // 프로젝트 목록 가져오기
                 projects = await window.ProjectBackup.getProjectList();
-                filteredProjects = [...projects];
+
+                // 현재 사용자 정보 가져오기
+                const userInfo = localStorage.getItem('user_info');
+                if (userInfo) {
+                    const user = JSON.parse(userInfo);
+                    // 사용자 이메일로 프로젝트 필터링
+                    filteredProjects = projects.filter(project => {
+                        // metadata에 사용자 이메일이 있는 경우
+                        if (project.metadata?.user_email === user.email) {
+                            return true;
+                        }
+                        // backup_data에서 사용자 정보 확인
+                        if (project.backup_data) {
+                            try {
+                                const data = typeof project.backup_data === 'string'
+                                    ? JSON.parse(project.backup_data)
+                                    : project.backup_data;
+                                return data.user_email === user.email;
+                            } catch (e) {
+                                return false;
+                            }
+                        }
+                        return false;
+                    });
+                } else {
+                    // 로그인하지 않은 경우 모든 프로젝트 표시
+                    filteredProjects = [...projects];
+                }
+
                 renderProjects();
 
             } catch (error) {

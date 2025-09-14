@@ -1842,12 +1842,22 @@
                 // Supabase에 백업
                 await window.ProjectBackup.backupToSupabase(projectName);
 
-                // 성공 메시지
+                // 성공 메시지 및 대시보드 이동
                 btn.innerHTML = '<i class="ti ti-check"></i> 저장 완료!';
+
+                // 사용자 정보 가져오기
+                const user = JSON.parse(userInfo);
+
                 setTimeout(() => {
                     btn.innerHTML = originalHTML;
                     btn.disabled = false;
-                    alert(`✅ 프로젝트 "${projectName}"이(가) 성공적으로 저장되었습니다!`);
+
+                    // 저장 완료 알림
+                    alert(`✅ 프로젝트 "${projectName}"이(가) 성공적으로 저장되었습니다!\n\n대시보드로 이동합니다.`);
+
+                    // 사용자별 대시보드로 이동
+                    const userParam = encodeURIComponent(user.email);
+                    window.location.href = `/dashboard.html?user=${userParam}&project=${encodeURIComponent(projectName)}`;
                 }, 1000);
 
             } catch (error) {

@@ -153,6 +153,23 @@ async function rejectUserInSupabase(email) {
     }
 }
 
+// 사용자 목록 병합 함수 (중복 제거)
+function mergeUserLists(existingUsers, newUsers) {
+    const userMap = new Map();
+
+    // 기존 사용자 추가
+    existingUsers.forEach(user => {
+        userMap.set(user.email, user);
+    });
+
+    // 새 사용자 추가/업데이트 (Supabase가 최신 데이터)
+    newUsers.forEach(user => {
+        userMap.set(user.email, user);
+    });
+
+    return Array.from(userMap.values());
+}
+
 // AdminAuth의 loadUsers 메서드 오버라이드
 if (window.adminAuth) {
     const originalLoadUsers = window.adminAuth.loadUsers.bind(window.adminAuth);
@@ -160,39 +177,100 @@ if (window.adminAuth) {
     window.adminAuth.loadUsers = async function() {
         console.log('🔄 Supabase에서 사용자 목록 로드 중...');
 
-        // Supabase에서 사용자 목록 가져오기
-        const supabaseUsers = await loadUsersFromSupabase();
+        try {
+            // Supabase에서 사용자 목록 가져오기
+            const supabaseUsers = await loadUsersFromSupabase();
 
-        if (supabaseUsers && supabaseUsers.length > 0) {
-            // Supabase 데이터를 localStorage 형식으로 변환
-            const pendingUsers = [];
-            const approvedUsers = [];
+            if (supabaseUsers && supabaseUsers.length > 0) {
+                // Supabase 데이터를 localStorage 형식으로 변환
+                const pendingUsers = [];
+                const approvedUsers = [];
+                const rejectedUsers = [];
 
-            supabaseUsers.forEach(user => {
-                const userData = {
-                    email: user.email,
-                    name: user.name || user.email.split('@')[0],
-                    picture: user.picture || '',
-                    requestedAt: user.created_at,
-                    approvedAt: user.approved_at,
-                    status: user.status || 'pending'
-                };
+                supabaseUsers.forEach(user => {
+                    const userData = {
+                        email: user.email,
+                        name: user.name || user.email.split('@')[0],
+                        picture: user.picture || '',
+                        requestedAt: user.created_at,
+                        approvedAt: user.approved_at,
+                        status: user.status || 'pending',
+                        loginCount: user.login_count || 0,
+                        lastLogin: user.last_login,
+                        googleId: user.google_id
+                    };
 
-                if (user.status === 'approved') {
-                    approvedUsers.push(userData);
-                } else if (user.status === 'pending' || !user.status) {
-                    pendingUsers.push(userData);
+                    if (user.status === 'approved') {
+                        approvedUsers.push(userData);
+                    } else if (user.status === 'rejected') {
+                        rejectedUsers.push(userData);
+                    } else {
+                        pendingUsers.push(userData);
+                    }
+                });
+
+                // localStorage 업데이트 (백업용) - 기존 데이터와 병합
+                const existingPending = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+                const existingApproved = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
+
+                // 이메일을 기준으로 중복 제거하며 병합
+                const mergedPending = mergeUserLists(existingPending, pendingUsers);
+                const mergedApproved = mergeUserLists(existingApproved, approvedUsers);
+
+                localStorage.setItem('pendingUsers', JSON.stringify(mergedPending));
+                localStorage.setItem('approvedUsers', JSON.stringify(mergedApproved));
+
+                console.log(`✅ Supabase 사용자 현황:`);
+                console.log(`   - 대기중: ${pendingUsers.length}명`);
+                console.log(`   - 승인됨: ${approvedUsers.length}명`);
+                console.log(`   - 거절됨: ${rejectedUsers.length}명`);
+                console.log(`   - 총: ${supabaseUsers.length}명`);
+
+                // 새로운 가입자가 있으면 알림
+                const lastCheckTime = localStorage.getItem('lastUserCheck');
+                const currentTime = new Date().toISOString();
+
+                if (lastCheckTime) {
+                    const newUsers = pendingUsers.filter(user =>
+                        new Date(user.requestedAt) > new Date(lastCheckTime)
+                    );
+
+                    if (newUsers.length > 0) {
+                        console.log(`🆕 새로운 가입 신청자: ${newUsers.length}명`);
+                        newUsers.forEach(user => {
+                            console.log(`   - ${user.name} (${user.email})`);
+                        });
+
+                        // 알림 표시 (옵션)
+                        if (window.adminAuth && window.adminAuth.showNotification) {
+                            window.adminAuth.showNotification(
+                                `새로운 가입 신청자 ${newUsers.length}명이 있습니다!`,
+                                'info'
+                            );
+                        }
+                    }
                 }
-            });
 
-            // localStorage 업데이트 (백업용)
-            localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
-            localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
-
-            console.log(`✅ Supabase 사용자: 대기 ${pendingUsers.length}명, 승인 ${approvedUsers.length}명`);
+                localStorage.setItem('lastUserCheck', currentTime);
+            } else {
+                console.log('ℹ️ Supabase에 사용자 데이터가 없거나 연결 실패');
+                console.log('💾 로컬 데이터 유지:');
+                const localPending = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+                const localApproved = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
+                console.log(`   - 로컬 대기중: ${localPending.length}명`);
+                console.log(`   - 로컬 승인됨: ${localApproved.length}명`);
+            }
+        } catch (error) {
+            console.error('❌ Supabase 데이터 로드 실패:', error);
+            console.log('💾 로컬 데이터를 유지합니다');
+            // 에러 발생 시 로컬 데이터 유지 (삭제하지 않음)
+            const localPending = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+            const localApproved = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
+            console.log(`   - 로컬 대기중: ${localPending.length}명`);
+            console.log(`   - 로컬 승인됨: ${localApproved.length}명`);
         }
 
-        // 원래 loadUsers 함수 호출
+        // 원래 loadUsers 함수 호출 (UI 업데이트)
         originalLoadUsers();
     };
 
@@ -214,20 +292,54 @@ if (window.adminAuth) {
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Admin Supabase Integration 시작...');
 
-    // 3초 후 사용자 목록 로드 (초기화 대기)
-    setTimeout(async () => {
-        if (window.adminAuth && window.adminAuth.isAdmin) {
-            await window.adminAuth.loadUsers();
-        }
-    }, 3000);
+    // ProjectBackup 초기화 대기
+    let retries = 0;
+    const waitForProjectBackup = setInterval(async () => {
+        retries++;
 
-    // 10초마다 자동 새로고침
+        if (window.ProjectBackup || retries > 10) {
+            clearInterval(waitForProjectBackup);
+
+            if (window.ProjectBackup) {
+                console.log('✅ ProjectBackup 준비 완료');
+
+                // Supabase 초기화 확인
+                if (!window.ProjectBackup.supabase) {
+                    await window.ProjectBackup.initSupabase();
+                }
+
+                // 사용자 목록 로드
+                if (window.adminAuth && window.adminAuth.isAdmin) {
+                    console.log('🔄 초기 사용자 목록 로드...');
+                    await window.adminAuth.loadUsers();
+                }
+            } else {
+                console.warn('⚠️ ProjectBackup을 찾을 수 없습니다. 수동으로 초기화 시도...');
+
+                // 수동으로 ProjectBackup 초기화
+                try {
+                    const { default: ProjectBackupSystem } = await import('./modules/project-backup.js');
+                    window.ProjectBackup = new ProjectBackupSystem();
+                    console.log('✅ ProjectBackup 수동 초기화 성공');
+
+                    // 사용자 목록 로드
+                    if (window.adminAuth && window.adminAuth.isAdmin) {
+                        await window.adminAuth.loadUsers();
+                    }
+                } catch (error) {
+                    console.error('❌ ProjectBackup 수동 초기화 실패:', error);
+                }
+            }
+        }
+    }, 500);
+
+    // 30초마다 자동 새로고침 (너무 자주하면 API 제한에 걸릴 수 있음)
     setInterval(async () => {
         if (window.adminAuth && window.adminAuth.isAdmin) {
             console.log('🔄 자동 새로고침...');
-            await window.adminAuth.loadUsers();
+            await window.adminAuth.refreshData(); // loadUsers 대신 refreshData 사용
         }
-    }, 10000);
+    }, 30000); // 10초에서 30초로 변경
 });
 
 console.log('✅ Admin Supabase Integration 로드됨');

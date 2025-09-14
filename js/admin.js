@@ -609,9 +609,37 @@ class AdminAuth {
     }
     
     // 데이터 새로고침
-    refreshData() {
-        this.loadUsers();
-        this.showNotification('데이터를 새로고침했습니다', 'success');
+    async refreshData() {
+        console.log('🔄 관리자 페이지 데이터 새로고침 시작...');
+
+        // 로딩 표시
+        const refreshBtn = document.querySelector('.ti-refresh');
+        if (refreshBtn) {
+            refreshBtn.classList.add('rotating');
+        }
+
+        try {
+            // Supabase에서 최신 데이터 가져오기 시도
+            if (window.adminAuth && typeof window.adminAuth.loadUsers === 'function') {
+                // admin-supabase.js의 오버라이드된 loadUsers 호출
+                await this.loadUsers();
+                console.log('✅ Supabase 데이터 새로고침 완료');
+            } else {
+                // 기본 loadUsers 호출
+                this.loadUsers();
+                console.log('✅ 로컬 데이터 새로고침 완료');
+            }
+
+            this.showNotification('데이터를 새로고침했습니다', 'success');
+        } catch (error) {
+            console.error('❌ 새로고침 실패:', error);
+            this.showNotification('새로고침 중 오류가 발생했습니다', 'error');
+        } finally {
+            // 로딩 표시 제거
+            if (refreshBtn) {
+                refreshBtn.classList.remove('rotating');
+            }
+        }
     }
     
     logAction(action, email, userInfo = null) {
