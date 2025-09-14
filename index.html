@@ -1913,6 +1913,23 @@
     -->
 
     <!-- Auth Scripts -->
+    <!-- Supabase and Project Backup -->
+    <script src="js/modules/project-backup.js" type="module"></script>
+    <script>
+        // ProjectBackup 초기화
+        window.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 ProjectBackup 초기화 시작...');
+            try {
+                // ProjectBackup 인스턴스 생성
+                const { default: ProjectBackupSystem } = await import('./js/modules/project-backup.js');
+                window.ProjectBackup = new ProjectBackupSystem();
+                console.log('✅ ProjectBackup 초기화 완료');
+            } catch (error) {
+                console.error('❌ ProjectBackup 초기화 실패:', error);
+            }
+        });
+    </script>
+
     <script src="js/auth.js"></script>
     <script>
         // 관리자 이메일 확인 및 관리자 링크 표시

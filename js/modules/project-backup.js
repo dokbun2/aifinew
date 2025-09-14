@@ -348,8 +348,11 @@ class ProjectBackupSystem {
     }
 }
 
-// 전역 인스턴스 생성
-window.ProjectBackup = new ProjectBackupSystem();
+// 전역 인스턴스 생성 (module로 로드되지 않은 경우에만)
+if (typeof window !== 'undefined' && !window.ProjectBackup) {
+    window.ProjectBackup = new ProjectBackupSystem();
+    console.log('✅ ProjectBackup 전역 인스턴스 생성됨');
+}
 
 // Export for module usage
 export default ProjectBackupSystem;

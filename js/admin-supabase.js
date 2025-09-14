@@ -4,19 +4,62 @@
 // Supabase 사용자 목록 가져오기
 async function loadUsersFromSupabase() {
     try {
+        console.log('🔄 Supabase에서 사용자 목록 로드 시작...');
+
         // ProjectBackup 인스턴스 대기
         let retries = 0;
         while (!window.ProjectBackup && retries < 10) {
+            console.log(`⏳ ProjectBackup 대기중... (시도 ${retries + 1}/10)`);
             await new Promise(resolve => setTimeout(resolve, 500));
             retries++;
         }
 
-        if (!window.ProjectBackup || !window.ProjectBackup.supabase) {
-            console.warn('⚠️ Supabase 연결을 사용할 수 없습니다.');
+        if (!window.ProjectBackup) {
+            console.warn('⚠️ ProjectBackup 인스턴스를 찾을 수 없습니다.');
+
+            // 직접 Supabase 클라이언트 생성 시도
+            if (window.supabase) {
+                try {
+                    const module = await import('./modules/supabase-config.js');
+                    if (module.SUPABASE_CONFIG) {
+                        const supabaseClient = window.supabase.createClient(
+                            module.SUPABASE_CONFIG.url,
+                            module.SUPABASE_CONFIG.anonKey
+                        );
+
+                        const { data, error } = await supabaseClient
+                            .from('users')
+                            .select('*')
+                            .order('created_at', { ascending: false });
+
+                        if (error) {
+                            console.error('❌ 직접 Supabase 사용자 목록 가져오기 실패:', error);
+                            return null;
+                        }
+
+                        console.log('✅ 직접 Supabase에서 사용자 목록 로드됨:', data);
+                        return data;
+                    }
+                } catch (error) {
+                    console.error('❌ Supabase 클라이언트 생성 실패:', error);
+                }
+            }
             return null;
         }
 
+        if (!window.ProjectBackup.supabase) {
+            console.warn('⚠️ ProjectBackup.supabase가 초기화되지 않았습니다.');
+            await window.ProjectBackup.initSupabase();
+
+            // 재시도
+            if (!window.ProjectBackup.supabase) {
+                console.error('❌ Supabase 초기화 실패');
+                return null;
+            }
+        }
+
         // users 테이블에서 모든 사용자 가져오기
+        console.log('🔍 users 테이블에서 데이터 조회 중...');
         const { data, error } = await window.ProjectBackup.supabase
             .from('users')
             .select('*')
@@ -24,10 +67,24 @@ async function loadUsersFromSupabase() {
 
         if (error) {
             console.error('❌ Supabase 사용자 목록 가져오기 실패:', error);
+            console.error('Error details:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            });
             return null;
         }
 
-        console.log('✅ Supabase에서 사용자 목록 로드됨:', data);
+        console.log(`✅ Supabase에서 ${data ? data.length : 0}명의 사용자 목록 로드됨`);
+        if (data && data.length > 0) {
+            console.table(data.map(u => ({
+                email: u.email,
+                name: u.name,
+                status: u.status,
+                created_at: u.created_at
+            })));
+        }
         return data;
     } catch (error) {
         console.error('❌ Supabase 연결 오류:', error);
