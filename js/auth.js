@@ -362,7 +362,7 @@ class GoogleAuth {
                     onConflict: 'email'
                 })
                 .select()
-                .single();
+                .maybeSingle(); // single() 대신 maybeSingle() 사용
 
             if (error) {
                 console.error('❌ Supabase 사용자 저장 실패:', error);
@@ -377,9 +377,9 @@ class GoogleAuth {
                 console.log('✅ Supabase에 사용자 정보 저장 성공:', data);
 
                 // 승인 상태 확인 및 업데이트
-                if (data && data[0]) {
-                    this.isApproved = data[0].status === 'approved';
-                    console.log('👤 사용자 상태:', data[0].status);
+                if (data) {
+                    this.isApproved = data.status === 'approved';
+                    console.log('👤 사용자 상태:', data.status);
                 }
                 return true;
             }
