@@ -971,9 +971,16 @@
                 <div class="features-right-section">
                     <h3 class="section-title">프로젝트 워크플로우</h3>
                     <p class="section-subtitle">8단계의 체계적인 워크플로우</p>
-                    <button class="stage-upload-main-btn" onclick="startSequentialUpload()">
-                        단계별 업로드 시작
-                    </button>
+                    <div class="workflow-buttons">
+                        <button class="stage-upload-main-btn" onclick="startSequentialUpload()">
+                            <i class="ti ti-upload"></i>
+                            단계별 업로드 시작
+                        </button>
+                        <button class="stage-save-btn" onclick="saveProjectToSupabase(event)">
+                            <i class="ti ti-cloud-upload"></i>
+                            프로젝트 저장
+                        </button>
+                    </div>
                     
                     <div class="stage-cards-grid">
                 <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage2" title="시나리오">
@@ -1786,8 +1793,107 @@
             }
         });
     </script>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Project Backup System -->
+    <script type="module">
+        import ProjectBackupSystem from './js/modules/project-backup.js';
+        window.ProjectBackup = new ProjectBackupSystem();
+    </script>
+
+    <!-- Project Save/Load Functions -->
+    <script>
+        // 프로젝트를 Supabase에 저장
+        async function saveProjectToSupabase(event) {
+            const btn = event ? event.target.closest('button') : document.querySelector('.stage-save-btn');
+            const originalHTML = btn.innerHTML;
+
+            try {
+                // 로그인 확인
+                const userInfo = localStorage.getItem('user_info');
+                if (!userInfo) {
+                    alert('프로젝트 저장을 위해 로그인이 필요합니다.');
+                    return;
+                }
+
+                // 프로젝트 이름 입력받기
+                const projectName = prompt('프로젝트 이름을 입력하세요:', 'My Project');
+                if (!projectName) {
+                    return;
+                }
+
+                // 로딩 표시
+                btn.innerHTML = '<i class="ti ti-loader-2"></i> 저장 중...';
+                btn.disabled = true;
+
+                // ProjectBackup 인스턴스 대기
+                let retries = 0;
+                while (!window.ProjectBackup && retries < 10) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retries++;
+                }
+
+                if (!window.ProjectBackup) {
+                    throw new Error('프로젝트 백업 시스템을 초기화할 수 없습니다.');
+                }
+
+                // Supabase에 백업
+                await window.ProjectBackup.backupToSupabase(projectName);
+
+                // 성공 메시지
+                btn.innerHTML = '<i class="ti ti-check"></i> 저장 완료!';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    alert(`✅ 프로젝트 "${projectName}"이(가) 성공적으로 저장되었습니다!`);
+                }, 1000);
+
+            } catch (error) {
+                console.error('프로젝트 저장 실패:', error);
+
+                // 오류 메시지 개선
+                let errorMessage = '프로젝트 저장에 실패했습니다.';
+                if (error.message.includes('backup_data')) {
+                    errorMessage = '데이터베이스 스키마를 업데이트해야 합니다. Supabase SQL Editor에서 schema-update.sql을 실행해주세요.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Supabase 연결에 실패했습니다. 인터넷 연결을 확인해주세요.';
+                } else {
+                    errorMessage += '\n' + error.message;
+                }
+
+                alert(errorMessage);
+
+                // 버튼 원상복구
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        // 백업 파일 다운로드
+        function downloadProjectBackup() {
+            try {
+                const projectName = prompt('다운로드할 프로젝트 이름:', 'My Project');
+                if (!projectName) {
+                    return;
+                }
+
+                if (window.ProjectBackup) {
+                    window.ProjectBackup.downloadBackup(projectName);
+                    alert('✅ 백업 파일이 다운로드되었습니다!');
+                } else {
+                    alert('프로젝트 백업 시스템이 초기화되지 않았습니다.');
+                }
+            } catch (error) {
+                console.error('백업 다운로드 실패:', error);
+                alert('백업 다운로드에 실패했습니다: ' + error.message);
+            }
+        }
+    </script>
+
     <!-- 비밀번호 입력 모달 (현재 사용하지 않음) -->
-    <!-- 
+    <!--
     <div id="passwordModal" class="password-modal">
         <div class="password-modal-content">
             <h3>🍌 AIFI 바나나</h3>
