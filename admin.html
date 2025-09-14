@@ -747,8 +747,17 @@
         <!-- 내용은 JavaScript에서 동적으로 설정됩니다 -->
     </div>
     
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Project Scripts -->
     <script src="js/auth.js"></script>
+    <script type="module">
+        import ProjectBackupSystem from './js/modules/project-backup.js';
+        window.ProjectBackup = new ProjectBackupSystem();
+    </script>
     <script src="js/admin.js"></script>
+    <script src="js/admin-supabase.js"></script>
     <script>
         // 페이지 초기화
         document.addEventListener('DOMContentLoaded', function() {
