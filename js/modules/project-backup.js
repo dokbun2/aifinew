@@ -25,8 +25,11 @@ class ProjectBackupSystem {
     // Supabase 설정 로드
     async loadSupabaseConfig() {
         try {
-            const module = await import('./supabase-config.js');
-            return module.SUPABASE_CONFIG;
+            // 하드코딩된 설정 사용 (import 오류 방지)
+            return {
+                url: 'https://ocbqffealslwnsybeurj.supabase.co',
+                anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jYnFmZmVhbHNsd25zeWJldXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MjMxMzYsImV4cCI6MjA3MzM5OTEzNn0.EkqrmbUgB3M7U0o_Caf7VMQwbmly7NkkCClynx7eamE'
+            };
         } catch (error) {
             console.error('Failed to load Supabase config:', error);
             return null;

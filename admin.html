@@ -287,7 +287,12 @@
             color: rgba(255, 255, 255, 0.4);
             font-size: 14px;
         }
-        
+
+        .filter-buttons-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
         .filter-btn {
             padding: 8px 14px;
             background: rgba(255, 255, 255, 0.08);
@@ -574,30 +579,257 @@
         
         /* 반응형 디자인 */
         @media (max-width: 768px) {
+            /* 네비게이션 바 모바일 최적화 */
+            .admin-navbar {
+                padding: 10px 0;
+            }
+
+            .admin-navbar-content {
+                padding: 0 12px;
+            }
+
+            .admin-nav-left {
+                gap: 12px;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .home-button {
+                padding: 8px 12px;
+                min-width: auto;
+            }
+
+            .home-button span {
+                display: none; /* 모바일에서 텍스트 숨김 */
+            }
+
+            .admin-page-title {
+                font-size: 16px;
+                flex: 1;
+            }
+
+            .admin-page-title > span:not(.admin-page-badge) {
+                display: inline-block; /* "관리자 대시보드" 텍스트 표시 */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 120px;
+            }
+
+            .admin-page-title > i {
+                display: inline-block; /* 아이콘 유지 */
+                font-size: 18px;
+            }
+
+            .admin-page-badge {
+                flex-shrink: 0;
+            }
+
+            /* 헤더 섹션 모바일 최적화 */
+            .admin-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
             .admin-header h1 {
-                font-size: 28px;
+                font-size: 20px;
             }
-            
+
+            .admin-header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 15px;
+            }
+
+            .section-header {
+                padding: 12px 0;
+                margin-bottom: 10px;
+            }
+
+            .section-title {
+                font-size: 14px;
+                gap: 6px;
+            }
+
+            .section-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+
+            .users-section {
+                margin-bottom: 15px;
+            }
+
+            .user-list {
+                padding: 0;
+            }
+
             .admin-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .user-list-header,
-            .user-item {
                 grid-template-columns: 1fr;
                 gap: 10px;
             }
-            
+
+            .stat-card {
+                padding: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .stat-card h3 {
+                font-size: 11px;
+                margin-bottom: 4px;
+            }
+
+            .stat-card p {
+                font-size: 20px;
+            }
+
+            .user-list-header {
+                display: none; /* 모바일에서 헤더 숨김 */
+            }
+
+            .user-item {
+                display: flex;
+                flex-direction: column;
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                margin-bottom: 10px;
+                gap: 12px;
+            }
+
+            .user-item:last-child {
+                margin-bottom: 0;
+            }
+
             .user-checkbox {
                 display: none;
             }
-            
+
+            /* 모바일 사용자 정보 레이아웃 */
+            .user-info {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 12px;
+                width: 100%;
+            }
+
+            .user-avatar {
+                width: 48px;
+                height: 48px;
+                flex-shrink: 0;
+            }
+
+            .user-details {
+                flex: 1;
+                gap: 4px;
+            }
+
+            .user-name {
+                font-size: 14px;
+                font-weight: 600;
+                color: #fff;
+            }
+
+            .user-email {
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.6);
+                word-break: break-all;
+            }
+
+            .user-meta {
+                font-size: 11px;
+                color: rgba(255, 255, 255, 0.4);
+                margin-top: 8px;
+                padding-top: 8px;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            /* 모바일 액션 버튼 */
+            .user-actions {
+                display: flex;
+                gap: 8px;
+                width: 100%;
+                margin-top: 4px;
+            }
+
+            .user-action-btn {
+                flex: 1;
+                padding: 10px 12px;
+                font-size: 12px;
+                font-weight: 600;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            .approve-btn {
+                background: rgba(0, 122, 255, 0.15);
+                border: 1px solid rgba(0, 122, 255, 0.3);
+                color: #4DA6FF;
+            }
+
+            .reject-btn, .revoke-btn {
+                background: rgba(255, 59, 48, 0.15);
+                border: 1px solid rgba(255, 59, 48, 0.3);
+                color: #FF6B6B;
+            }
+
+            /* 모바일 검색 UI 개선 */
             .admin-controls {
+                padding: 10px;
+                gap: 0;
+                display: flex;
                 flex-direction: column;
             }
-            
+
             .search-box {
+                width: 100%;
                 min-width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .search-input {
+                padding: 10px 12px 10px 36px;
+                font-size: 14px;
+                height: 40px;
+            }
+
+            /* 필터 버튼 그룹 - 한 줄에 배치 */
+            .filter-btn {
+                flex: 1;
+                padding: 10px 8px;
+                font-size: 12px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                min-width: 0;
+                height: 40px;
+            }
+
+            .filter-btn span {
+                white-space: nowrap;
+            }
+
+            .filter-btn i {
+                font-size: 14px !important;
+                flex-shrink: 0;
+            }
+
+            /* 모바일에서 필터 버튼들을 한 줄에 배치 */
+            .admin-controls {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .filter-buttons-wrapper {
+                display: flex;
+                gap: 6px;
+                width: 100%;
             }
         }
     </style>
@@ -675,18 +907,20 @@
                 <i class="ti ti-search search-icon" style="font-size: 14px;"></i>
                 <input type="text" class="search-input" id="user-search" placeholder="이름 또는 이메일로 검색..." onkeyup="adminAuth.searchUsers(this.value)">
             </div>
-            <button class="filter-btn active" onclick="adminAuth.filterUsers('all')">
-                <i class="ti ti-list" style="font-size: 14px;"></i>
-                <span>전체</span>
-            </button>
-            <button class="filter-btn" onclick="adminAuth.filterUsers('pending')">
-                <i class="ti ti-clock" style="font-size: 14px;"></i>
-                <span>대기중</span>
-            </button>
-            <button class="filter-btn" onclick="adminAuth.filterUsers('approved')">
-                <i class="ti ti-circle-check" style="font-size: 14px;"></i>
-                <span>승인됨</span>
-            </button>
+            <div class="filter-buttons-wrapper">
+                <button class="filter-btn active" onclick="adminAuth.filterUsers('all')">
+                    <i class="ti ti-list" style="font-size: 14px;"></i>
+                    <span>전체</span>
+                </button>
+                <button class="filter-btn" onclick="adminAuth.filterUsers('pending')">
+                    <i class="ti ti-clock" style="font-size: 14px;"></i>
+                    <span>대기중</span>
+                </button>
+                <button class="filter-btn" onclick="adminAuth.filterUsers('approved')">
+                    <i class="ti ti-circle-check" style="font-size: 14px;"></i>
+                    <span>승인됨</span>
+                </button>
+            </div>
         </div>
         
         <!-- 승인 대기 사용자 -->

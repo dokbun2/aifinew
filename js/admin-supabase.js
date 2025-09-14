@@ -20,12 +20,16 @@ async function loadUsersFromSupabase() {
             // 직접 Supabase 클라이언트 생성 시도
             if (window.supabase) {
                 try {
-                    const module = await import('./modules/supabase-config.js');
-                    if (module.SUPABASE_CONFIG) {
-                        const supabaseClient = window.supabase.createClient(
-                            module.SUPABASE_CONFIG.url,
-                            module.SUPABASE_CONFIG.anonKey
-                        );
+                    // 하드코딩된 설정 사용 (import 오류 방지)
+                    const SUPABASE_CONFIG = {
+                        url: 'https://ocbqffealslwnsybeurj.supabase.co',
+                        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jYnFmZmVhbHNsd25zeWJldXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MjMxMzYsImV4cCI6MjA3MzM5OTEzNn0.EkqrmbUgB3M7U0o_Caf7VMQwbmly7NkkCClynx7eamE'
+                    };
+
+                    const supabaseClient = window.supabase.createClient(
+                        SUPABASE_CONFIG.url,
+                        SUPABASE_CONFIG.anonKey
+                    );
 
                         const { data, error } = await supabaseClient
                             .from('users')
