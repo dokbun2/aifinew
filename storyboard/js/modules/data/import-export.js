@@ -40,6 +40,18 @@
                         project_info: { name: 'Imported_Project' },
                         breakdown_data: { sequences: [], shots: [] }
                     };
+
+                    // Google 로그인 사용자 정보 추가
+                    const userInfo = localStorage.getItem('user_info');
+                    if (userInfo) {
+                        try {
+                            const user = JSON.parse(userInfo);
+                            mergedData.user_email = user.email;
+                            mergedData.user_name = user.name;
+                        } catch (e) {
+                            console.error('사용자 정보 파싱 오류:', e);
+                        }
+                    }
                     
                     // Stage 7 데이터를 현재 데이터와 병합
                     if (window.StageConverter?.processStage7VideoPrompts) {
@@ -72,6 +84,18 @@
                             shots: []
                         }
                     };
+
+                    // Google 로그인 사용자 정보 추가
+                    const userInfo = localStorage.getItem('user_info');
+                    if (userInfo) {
+                        try {
+                            const user = JSON.parse(userInfo);
+                            convertedData.user_email = user.email;
+                            convertedData.user_name = user.name;
+                        } catch (e) {
+                            console.error('사용자 정보 파싱 오류:', e);
+                        }
+                    }
 
                     // 콜백 함수 실행
                     if (callback && typeof callback === 'function') {

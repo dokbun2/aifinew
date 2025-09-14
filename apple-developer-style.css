@@ -2301,6 +2301,30 @@ body {
   }
 }
 
+/* Dropdown Menu Button Styles */
+.dropdown-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  text-align: left;
+}
+
+.dropdown-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-menu-btn span:first-child {
+  font-size: 18px;
+}
+
 /* ==========================================
    14. Stage Buttons
    ========================================== */

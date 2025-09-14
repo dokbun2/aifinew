@@ -655,20 +655,73 @@
         import { SUPABASE_CONFIG, validateConfig } from './js/modules/supabase-config.js';
 
         // Global variables
+        let supabase = null;
         let currentUser = null;
         let projects = [];
         let currentFilter = 'all';
         let currentView = 'grid';
 
+        // Initialize Supabase client
+        function initSupabase() {
+            if (!validateConfig()) {
+                console.error('Invalid Supabase configuration');
+                showError('Supabase 설정이 올바르지 않습니다.');
+                return null;
+            }
+
+            supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true
+                }
+            });
+
+            console.log('✅ Supabase client initialized');
+            return supabase;
+        }
+
+        // Get current user
+        async function getCurrentUser() {
+            if (!supabase) return null;
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error) throw error;
+            return user;
+        }
+
+        // Sign out
+        async function signOut() {
+            if (!supabase) return;
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+
+            // Clear local storage
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+
+            // Redirect to home
+            window.location.href = '/';
+        }
+
         // Initialize dashboard
         async function initDashboard() {
             try {
-                // Check authentication
-                const authenticated = await SupabaseClient.requireAuth();
-                if (!authenticated) return;
+                // Initialize Supabase
+                if (!initSupabase()) {
+                    showError('Supabase 초기화 실패');
+                    return;
+                }
 
                 // Get current user
-                currentUser = await SupabaseClient.getCurrentUser();
+                currentUser = await getCurrentUser();
+
+                if (!currentUser) {
+                    // Not authenticated, redirect to login
+                    console.log('User not authenticated, redirecting to home');
+                    window.location.href = '/';
+                    return;
+                }
+
                 updateUserInfo();
 
                 // Load projects
@@ -695,7 +748,7 @@
                             <span class="user-name">${currentUser.user_metadata?.full_name || 'User'}</span>
                         </button>
                         <div class="user-dropdown-content">
-                            <button onclick="SupabaseClient.signOut()" class="dropdown-item">
+                            <button onclick="signOut()" class="dropdown-item">
                                 <i class="ti ti-logout"></i>
                                 로그아웃
                             </button>
@@ -711,7 +764,19 @@
             container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
             try {
-                projects = await SupabaseClient.getUserProjects();
+                if (!supabase) return;
+
+                // Get user projects
+                const { data, error } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('is_deleted', false)
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+
+                projects = data || [];
                 renderProjects();
             } catch (error) {
                 console.error('Error loading projects:', error);
@@ -860,6 +925,21 @@
             cfFields.classList.toggle('show', projectType === 'cf');
         };
 
+        // Generate film ID
+        function generateFilmId(projectName) {
+            const prefix = projectName
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 3);
+
+            const year = new Date().getFullYear();
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+            return `${prefix}${year}${random}`;
+        }
+
         // Create new project
         window.createNewProject = async function() {
             const projectName = document.getElementById('project-name').value.trim();
@@ -871,11 +951,23 @@
 
             const projectType = document.querySelector('input[name="project_type"]:checked').value;
             const projectData = {
+                user_id: currentUser.id,
                 project_name: projectName,
+                film_id: generateFilmId(projectName),
                 project_type: projectType,
                 genre: document.getElementById('project-genre').value.trim(),
                 description: document.getElementById('project-description').value.trim(),
-                status: 'planning'
+                status: 'planning',
+                storyboard_data: {},
+                concept_art_data: {},
+                statistics: {
+                    total_sequences: 0,
+                    total_scenes: 0,
+                    total_shots: 0,
+                    total_characters: 0,
+                    total_locations: 0,
+                    total_props: 0
+                }
             };
 
             // Add CF specific data
@@ -899,8 +991,17 @@
             }
 
             try {
-                const newProject = await SupabaseClient.createProject(projectData);
-                console.log('Project created:', newProject);
+                if (!supabase) return;
+
+                const { data, error } = await supabase
+                    .from('projects')
+                    .insert([projectData])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                console.log('Project created:', data);
 
                 // Reload projects
                 await loadProjects();
@@ -930,8 +1031,9 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', initDashboard);
 
-        // Make SupabaseClient available globally for debugging
-        window.SupabaseClient = SupabaseClient;
+        // Make functions available globally for debugging
+        window.supabase = supabase;
+        window.signOut = signOut;
     </script>
 </body>
 </html>

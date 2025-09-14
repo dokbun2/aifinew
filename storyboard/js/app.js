@@ -67,14 +67,15 @@ window.debugData = {
 const IMAGE_AI_TOOLS = ['midjourney', 'ideogram', 'leonardo', 'imagefx', 'openart'];
 
 // 수정된 프롬프트 가져오기 함수 (AppState 사용)
-function getEditedPrompt(shotId, aiName, imageId) {
+// getEditedPrompt - PromptEditor 모듈 사용
+const getEditedPrompt = window.PromptEditor ? window.PromptEditor.getEditedPrompt : function(shotId, aiName, imageId) {
     if (window.AppState && AppState.getEditedPrompt) {
         return AppState.getEditedPrompt(shotId, aiName, imageId);
     }
     // 폴백: 기존 방식
     const editKey = `${shotId}_${aiName}_${imageId}`;
     return editedPrompts[editKey];
-}
+};
 
 // getProjectFileName과 getProjectName 함수는 AppUtils 모듈로 이동됨
 // 호환성을 위한 별칭
@@ -10361,7 +10362,8 @@ try {
 editedPrompts = JSON.parse(localStorage.getItem('editedImagePrompts') || '{}');
 
 // 프롬프트 수정 버튼 클릭 시 호출되는 함수
-function editImagePrompt(shotId, aiName, imageId, originalPrompt, translatedPrompt, parameters) {
+// editImagePrompt - PromptEditor 모듈 사용
+const editImagePrompt = window.PromptEditor ? window.PromptEditor.editImagePrompt : function(shotId, aiName, imageId, originalPrompt, translatedPrompt, parameters) {
     try {
         // HTML 엔티티 디코드
         const decodeHtmlEntities = (str) => {
@@ -10421,10 +10423,10 @@ function editImagePrompt(shotId, aiName, imageId, originalPrompt, translatedProm
         console.error('프롬프트 수정 모달 생성 오류:', error);
         showMessage('프롬프트 수정 모달을 열 수 없습니다.', 'error');
     }
-}
+};
 
-// 수정된 프롬프트 저장
-function saveEditedPrompt(shotId, aiName, imageId) {
+// saveEditedPrompt - PromptEditor 모듈 사용
+const saveEditedPrompt = window.PromptEditor ? window.PromptEditor.saveEditedPrompt : function(shotId, aiName, imageId) {
     try {
         const originalPrompt = document.getElementById('edit-original-prompt').value;
         const translatedPromptEl = document.getElementById('edit-translated-prompt');
@@ -10460,17 +10462,17 @@ function saveEditedPrompt(shotId, aiName, imageId) {
     }
 }
 
-// 프롬프트 수정 모달 닫기
-function closePromptEditModal(event) {
+// closePromptEditModal - PromptEditor 모듈 사용
+const closePromptEditModal = window.PromptEditor ? window.PromptEditor.closePromptEditModal : function(event) {
     if (event && event.target !== event.currentTarget) return;
     const modal = document.getElementById('prompt-edit-modal');
     if (modal) {
         modal.remove();
     }
-}
+};
 
-// 프롬프트 수정 모달 스타일 추가
-function addPromptEditModalStyles() {
+// addPromptEditModalStyles - PromptEditor 모듈 사용
+const addPromptEditModalStyles = window.PromptEditor ? window.PromptEditor.addPromptEditModalStyles : function() {
     if (!document.getElementById('prompt-edit-modal-styles')) {
         const style = document.createElement('style');
         style.id = 'prompt-edit-modal-styles';
@@ -10601,8 +10603,8 @@ function addPromptEditModalStyles() {
 }
 
 
-// AI 수정 버튼 클릭 시 호출되는 함수
-function aiEditImagePrompt(shotId, aiName, imageId, originalPrompt) {
+// aiEditImagePrompt - PromptEditor 모듈 사용
+const aiEditImagePrompt = window.PromptEditor ? window.PromptEditor.aiEditImagePrompt : function(shotId, aiName, imageId, originalPrompt) {
     try {
         // HTML 엔티티 디코드
         const decodedPrompt = originalPrompt
@@ -10658,8 +10660,8 @@ debugLog('프롬프트 관련 함수들이 전역 스코프에 등록되었습�
     aiEditImagePrompt: typeof window.aiEditImagePrompt
 });
 
-// DOM이 완전히 로드된 후 동적 버튼 이벤트 재바인딩
-function rebindPromptButtons() {
+// rebindPromptButtons - PromptEditor 모듈 사용
+const rebindPromptButtons = window.PromptEditor ? window.PromptEditor.rebindPromptButtons : function() {
     // ai-image-prompt-details 내부의 모든 버튼에 이벤트 리스너 재설정
     setTimeout(() => {
         const promptContainers = document.querySelectorAll('.ai-image-prompt-details');

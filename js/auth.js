@@ -214,6 +214,13 @@ class GoogleAuth {
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
+                        ${this.isApproved ? `
+                        <button onclick="googleAuth.openDashboard()" class="dropdown-menu-btn">
+                            <span>📁</span>
+                            <span>나의 프로젝트</span>
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        ` : ''}
                         <button onclick="googleAuth.logout()" class="dropdown-logout-btn">
                             <span>🚪</span>
                             <span>로그아웃</span>
@@ -393,6 +400,11 @@ class GoogleAuth {
         
         // 메인 페이지의 기능도 비활성화
         this.disableMainFeatures();
+    }
+
+    openDashboard() {
+        // 대시보드 페이지로 이동
+        window.location.href = '/dashboard.html';
     }
 
     async logout() {
