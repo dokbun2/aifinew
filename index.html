@@ -68,7 +68,7 @@
             .nav-menu {
                 display: none;
                 position: fixed;
-                top: 60px;
+                top: 48px; /* 헤더 높이와 정확히 맞추기 */
                 left: 0;
                 width: 100%;
                 background: rgba(20, 20, 20, 0.98);
@@ -78,9 +78,25 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 z-index: 1000;
             }
-            
+
             .nav-menu.active {
                 display: flex;
+            }
+
+            /* 모바일 메뉴 오버레이 */
+            .menu-overlay {
+                display: none;
+                position: fixed;
+                top: 48px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .menu-overlay.active {
+                display: block;
             }
             
             .nav-menu li {
@@ -171,15 +187,25 @@
         @media screen and (max-width: 768px) {
             .nav-content {
                 padding: 0 10px;
+                justify-content: space-between !important;
             }
-            
+
             .nav-brand {
                 font-size: 14px !important;
+                position: static !important;
+                transform: none !important;
+                left: auto !important;
+                margin-right: auto;
+                justify-content: flex-start !important;
             }
-            
+
             .nav-brand img {
                 width: 20px !important;
                 height: 20px !important;
+            }
+
+            .menu-toggle {
+                margin-left: auto;
             }
         }
         
@@ -785,7 +811,7 @@
     <!-- Navigation -->
     <nav class="apple-nav">
         <div class="nav-content">
-            <a href="#features" class="nav-brand" style="display: flex; align-items: center; gap: 8px;">
+            <a href="#features" class="nav-brand" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                 <img src="favicon_io/favicon-32x32.png" alt="AIFI Logo" width="24" height="24" style="display: inline-block;">
                 <span class="nav-brand-text">AIFI FRAME WORK</span>
             </a>
@@ -795,6 +821,8 @@
                 <span></span>
                 <span></span>
             </button>
+            <!-- 모바일 메뉴 오버레이 -->
+            <div class="menu-overlay" id="menu-overlay"></div>
             <ul class="nav-menu" id="nav-menu">
                 <li><a href="#features" class="nav-link" onclick="closeMobileMenu()">영상제작</a></li>
                 <li><a href="#tools" class="nav-link" onclick="closeMobileMenu()">AIFI툴</a></li>
@@ -1426,30 +1454,75 @@
         // 모바일 메뉴 토글
         function toggleMobileMenu() {
             const navMenu = document.getElementById('nav-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+            const menuToggle = document.getElementById('menu-toggle');
+
             navMenu.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+
+            // 메뉴가 열릴 때 이벤트 전파 방지
+            if (event) {
+                event.stopPropagation();
+            }
         }
-        
+
         function closeMobileMenu() {
             const navMenu = document.getElementById('nav-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+            const menuToggle = document.getElementById('menu-toggle');
+
             navMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+            menuToggle.classList.remove('active');
         }
-        
+
         // 화면 크기 변경 시 모바일 메뉴 닫기
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
                 closeMobileMenu();
             }
         });
-        
-        // 모바일에서 외부 클릭 시 메뉴 닫기
-        document.addEventListener('click', function(e) {
+
+        // DOMContentLoaded 이벤트에서 모든 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', function() {
             const navMenu = document.getElementById('nav-menu');
-            const menuBtn = document.getElementById('mobile-menu-btn');
-            
-            if (navMenu && navMenu.classList.contains('active')) {
-                if (!navMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+            const menuOverlay = document.getElementById('menu-overlay');
+            const menuToggle = document.getElementById('menu-toggle');
+
+            // 오버레이 클릭 시 메뉴 닫기
+            if (menuOverlay) {
+                menuOverlay.addEventListener('click', function() {
                     closeMobileMenu();
+                });
+            }
+
+            // 문서 전체 클릭 이벤트 (메뉴 외부 클릭 감지)
+            document.addEventListener('click', function(e) {
+                // 메뉴가 열려있고, 클릭한 곳이 메뉴나 토글 버튼이 아닌 경우
+                if (navMenu && navMenu.classList.contains('active')) {
+                    // 클릭한 요소가 메뉴, 토글 버튼, 오버레이가 아니면 메뉴 닫기
+                    if (!navMenu.contains(e.target) &&
+                        !menuToggle.contains(e.target) &&
+                        e.target !== menuOverlay) {
+                        closeMobileMenu();
+                    }
                 }
+            });
+
+            // nav-menu 내부 클릭 이벤트
+            if (navMenu) {
+                navMenu.addEventListener('click', function(e) {
+                    // 메뉴 링크 클릭 시에만 메뉴 닫기
+                    if (e.target.classList.contains('nav-link')) {
+                        // 외부 링크가 아닌 경우에만 메뉴 닫기
+                        if (!e.target.hasAttribute('target')) {
+                            closeMobileMenu();
+                        }
+                    }
+                    // 메뉴 내부 클릭 시 이벤트 전파 방지
+                    e.stopPropagation();
+                });
             }
         });
         

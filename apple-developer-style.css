@@ -2041,19 +2041,26 @@ body {
 }
 
 @media (max-width: 768px) {
+  /* nav-content 모바일 레이아웃 */
+  .nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    position: relative;
+  }
+
   /* 햄버거 메뉴 버튼 표시 */
   .menu-toggle {
     display: block;
-    position: absolute;
-    right: 22px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: relative;
+    margin-left: auto;
   }
-  
+
   /* 네비게이션 메뉴 모바일 스타일 */
   .nav-menu {
     position: fixed;
-    top: var(--nav-height);
+    top: calc(var(--nav-height) - 1px); /* 헤더와 붙이기 위해 1px 조정 */
     left: 0;
     right: 0;
     background: rgba(29, 29, 31, 0.98);
@@ -2102,12 +2109,13 @@ body {
     box-shadow: none !important;
   }
   
-  /* 모바일에서 nav-brand 중앙 정렬 */
+  /* 모바일에서 nav-brand 좌측 정렬 */
   .nav-brand {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    position: static;
+    left: auto;
+    transform: none;
     font-size: 18px;
+    margin-right: auto;
   }
   
   /* 모바일에서 user-info 위치 */
