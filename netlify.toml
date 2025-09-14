@@ -3,8 +3,8 @@
   # Supabase 설정 파일 자동 생성 명령
   command = '''
     mkdir -p js/modules &&
-    echo "export const SUPABASE_CONFIG = { url: '$SUPABASE_URL', anonKey: '$SUPABASE_ANON_KEY' };" > js/modules/supabase-config.js &&
-    echo "✅ Supabase config created successfully"
+    echo "export const SUPABASE_CONFIG = { url: \"$SUPABASE_URL\", anonKey: \"$SUPABASE_ANON_KEY\" };" > js/modules/supabase-config.js &&
+    echo "✅ Supabase config created with URL: $SUPABASE_URL"
   '''
   publish = "."
 

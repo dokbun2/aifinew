@@ -40,7 +40,7 @@ class ProjectBackupSystem {
             try {
                 return JSON.parse(userInfo);
             } catch (e) {
-                console.error('Failed to parse user info:', e);
+                console.error('사용자 정보를 불러올 수 없습니다:', e);
             }
         }
         return null;
@@ -112,7 +112,7 @@ class ProjectBackupSystem {
             if (!this.supabase) {
                 await this.initSupabase();
                 if (!this.supabase) {
-                    throw new Error('Supabase 연결 실패');
+                    throw new Error('프로젝트 저장소에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
                 }
             }
 
@@ -169,7 +169,7 @@ class ProjectBackupSystem {
             if (!this.supabase) {
                 await this.initSupabase();
                 if (!this.supabase) {
-                    throw new Error('Supabase 연결 실패');
+                    throw new Error('프로젝트 저장소에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
                 }
             }
 
@@ -291,7 +291,7 @@ class ProjectBackupSystem {
             if (!this.supabase) {
                 await this.initSupabase();
                 if (!this.supabase) {
-                    throw new Error('Supabase 연결 실패');
+                    throw new Error('프로젝트 저장소에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
                 }
             }
 
@@ -325,7 +325,7 @@ class ProjectBackupSystem {
             if (!this.supabase) {
                 await this.initSupabase();
                 if (!this.supabase) {
-                    throw new Error('Supabase 연결 실패');
+                    throw new Error('프로젝트 저장소에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
                 }
             }
 

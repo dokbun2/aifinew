@@ -106,7 +106,7 @@
                 // 로그인 확인
                 const userInfo = localStorage.getItem('user_info');
                 if (!userInfo) {
-                    alert('로그인이 필요합니다.');
+                    showError('프로젝트를 보려면 먼저 로그인해주세요.');
                     window.location.href = '/';
                     return;
                 }

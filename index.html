@@ -1836,7 +1836,7 @@
                 }
 
                 if (!window.ProjectBackup) {
-                    throw new Error('프로젝트 백업 시스템을 초기화할 수 없습니다.');
+                    throw new Error('프로젝트 저장 시스템이 준비되지 않았습니다. 페이지를 새로고침해주세요.');
                 }
 
                 // Supabase에 백업
@@ -1855,12 +1855,14 @@
 
                 // 오류 메시지 개선
                 let errorMessage = '프로젝트 저장에 실패했습니다.';
-                if (error.message.includes('backup_data')) {
-                    errorMessage = '데이터베이스 스키마를 업데이트해야 합니다. Supabase SQL Editor에서 schema-update.sql을 실행해주세요.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Supabase 연결에 실패했습니다. 인터넷 연결을 확인해주세요.';
+                if (error.message.includes('로그인이 필요')) {
+                    errorMessage = '프로젝트를 저장하려면 먼저 로그인해주세요.';
+                } else if (error.message.includes('backup_data') || error.message.includes('column')) {
+                    errorMessage = '프로젝트 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('연결')) {
+                    errorMessage = '연결 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
                 } else {
-                    errorMessage += '\n' + error.message;
+                    errorMessage = '프로젝트 저장 중 오류가 발생했습니다.';
                 }
 
                 alert(errorMessage);
