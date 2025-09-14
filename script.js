@@ -1,31 +1,212 @@
 // 업로드 후 이동할 URL을 저장할 전역 변수
 let pendingNavigationUrl = null;
 
-// 관리자 접근 권한 확인 함수
-function checkAdminAccess() {
+// 사용자 접근 권한 확인 함수
+function checkUserAccess() {
     const userInfo = localStorage.getItem('user_info');
+    const token = localStorage.getItem('auth_token');
+
+    // 로그인하지 않은 경우
+    if (!token || !userInfo) {
+        // 보호된 콘텐츠 비활성화
+        disableProtectedContent();
+        return false;
+    }
+
+    try {
+        const user = JSON.parse(userInfo);
+
+        // 승인되지 않은 사용자
+        if (user.status !== 'approved') {
+            disableProtectedContent();
+            showAccessDeniedMessage(user.status);
+            return false;
+        }
+
+        // 승인된 사용자 - 전체 접근 허용
+        enableProtectedContent();
+
+        // 관리자 링크 표시 여부 확인
+        checkAdminAccess(user);
+        return true;
+
+    } catch (e) {
+        console.error('사용자 정보 파싱 오류:', e);
+        disableProtectedContent();
+        return false;
+    }
+}
+
+// 관리자 접근 권한 확인 함수
+function checkAdminAccess(user) {
     const adminLink = document.getElementById('admin-link');
-    
-    if (userInfo && adminLink) {
-        try {
-            const user = JSON.parse(userInfo);
-            const adminList = JSON.parse(localStorage.getItem('admin_list') || '[]');
-            
-            // 사용자가 관리자 목록에 있는지 확인
-            if (adminList.includes(user.email)) {
-                adminLink.style.display = 'inline-block';
-                console.log('관리자 권한 확인됨:', user.email);
-            } else {
-                adminLink.style.display = 'none';
-                console.log('일반 사용자:', user.email);
-            }
-        } catch (e) {
-            console.error('사용자 정보 파싱 오류:', e);
+
+    if (adminLink) {
+        if (user && user.role === 'admin') {
+            adminLink.style.display = 'inline-block';
+            console.log('관리자 권한 확인됨:', user.email);
+        } else {
             adminLink.style.display = 'none';
         }
-    } else if (adminLink) {
-        // 로그인하지 않은 경우 버튼 숨기기
-        adminLink.style.display = 'none';
+    }
+}
+
+// 보호된 콘텐츠 비활성화
+function disableProtectedContent() {
+    // 스테이지 카드들 비활성화
+    const stageCards = document.querySelectorAll('.stage-card');
+    stageCards.forEach(card => {
+        card.style.pointerEvents = 'none';
+        card.style.opacity = '0.5';
+        card.style.filter = 'grayscale(100%)';
+    });
+
+    // 네비게이션 메뉴 비활성화
+    const navLinks = document.querySelectorAll('.nav-link[href^="storyboard"], .nav-link[href^="concept-art"], .nav-link[href^="prompt-generator"], .nav-link[href^="media-gallery"]');
+    navLinks.forEach(link => {
+        link.style.pointerEvents = 'none';
+        link.style.opacity = '0.5';
+    });
+}
+
+// 보호된 콘텐츠 활성화
+function enableProtectedContent() {
+    // 스테이지 카드들 활성화
+    const stageCards = document.querySelectorAll('.stage-card');
+    stageCards.forEach(card => {
+        card.style.pointerEvents = '';
+        card.style.opacity = '';
+        card.style.filter = '';
+    });
+
+    // 네비게이션 메뉴 활성화
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.style.pointerEvents = '';
+        link.style.opacity = '';
+    });
+}
+
+// 접근 거부 메시지 표시
+function showAccessDeniedMessage(status) {
+    // 기존 메시지 제거
+    const existingMessage = document.querySelector('.access-denied-overlay');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+
+    let message = '';
+    let icon = '';
+
+    if (status === 'pending') {
+        icon = '⏳';
+        message = `
+            <h2>승인 대기 중</h2>
+            <p>회원가입이 완료되었습니다!</p>
+            <p>관리자의 승인을 기다리고 있습니다.</p>
+            <p class="note">승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
+        `;
+    } else if (status === 'rejected') {
+        icon = '🚫';
+        message = `
+            <h2>접근 제한</h2>
+            <p>귀하의 계정이 차단되었습니다.</p>
+            <p>자세한 사항은 관리자에게 문의하세요.</p>
+        `;
+    } else {
+        icon = '🔒';
+        message = `
+            <h2>로그인 필요</h2>
+            <p>이 서비스를 이용하려면 로그인이 필요합니다.</p>
+            <button onclick="authSystem.showLoginModal()" class="login-prompt-btn">로그인</button>
+        `;
+    }
+
+    // 오버레이 생성
+    const overlay = document.createElement('div');
+    overlay.className = 'access-denied-overlay';
+    overlay.innerHTML = `
+        <div class="access-denied-content">
+            <div class="access-denied-icon">${icon}</div>
+            ${message}
+        </div>
+    `;
+
+    // 메인 콘텐츠 영역에 추가
+    const mainContent = document.querySelector('.container');
+    if (mainContent) {
+        mainContent.style.position = 'relative';
+        mainContent.appendChild(overlay);
+    }
+
+    // 스타일 추가
+    if (!document.querySelector('#access-denied-styles')) {
+        const style = document.createElement('style');
+        style.id = 'access-denied-styles';
+        style.textContent = `
+            .access-denied-overlay {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 100;
+                background: rgba(29, 29, 31, 0.98);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 18px;
+                padding: 48px;
+                max-width: 420px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 44px 80px rgba(0, 0, 0, 0.5);
+            }
+
+            .access-denied-icon {
+                font-size: 60px;
+                margin-bottom: 24px;
+            }
+
+            .access-denied-content h2 {
+                color: #f5f5f7;
+                font-size: 28px;
+                font-weight: 600;
+                margin-bottom: 16px;
+            }
+
+            .access-denied-content p {
+                color: #86868b;
+                font-size: 15px;
+                line-height: 1.5;
+                margin-bottom: 12px;
+            }
+
+            .access-denied-content .note {
+                color: #0066CC;
+                font-size: 13px;
+                margin-top: 20px;
+            }
+
+            .login-prompt-btn {
+                margin-top: 24px;
+                padding: 16px 32px;
+                background: linear-gradient(135deg, #0066CC, #0055B3);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .login-prompt-btn:hover {
+                background: linear-gradient(135deg, #0055B3, #004499);
+                transform: translateY(-1px);
+                box-shadow: 0 12px 32px rgba(0, 102, 204, 0.3);
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 
@@ -228,8 +409,8 @@ function appendExistingStageParams(baseUrl) {
 // DOM Content Loaded Event
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        // 관리자 버튼 표시 여부 확인
-        checkAdminAccess();
+        // 사용자 접근 권한 확인 (미승인 사용자 차단)
+        checkUserAccess();
         
         // 업로드 알림 섹션 숨기기
         const notificationSection = document.getElementById('upload-notification-section');
@@ -3001,9 +3182,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     stageCards.forEach(card => {
         card.addEventListener('click', function() {
+            // 접근 권한 확인
+            if (!checkUserAccess()) {
+                // authSystem이 있으면 로그인 모달 표시
+                if (window.authSystem && typeof window.authSystem.showLoginModal === 'function') {
+                    window.authSystem.showLoginModal();
+                }
+                return;
+            }
+
             const action = this.getAttribute('data-stage-action');
             console.log('🖱️ Stage 카드 클릭됨:', action);
-            
+
             switch(action) {
                 case 'stage2':
                     if (typeof window.goToStoryboardWithImport === 'function') {
