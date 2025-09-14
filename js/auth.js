@@ -140,19 +140,50 @@ class GoogleAuth {
         // 로컬 스토리지에서 승인된 사용자 목록 확인
         const approvedUsers = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
         const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
-        
-        this.isApproved = approvedUsers.includes(email);
-        
+
+        // 승인된 사용자 확인 (email 문자열 또는 객체 배열 모두 지원)
+        this.isApproved = approvedUsers.some(u =>
+            typeof u === 'string' ? u === email : u.email === email
+        );
+
         // 신규 사용자인 경우 대기 목록에 추가
-        if (!this.isApproved && !pendingUsers.find(u => u.email === email)) {
-            pendingUsers.push({
-                email: email,
-                name: this.user.name,
-                requestedAt: new Date().toISOString()
-            });
-            localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+        if (!this.isApproved) {
+            const existingPending = pendingUsers.find(u => u.email === email);
+
+            if (!existingPending) {
+                // 신규 사용자 추가
+                const newUser = {
+                    email: email,
+                    name: this.user.name || 'Unknown',
+                    picture: this.user.picture || '',
+                    requestedAt: new Date().toISOString(),
+                    status: 'pending'
+                };
+                pendingUsers.push(newUser);
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                console.log('새 사용자가 대기 목록에 추가됨:', newUser);
+            } else {
+                // 기존 사용자 정보 업데이트
+                existingPending.name = this.user.name || existingPending.name;
+                existingPending.picture = this.user.picture || existingPending.picture;
+                existingPending.lastLoginAt = new Date().toISOString();
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+            }
+        } else {
+            // 승인된 사용자 정보 업데이트
+            const approvedUser = approvedUsers.find(u =>
+                typeof u === 'object' && u.email === email
+            );
+
+            if (approvedUser) {
+                approvedUser.lastLoginAt = new Date().toISOString();
+                approvedUser.name = this.user.name || approvedUser.name;
+                approvedUser.picture = this.user.picture || approvedUser.picture;
+                localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
+            }
         }
-        
+
         return this.isApproved;
     }
 

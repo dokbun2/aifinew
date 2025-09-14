@@ -252,10 +252,10 @@ class AdminAuth {
         `).join('');
     }
     
-    renderApprovedUsers(emails) {
+    renderApprovedUsers(users) {
         const container = document.getElementById('approved-users');
-        
-        if (emails.length === 0) {
+
+        if (!users || users.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">👥</div>
@@ -265,33 +265,47 @@ class AdminAuth {
             `;
             return;
         }
-        
-        // 승인된 사용자 정보 구성
-        const approvedUserDetails = JSON.parse(localStorage.getItem('approvedUserDetails') || '{}');
-        
-        container.innerHTML = emails.map(email => {
-            const userDetail = approvedUserDetails[email] || {};
+
+        // 배열이 문자열인지 객체인지 확인하고 정규화
+        const normalizedUsers = users.map(user => {
+            if (typeof user === 'string') {
+                // 이전 형식: 이메일 문자열만 있는 경우
+                return {
+                    email: user,
+                    name: user.split('@')[0],
+                    picture: '',
+                    approvedAt: null
+                };
+            }
+            return user; // 이미 객체 형식인 경우
+        });
+
+        container.innerHTML = normalizedUsers.map(user => {
+            const email = user.email || user;
+            const name = user.name || email.split('@')[0];
+            const picture = user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4ecdc4&color=fff`;
+
             return `
                 <div class="user-item" data-email="${email}" data-type="approved">
                     <div>
                         <input type="checkbox" class="user-checkbox" data-email="${email}" onchange="adminAuth.toggleUserSelection('${email}', 'approved')">
                     </div>
                     <div class="user-info">
-                        <img src="${userDetail.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=4ecdc4&color=fff`}" 
-                             alt="${email}" class="user-avatar">
+                        <img src="${picture}"
+                             alt="${name}" class="user-avatar">
                         <div class="user-details">
-                            <div class="user-name">${userDetail.name || email.split('@')[0]}</div>
+                            <div class="user-name">${name}</div>
                             <div class="user-email">${email}</div>
                         </div>
                     </div>
                     <div class="user-meta">
-                        ${this.formatDate(userDetail.approvedAt) || '승인됨'}
+                        ${user.approvedAt ? this.formatDate(user.approvedAt) : '승인됨'}
                         ${this.isUserAdmin(email) ? '<span style="background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">관리자</span>' : ''}
                     </div>
                     <div class="user-actions">
-                        ${!this.isUserAdmin(email) ? 
+                        ${!this.isUserAdmin(email) ?
                             `<button class="user-action-btn approve-btn" onclick="adminAuth.makeUserAdmin('${email}')">관리자 지정</button>` :
-                            this.ADMIN_EMAILS.length > 1 ? 
+                            this.ADMIN_EMAILS.length > 1 ?
                                 `<button class="user-action-btn reject-btn" onclick="adminAuth.removeUserAdmin('${email}')">관리자 해제</button>` :
                                 ''
                         }
@@ -305,17 +319,21 @@ class AdminAuth {
     // 검색 기능
     searchUsers(query) {
         const lowerQuery = query.toLowerCase();
-        
+
         // 대기 중인 사용자 필터링
-        const filteredPending = this.allUsers.pending.filter(user => 
-            user.name.toLowerCase().includes(lowerQuery) || 
+        const filteredPending = this.allUsers.pending.filter(user =>
+            user.name.toLowerCase().includes(lowerQuery) ||
             user.email.toLowerCase().includes(lowerQuery)
         );
-        
-        // 승인된 사용자 필터링
-        const filteredApproved = this.allUsers.approved.filter(email => 
-            email.toLowerCase().includes(lowerQuery)
-        );
+
+        // 승인된 사용자 필터링 (문자열과 객체 형식 모두 처리)
+        const filteredApproved = this.allUsers.approved.filter(user => {
+            if (typeof user === 'string') {
+                return user.toLowerCase().includes(lowerQuery);
+            }
+            return (user.email && user.email.toLowerCase().includes(lowerQuery)) ||
+                   (user.name && user.name.toLowerCase().includes(lowerQuery));
+        });
         
         // 현재 필터에 따라 렌더링
         if (this.currentFilter === 'all' || this.currentFilter === 'pending') {
@@ -481,29 +499,45 @@ class AdminAuth {
     }
     
     approveUserSilent(email) {
-        // 대기 목록에서 제거
+        // 대기 목록에서 사용자 정보 가져오기
         let pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
         const userInfo = pendingUsers.find(u => u.email === email);
+
+        // 대기 목록에서 제거
         pendingUsers = pendingUsers.filter(u => u.email !== email);
         localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
-        
-        // 승인 목록에 추가
+
+        // 승인 목록에 추가 (객체 형식으로)
         let approvedUsers = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
-        if (!approvedUsers.includes(email)) {
-            approvedUsers.push(email);
-            localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
-        }
-        
-        // 승인된 사용자 상세 정보 저장
-        if (userInfo) {
-            let approvedUserDetails = JSON.parse(localStorage.getItem('approvedUserDetails') || '{}');
-            approvedUserDetails[email] = {
-                ...userInfo,
-                approvedAt: new Date().toISOString()
+
+        // 이미 승인된 사용자인지 확인
+        const existingIndex = approvedUsers.findIndex(u =>
+            typeof u === 'string' ? u === email : u.email === email
+        );
+
+        if (existingIndex === -1) {
+            // 새로운 승인된 사용자 추가
+            const approvedUser = {
+                email: email,
+                name: userInfo?.name || email.split('@')[0],
+                picture: userInfo?.picture || '',
+                approvedAt: new Date().toISOString(),
+                status: 'approved'
             };
-            localStorage.setItem('approvedUserDetails', JSON.stringify(approvedUserDetails));
+            approvedUsers.push(approvedUser);
+        } else if (typeof approvedUsers[existingIndex] === 'string') {
+            // 기존 문자열 형식을 객체로 업데이트
+            approvedUsers[existingIndex] = {
+                email: email,
+                name: userInfo?.name || email.split('@')[0],
+                picture: userInfo?.picture || '',
+                approvedAt: new Date().toISOString(),
+                status: 'approved'
+            };
         }
-        
+
+        localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
+
         // 승인 기록 저장
         this.logAction('approve', email, userInfo);
     }
@@ -538,11 +572,16 @@ class AdminAuth {
     }
     
     revokeUserSilent(email) {
-        // 승인 목록에서 제거
+        // 승인 목록에서 제거 (문자열과 객체 형식 모두 처리)
         let approvedUsers = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
-        approvedUsers = approvedUsers.filter(e => e !== email);
+        approvedUsers = approvedUsers.filter(user => {
+            if (typeof user === 'string') {
+                return user !== email;
+            }
+            return user.email !== email;
+        });
         localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
-        
+
         // 취소 기록 저장
         this.logAction('revoke', email);
     }
