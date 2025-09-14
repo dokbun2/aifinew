@@ -1,11 +1,50 @@
-// 전역 변수
-let currentData = null;
-let selectedType = null;
-let selectedId = null;
-let selectedSceneId = null;
-let hasStage2Structure = false; // Stage 2 구조 로드 여부
-let editedPrompts = {}; // 프롬프트 수정 데이터 저장용
-let imageUrlCache = {}; // 이미지 URL 캐시 저장용
+// ========================================
+// 전역 변수 -> AppState 모듈로 마이그레이션
+// ========================================
+// AppState 모듈이 로드되지 않은 경우를 위한 폴백
+if (typeof window.AppState === 'undefined') {
+    console.warn('AppState module not loaded. Using fallback global variables.');
+    // 기존 전역 변수 유지 (호환성)
+    let currentData = null;
+    let selectedType = null;
+    let selectedId = null;
+    let selectedSceneId = null;
+    let hasStage2Structure = false;
+    let editedPrompts = {};
+    let imageUrlCache = {};
+} else {
+    // AppState 사용 시 getter/setter로 연결
+    Object.defineProperties(window, {
+        currentData: {
+            get() { return AppState.get('currentData'); },
+            set(value) { AppState.set('currentData', value); }
+        },
+        selectedType: {
+            get() { return AppState.get('selectedType'); },
+            set(value) { AppState.set('selectedType', value); }
+        },
+        selectedId: {
+            get() { return AppState.get('selectedId'); },
+            set(value) { AppState.set('selectedId', value); }
+        },
+        selectedSceneId: {
+            get() { return AppState.get('selectedSceneId'); },
+            set(value) { AppState.set('selectedSceneId', value); }
+        },
+        hasStage2Structure: {
+            get() { return AppState.get('hasStage2Structure'); },
+            set(value) { AppState.set('hasStage2Structure', value); }
+        },
+        editedPrompts: {
+            get() { return AppState.get('editedPrompts'); },
+            set(value) { AppState.set('editedPrompts', value); }
+        },
+        imageUrlCache: {
+            get() { return AppState.get('imageUrlCache'); },
+            set(value) { AppState.set('imageUrlCache', value); }
+        }
+    });
+}
 
 // 디버그 모드 설정 (프로덕션에서는 false로 설정)
 const DEBUG_MODE = false;
@@ -28,18 +67,23 @@ const escapeHtmlAttribute = window.AppUtils ? window.AppUtils.escapeHtmlAttribut
         .replace(/\t/g, '\\t');
 };
 
-// 디버깅용 전역 변수 노출
+// 디버깅용 전역 변수 노출 (AppState 호환)
 window.debugData = {
-	getCurrentData: () => currentData,
+	getCurrentData: () => window.AppState ? AppState.get('currentData') : currentData,
 	updateNavigation: () => updateNavigation(),
 	checkSequences: () => {
-		return currentData?.breakdown_data?.sequences;
+		const data = window.AppState ? AppState.get('currentData') : currentData;
+		return data?.breakdown_data?.sequences;
 	}
 };
 const IMAGE_AI_TOOLS = ['midjourney', 'ideogram', 'leonardo', 'imagefx', 'openart'];
 
-// 수정된 프롬프트 가져오기 함수 (초기 정의)
+// 수정된 프롬프트 가져오기 함수 (AppState 사용)
 function getEditedPrompt(shotId, aiName, imageId) {
+    if (window.AppState && AppState.getEditedPrompt) {
+        return AppState.getEditedPrompt(shotId, aiName, imageId);
+    }
+    // 폴백: 기존 방식
     const editKey = `${shotId}_${aiName}_${imageId}`;
     return editedPrompts[editKey];
 }
@@ -1757,9 +1801,15 @@ function createTestData() {
                debugLog('✅ v1.1.0 형식 조건 매치! 파일 처리 시작...');
                
                // v1.1.0 형식은 그 자체가 완전한 데이터
-               currentData = newData;
-               window.currentData = currentData;
-               hasStage2Structure = true;
+               // AppState 모듈 호환성 처리
+               if (window.AppState && typeof window.AppState.set === 'function') {
+                   AppState.set('currentData', newData);
+                   AppState.set('hasStage2Structure', true);
+               } else {
+                   currentData = newData;
+                   window.currentData = currentData;
+                   hasStage2Structure = true;
+               }
                
                // 각 shot의 video_prompts 확인 및 처리
                if (currentData.breakdown_data.shots && currentData.breakdown_data.shots.length > 0) {
@@ -1845,7 +1895,12 @@ function createTestData() {
                }
                
                // 전체 데이터 복원
-               currentData = newData.data;
+               // AppState 모듈 호환성 처리
+               if (window.AppState && typeof window.AppState.set === 'function') {
+                   AppState.set('currentData', newData.data);
+               } else {
+                   currentData = newData.data;
+               }
                window.currentData = currentData;
                
                // hasStage2Structure 복원
@@ -2633,9 +2688,14 @@ function createTestData() {
                    newData.hasStage2Structure = true;
                }
                
-               currentData = newData;
-               window.currentData = currentData;
-               
+               // AppState 모듈 호환성 처리
+               if (window.AppState && typeof window.AppState.set === 'function') {
+                   AppState.set('currentData', newData);
+               } else {
+                   currentData = newData;
+                   window.currentData = currentData;
+               }
+
                // ⭐ 중요 디버깅: currentData 설정 후 확인
                console.log('🔴 currentData 설정 완료:', {
                    sequences: currentData.breakdown_data.sequences?.length || 0,
@@ -9580,8 +9640,13 @@ try {
                                 } 
                                 // 전체 프로젝트 구조 (Stage 5 전체)
                                 else if (newData.film_metadata && newData.breakdown_data && newData.breakdown_data.sequences) {
-                                    currentData = newData;
-               window.currentData = currentData;
+                                    // AppState 모듈 호환성 처리
+                                    if (window.AppState && typeof window.AppState.set === 'function') {
+                                        AppState.set('currentData', newData);
+                                    } else {
+                                        currentData = newData;
+                                        window.currentData = currentData;
+                                    }
                                     
                                     // Stage 2 구조 존재 여부 확인
                                     if (currentData.breakdown_data.sequences && currentData.breakdown_data.sequences.length > 0) {

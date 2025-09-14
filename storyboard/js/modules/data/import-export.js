@@ -28,7 +28,15 @@
                     console.log('🎬 Stage 7 비디오 프롬프트 파일 감지');
                     
                     // 현재 프로젝트 데이터가 있으면 병합, 없으면 기본 구조 생성
-                    let mergedData = window.currentData || {
+                    // AppState 모듈 호환성 처리
+                    let currentDataValue = null;
+                    if (window.AppState && typeof window.AppState.get === 'function') {
+                        currentDataValue = window.AppState.get('currentData');
+                    } else if (window.currentData !== undefined) {
+                        currentDataValue = window.currentData;
+                    }
+
+                    let mergedData = currentDataValue || {
                         project_info: { name: 'Imported_Project' },
                         breakdown_data: { sequences: [], shots: [] }
                     };
@@ -48,6 +56,33 @@
                     return;
                 }
                 
+                // Stage 2 형식 감지 (stage: 2 또는 sequences/scenes만 있는 경우)
+                if (jsonData.stage === 2 || jsonData.sequences || jsonData.scenes) {
+                    console.log('📋 Stage 2 형식 파일 감지');
+
+                    // Stage 2 데이터를 전체 구조로 변환
+                    const convertedData = {
+                        project_info: {
+                            name: file.name.replace('.json', ''),
+                            project_type: 'film'
+                        },
+                        breakdown_data: {
+                            sequences: jsonData.sequences || [],
+                            scenes: jsonData.scenes || [],
+                            shots: []
+                        }
+                    };
+
+                    // 콜백 함수 실행
+                    if (callback && typeof callback === 'function') {
+                        callback(convertedData);
+                    }
+
+                    const showMessage = window.AppUtils?.showMessage || window.showMessage || alert;
+                    showMessage(`Stage 2 파일이 성공적으로 로드되었습니다: ${file.name}`, 'success');
+                    return;
+                }
+
                 // 일반 프로젝트 데이터 검증
                 if (!jsonData.project_info || !jsonData.breakdown_data) {
                     throw new Error('잘못된 JSON 형식입니다.');
@@ -270,8 +305,16 @@
         }
         
         window.autoBackupInterval = setInterval(() => {
-            if (window.currentData && window.hasUnsavedChanges) {
-                window.DataImportExport.createBackup(window.currentData);
+            // AppState 모듈 호환성 처리
+            let currentDataForBackup = null;
+            if (window.AppState && typeof window.AppState.get === 'function') {
+                currentDataForBackup = window.AppState.get('currentData');
+            } else if (window.currentData !== undefined) {
+                currentDataForBackup = window.currentData;
+            }
+
+            if (currentDataForBackup && window.hasUnsavedChanges) {
+                window.DataImportExport.createBackup(currentDataForBackup);
                 window.hasUnsavedChanges = false;
             }
         }, intervalMinutes * 60 * 1000);
@@ -282,7 +325,15 @@
     // 기존 전역 함수와의 호환성 유지
     if (!window.exportJSON) {
         window.exportJSON = function() {
-            return window.DataImportExport.exportJSON(window.currentData);
+            // AppState 모듈 호환성 처리
+            let currentDataForExport = null;
+            if (window.AppState && typeof window.AppState.get === 'function') {
+                currentDataForExport = window.AppState.get('currentData');
+            } else if (window.currentData !== undefined) {
+                currentDataForExport = window.currentData;
+            }
+
+            return window.DataImportExport.exportJSON(currentDataForExport);
         };
     }
     

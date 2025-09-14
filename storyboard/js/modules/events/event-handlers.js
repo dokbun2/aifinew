@@ -244,7 +244,7 @@
         }
     };
     
-    // 자동 초기화
-    window.EventHandlers.initializeAll();
+    // 자동 초기화 - 비활성화 (app.js의 handleFileSelect와 충돌 방지)
+    // window.EventHandlers.initializeAll();
     
 })(window);

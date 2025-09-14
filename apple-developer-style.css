@@ -122,16 +122,7 @@ body {
   transform: rotate(-45deg) translate(7px, -6px);
 }
 
-.nav-menu {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+/* 첫 번째 .nav-menu 정의 제거 - 우측 정렬 버전 사용 */
 
 .nav-brand {
   display: flex;
@@ -150,6 +141,7 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
+  margin-left: auto;
 }
 
 .nav-menu li {
