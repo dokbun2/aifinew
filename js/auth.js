@@ -443,59 +443,147 @@ class GoogleAuth {
         }
     }
 
+    async resendApplication() {
+        console.log('🔄 가입 신청 재전송 시작...');
+
+        try {
+            // 로딩 표시
+            this.showNotification('가입 신청을 다시 전송하는 중...', 'info');
+
+            // Supabase에 다시 저장 시도
+            const result = await this.saveUserToSupabase(this.user);
+
+            if (result) {
+                // 로컬 스토리지 업데이트
+                const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+                const existingUser = pendingUsers.find(u => u.email === this.user.email);
+
+                if (!existingUser) {
+                    // 새로 추가
+                    pendingUsers.push({
+                        email: this.user.email,
+                        name: this.user.name,
+                        picture: this.user.picture,
+                        requestedAt: new Date().toISOString(),
+                        status: 'pending',
+                        resent: true
+                    });
+                } else {
+                    // 기존 데이터 업데이트
+                    existingUser.lastResent = new Date().toISOString();
+                    existingUser.resentCount = (existingUser.resentCount || 0) + 1;
+                }
+
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                this.showNotification('✅ 가입 신청이 성공적으로 재전송되었습니다!', 'success');
+                console.log('✅ 가입 신청 재전송 완료');
+
+                // 관리자에게 알림 (선택사항)
+                console.log(`📧 관리자 알림: ${this.user.email}님이 가입 신청을 재전송했습니다.`);
+            } else {
+                // Supabase 저장 실패 시 로컬에만 저장
+                console.log('⚠️ Supabase 저장 실패, 로컬 저장 시도...');
+
+                const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+                const existingIndex = pendingUsers.findIndex(u => u.email === this.user.email);
+
+                const userData = {
+                    email: this.user.email,
+                    name: this.user.name,
+                    picture: this.user.picture,
+                    requestedAt: new Date().toISOString(),
+                    status: 'pending',
+                    resent: true,
+                    lastResent: new Date().toISOString()
+                };
+
+                if (existingIndex >= 0) {
+                    pendingUsers[existingIndex] = userData;
+                } else {
+                    pendingUsers.push(userData);
+                }
+
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                this.showNotification('⚠️ 서버 연결 문제로 로컬에만 저장되었습니다. 나중에 다시 시도해주세요.', 'warning');
+            }
+        } catch (error) {
+            console.error('❌ 가입 신청 재전송 실패:', error);
+            this.showNotification('❌ 가입 신청 재전송에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
+        }
+    }
+
     showPendingApproval() {
         // 기존 모달이 있으면 제거
         const existingModal = document.querySelector('.approval-pending-modal');
         if (existingModal) {
             existingModal.remove();
         }
-        
+
         const modal = document.createElement('div');
         modal.className = 'approval-pending-modal';
-        
+
         const content = document.createElement('div');
         content.className = 'approval-pending-content';
-        
+
+        // X 버튼 생성
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-close-x';
+        closeBtn.textContent = '×';
+        closeBtn.onclick = () => modal.remove();
+
+        // 컨텐츠 HTML
         content.innerHTML = `
-            <button class="modal-close-x">×</button>
             <div class="pending-icon">⏳</div>
             <h3>승인 대기중</h3>
             <p>관리자의 승인을 기다리고 있습니다.</p>
             <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
             <p class="user-email">${this.user.email}</p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 10px;">
+                    가입 신청이 확인되지 않으신다면 아래 버튼을 클릭하세요
+                </p>
+            </div>
         `;
-        
-        // X 버튼에 이벤트 리스너 추가
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'modal-close-x';
-        closeBtn.textContent = '×';
-        closeBtn.onclick = () => modal.remove();
-        
+
+        // 재신청 버튼 생성
+        const resendBtn = document.createElement('button');
+        resendBtn.className = 'btn-resend';
+        resendBtn.style.cssText = `
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        `;
+        resendBtn.textContent = '🔄 가입 신청 다시 하기';
+        resendBtn.onclick = async () => {
+            if (confirm('가입 신청을 다시 하시겠습니까?\n\n관리자 페이지에서 확인할 수 있도록 데이터를 재전송합니다.')) {
+                await this.resendApplication();
+            }
+        };
+
         // 확인 버튼 생성
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'close-btn';
         confirmBtn.textContent = '확인';
         confirmBtn.onclick = () => modal.remove();
-        
-        // 먼저 content를 만들고
-        content.innerHTML = `
-            <div class="pending-icon">⏳</div>
-            <h3>승인 대기중</h3>
-            <p>관리자의 승인을 기다리고 있습니다.</p>
-            <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
-            <p class="user-email">${this.user.email}</p>
-        `;
-        
+
         // 버튼들을 appendChild로 추가
         content.insertBefore(closeBtn, content.firstChild);
+        content.appendChild(resendBtn);
         content.appendChild(confirmBtn);
-        
+
         modal.appendChild(content);
         document.body.appendChild(modal);
-        
+
         // Tool 페이지도 잠금 처리
         this.disableAllFeatures();
-        
+
         setTimeout(() => {
             modal.classList.add('show');
         }, 100);
