@@ -466,6 +466,45 @@
             letter-spacing: -0.01em;
         }
 
+        /* 업데이트 버튼 스타일 */
+        .refresh-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 107, 107, 0.05));
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 12px;
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+            border-color: rgba(255, 107, 107, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .refresh-btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+            animation: pulse-loading 1s infinite;
+        }
+
+        @keyframes pulse-loading {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.4; }
+        }
+
         .section-controls {
             display: flex;
             align-items: center;
@@ -607,18 +646,26 @@
             border-radius: 12px;
             background: var(--bg-elevated);
             border: 1px solid var(--border-secondary);
+            min-width: 100%; /* 최소 너비 보장 */
+        }
+
+        /* 테이블 컨테이너 스타일 추가 */
+        .table-container {
+            width: 100%;
+            overflow: hidden;
         }
 
         .users-table {
             width: 100%;
-            border-collapse: separate;
+            border-collapse: collapse; /* collapse로 변경하여 셀 간격 제거 */
             border-spacing: 0;
             font-size: 13px;
+            table-layout: fixed; /* 고정 레이아웃으로 열 너비 일정하게 유지 */
         }
 
         .users-table th {
             background: rgba(255, 255, 255, 0.03);
-            padding: 12px 16px;
+            padding: 14px 16px; /* td와 동일한 패딩으로 통일 */
             text-align: left;
             font-size: 12px;
             font-weight: 600;
@@ -631,6 +678,51 @@
             top: 0;
             z-index: 10;
             backdrop-filter: blur(10px);
+            vertical-align: middle; /* 수직 정렬 추가 */
+        }
+
+        /* 각 열의 너비 명시적 설정 */
+        .users-table th:nth-child(1),
+        .users-table td:nth-child(1) {
+            width: 15%;
+            min-width: 120px; /* 최소 너비 보장 */
+            font-weight: 500; /* 이름 강조 */
+        } /* 이름 */
+
+        .users-table th:nth-child(2),
+        .users-table td:nth-child(2) {
+            width: 15%;
+            min-width: 100px;
+        } /* 닉네임 */
+
+        .users-table th:nth-child(3),
+        .users-table td:nth-child(3) {
+            width: 25%;
+            min-width: 180px;
+        } /* 이메일 */
+
+        .users-table th:nth-child(4),
+        .users-table td:nth-child(4) {
+            width: 20%;
+            min-width: 150px;
+        } /* 가입일시 */
+
+        .users-table th:nth-child(5),
+        .users-table td:nth-child(5) {
+            width: 25%;
+            min-width: 200px;
+        } /* 액션 */
+
+        /* 첫 번째 열(이름) 강조 스타일 */
+        .users-table td:first-child {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* 디버그용 테이블 경계선 (정렬 확인용) */
+        .users-table.debug th,
+        .users-table.debug td {
+            border: 1px solid rgba(255, 107, 107, 0.3) !important;
         }
 
         .users-table td {
@@ -638,6 +730,9 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             color: var(--text-secondary);
             transition: color 0.3s;
+            text-align: left; /* 명시적으로 좌측 정렬 */
+            vertical-align: middle; /* 수직 정렬 */
+            word-break: keep-all; /* 한글 단어 분리 방지 */
         }
 
         .users-table tbody tr {
@@ -1164,8 +1259,13 @@
         <div id="pending-tab" class="tab-content active">
             <div class="users-section">
                 <div class="section-header">
-                    <h2 class="section-title">승인 대기 중인 사용자</h2>
-                    <div class="section-info">신규 가입 사용자들을 검토하고 승인하세요</div>
+                    <div>
+                        <h2 class="section-title">승인 대기 중인 사용자</h2>
+                        <div class="section-info">신규 가입 사용자들을 검토하고 승인하세요</div>
+                    </div>
+                    <button class="refresh-btn" onclick="adminDashboard.refreshPendingUsers()" title="새로고침">
+                        🔄 업데이트
+                    </button>
                 </div>
                 <div id="pending-users-list"></div>
             </div>
@@ -1254,6 +1354,13 @@
                 this.initSupabase();
                 this.checkAdminAuth();
                 this.setupAutoRefresh();
+
+                // 캐시된 데이터 확인
+                const cachedData = localStorage.getItem('adminDashboard_cache');
+                if (cachedData) {
+                    const parsed = JSON.parse(cachedData);
+                    console.log('💾 캐시된 데이터 발견:', parsed.lastUpdate);
+                }
             }
 
             async initSupabase() {
@@ -1294,12 +1401,52 @@
                 }
             }
 
+            // 자동 새로고침 제거 - 수동 업데이트로 변경
             setupAutoRefresh() {
-                setInterval(() => {
-                    if (this.currentAdmin) {
-                        this.loadDashboard();
+                // 자동 새로고침 비활성화
+                // 사용자가 업데이트 버튼을 클릭할 때만 새로고침
+                console.log('🔄 자동 새로고침 비활성화 - 수동 업데이트 모드');
+            }
+
+            // 수동 업데이트 함수
+            async refreshPendingUsers() {
+                const refreshBtn = document.querySelector('.refresh-btn');
+                if (refreshBtn) {
+                    refreshBtn.classList.add('loading');
+                    refreshBtn.innerHTML = '🔄 업데이트 중...';
+                }
+
+                try {
+                    // 기존 데이터 localStorage에 저장
+                    const existingData = {
+                        users: this.users,
+                        lastUpdate: new Date().toISOString()
+                    };
+                    localStorage.setItem('adminDashboard_cache', JSON.stringify(existingData));
+                    console.log('💾 기존 데이터 저장 완료');
+
+                    // 새 데이터 로드
+                    await this.loadUsers();
+                    this.showToast('✅ 데이터가 업데이트되었습니다', 'success');
+
+                } catch (error) {
+                    console.error('❌ 업데이트 실패:', error);
+                    this.showToast('업데이트에 실패했습니다', 'error');
+
+                    // 오류 시 캐시된 데이터 복원
+                    const cachedData = localStorage.getItem('adminDashboard_cache');
+                    if (cachedData) {
+                        const parsed = JSON.parse(cachedData);
+                        this.users = parsed.users || [];
+                        this.displayCurrentTab();
+                        console.log('🔄 캐시된 데이터로 복원');
                     }
-                }, 15000);
+                } finally {
+                    if (refreshBtn) {
+                        refreshBtn.classList.remove('loading');
+                        refreshBtn.innerHTML = '🔄 업데이트';
+                    }
+                }
             }
 
             checkAdminAuth() {
@@ -1447,13 +1594,14 @@
                     const userEmail = user.email || '이메일 없음';
                     const createdDate = this.formatDate(user.created_at);
 
+                    // 각 셀에 명시적 스타일 적용
                     tableRows += `
                         <tr>
-                            <td>${userName}</td>
-                            <td>${userNickname}</td>
-                            <td>${userEmail}</td>
-                            <td>${createdDate}</td>
-                            <td>
+                            <td style="text-align: left; padding: 14px 16px; font-weight: 500;">${userName}</td>
+                            <td style="text-align: left; padding: 14px 16px;">${userNickname}</td>
+                            <td style="text-align: left; padding: 14px 16px;">${userEmail}</td>
+                            <td style="text-align: left; padding: 14px 16px;">${createdDate}</td>
+                            <td style="text-align: left; padding: 14px 16px;">
                                 <div class="action-buttons">
                                     <button class="action-btn approve-btn" onclick="adminDashboard.approveUser('${userEmail}')">
                                         ✓ 승인
@@ -1470,16 +1618,24 @@
                     `;
                 });
 
+                // 테이블 완전 재구성 - 디버그 모드 포함
                 const fullTable = `
                     <div class="table-wrapper">
-                        <table class="users-table">
+                        <table class="users-table debug">
+                            <colgroup>
+                                <col style="width: 15%;">
+                                <col style="width: 15%;">
+                                <col style="width: 25%;">
+                                <col style="width: 20%;">
+                                <col style="width: 25%;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>이름</th>
-                                    <th>닉네임</th>
-                                    <th>이메일</th>
-                                    <th>가입일시</th>
-                                    <th>액션</th>
+                                    <th style="text-align: left;">이름</th>
+                                    <th style="text-align: left;">닉네임</th>
+                                    <th style="text-align: left;">이메일</th>
+                                    <th style="text-align: left;">가입일시</th>
+                                    <th style="text-align: left;">액션</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1490,6 +1646,7 @@
                 `;
 
                 container.innerHTML = fullTable;
+                console.log('📊 테이블 재구성 완료 - 디버그 모드 활성화');
             }
 
             applyFilters() {
@@ -1545,13 +1702,14 @@
                     const userEmail = user.email || '이메일 없음';
                     const createdDate = this.formatDate(user.created_at);
 
+                    // 각 셀에 명시적 스타일 적용
                     tableRows += `
                         <tr>
-                            <td>${userName}</td>
-                            <td>${userNickname}</td>
-                            <td>${userEmail}</td>
-                            <td>${createdDate}</td>
-                            <td>
+                            <td style="text-align: left; padding: 14px 16px; font-weight: 500;">${userName}</td>
+                            <td style="text-align: left; padding: 14px 16px;">${userNickname}</td>
+                            <td style="text-align: left; padding: 14px 16px;">${userEmail}</td>
+                            <td style="text-align: left; padding: 14px 16px;">${createdDate}</td>
+                            <td style="text-align: left; padding: 14px 16px;">
                                 <div class="action-buttons">
                                     <button class="action-btn revoke-btn" onclick="adminDashboard.revokeUser('${userEmail}')">
                                         ↩ 승인 취소
@@ -1565,16 +1723,24 @@
                     `;
                 });
 
+                // 테이블 완전 재구성 - 디버그 모드 포함
                 const fullTable = `
                     <div class="table-wrapper">
-                        <table class="users-table">
+                        <table class="users-table debug">
+                            <colgroup>
+                                <col style="width: 15%;">
+                                <col style="width: 15%;">
+                                <col style="width: 25%;">
+                                <col style="width: 20%;">
+                                <col style="width: 25%;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>이름</th>
-                                    <th>닉네임</th>
-                                    <th>이메일</th>
-                                    <th>가입일시</th>
-                                    <th>액션</th>
+                                    <th style="text-align: left;">이름</th>
+                                    <th style="text-align: left;">닉네임</th>
+                                    <th style="text-align: left;">이메일</th>
+                                    <th style="text-align: left;">가입일시</th>
+                                    <th style="text-align: left;">액션</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1585,6 +1751,7 @@
                 `;
 
                 container.innerHTML = fullTable;
+                console.log('📊 테이블 재구성 완료 - 디버그 모드 활성화');
                 this.updatePagination();
             }
 
