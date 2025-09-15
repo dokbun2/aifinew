@@ -806,6 +806,11 @@ class AuthSystem {
 
     // 로그인 후 UI 업데이트
     updateUIAfterLogin(user) {
+        // index.html의 updateUIForUserStatus 함수 호출 (있는 경우)
+        if (typeof updateUIForUserStatus === 'function') {
+            updateUIForUserStatus();
+        }
+
         const userInfoDiv = document.getElementById('user-info');
         if (userInfoDiv) {
             userInfoDiv.innerHTML = `
@@ -934,6 +939,12 @@ class AuthSystem {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_info');
         this.currentUser = null;
+
+        // index.html의 updateUIForUserStatus 함수 호출 (있는 경우)
+        if (typeof updateUIForUserStatus === 'function') {
+            updateUIForUserStatus();
+        }
+
         window.location.reload();
     }
 

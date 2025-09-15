@@ -332,15 +332,16 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
-            display: flex;
+            display: none; /* 기본적으로 숨김 */
             justify-content: center;
             align-items: center;
             z-index: 100001;
             opacity: 0;
             transition: opacity 0.3s;
         }
-        
+
         .approval-pending-modal.show {
+            display: flex; /* show 클래스가 있을 때만 flex로 표시 */
             opacity: 1;
         }
         
@@ -352,8 +353,103 @@
             max-width: 400px;
             width: 90%;
             text-align: center;
+            backdrop-filter: blur(20px);
         }
-        
+
+        .approval-pending-icon {
+            color: #ff9f0a;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .approval-pending-content h3 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .approval-pending-content p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .approval-pending-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            padding: 12px 20px;
+            background: rgba(255, 159, 10, 0.1);
+            border: 1px solid rgba(255, 159, 10, 0.2);
+            border-radius: 12px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #ff9f0a;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .approval-pending-status span {
+            color: #ff9f0a;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .approval-pending-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .approval-pending-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .approval-pending-btn.primary {
+            background: linear-gradient(135deg, rgba(94, 106, 210, 0.2), rgba(94, 106, 210, 0.1));
+            border-color: rgba(94, 106, 210, 0.3);
+            color: #5e6ad2;
+        }
+
+        .approval-pending-btn.primary:hover {
+            background: linear-gradient(135deg, rgba(94, 106, 210, 0.3), rgba(94, 106, 210, 0.15));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(94, 106, 210, 0.2);
+        }
+
+        .approval-pending-btn.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .approval-pending-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .pending-icon {
             font-size: 48px;
             margin-bottom: 20px;
@@ -392,36 +488,62 @@
             background: rgba(78, 205, 196, 0.3);
         }
         
-        /* 비활성화된 카드 스타일 */
-        .stage-card.disabled,
-        .stage-upload-card.disabled,
-        .feature-card-detailed.disabled {
-            opacity: 0.5;
-            pointer-events: none;
+        /* 제한된 카드 시각적 표시만 - 클릭은 가능 */
+        .stage-card.restricted,
+        .stage-upload-card.restricted,
+        .feature-card-detailed.restricted {
             position: relative;
         }
         
-        .stage-card.disabled::after,
-        .stage-upload-card.disabled::after,
-        .feature-card-detailed.disabled::after {
-            content: '🔒';
+        .protected-link {
+            position: relative;
+        }
+
+        .protected-link.restricted {
+            cursor: not-allowed;
+        }
+
+        .lock-icon {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 32px;
-            background: rgba(0, 0, 0, 0.8);
-            width: 60px;
-            height: 60px;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            font-size: 18px;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
         }
-        
-        .protected-link.disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 2px 12px rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* 스테이지 카드에서 lock-icon 위치 조정 */
+        .stage-upload-card .lock-icon {
+            top: 10px;
+            right: 10px;
+        }
+
+        /* feature 카드에서 lock-icon 위치 조정 */
+        .feature-card-detailed .lock-icon {
+            top: 15px;
+            right: 15px;
         }
         
         /* 알림 스타일 */
@@ -820,7 +942,7 @@
             </ul>
             <!-- 사용자 정보 표시 영역 -->
             <div id="user-info">
-                <button class="login-button" onclick="authSystem.showLoginModal()">로그인</button>
+                <button class="login-button" onclick="if(typeof authSystem !== 'undefined' && authSystem.showLoginModal) { authSystem.showLoginModal(); } else { alert('로그인 시스템이 로드되지 않았습니다.'); }">로그인</button>
             </div>
         </div>
     </nav>
@@ -1823,6 +1945,29 @@
     </div>
     -->
 
+    <!-- 승인 대기 모달 -->
+    <div id="approvalPendingModal" class="approval-pending-modal">
+        <div class="approval-pending-content">
+            <div class="approval-pending-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <h3>계정 승인 대기 중</h3>
+            <p>회원가입이 완료되었지만, 관리자의 승인이 필요합니다.<br>
+            승인이 완료되면 모든 기능을 이용할 수 있습니다.</p>
+            <div class="approval-pending-status">
+                <div class="status-indicator"></div>
+                <span>승인 대기 중...</span>
+            </div>
+            <div class="approval-pending-buttons">
+                <button class="approval-pending-btn primary" onclick="authSystem.hideModal('approvalPendingModal')">확인</button>
+                <button class="approval-pending-btn secondary" onclick="authSystem.logout()">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Auth Scripts -->
     <script src="js/auth-system.js"></script>
     <script>
@@ -1833,20 +1978,124 @@
                 'ggamsire@gmail.com'  // 관리자 이메일
             ];
 
+            // 사용자 상태에 따라 UI 업데이트
+            function updateUIForUserStatus() {
+                try {
+                    const token = localStorage.getItem('auth_token');
+                    const userInfo = localStorage.getItem('user_info');
+                    const protectedLinks = document.querySelectorAll('.protected-link');
+
+                    if (!protectedLinks || protectedLinks.length === 0) {
+                        console.log('보호된 링크가 없습니다.');
+                        return;
+                    }
+
+                    if (!token || !userInfo) {
+                        // 로그인하지 않은 경우 - 잠금 표시
+                        protectedLinks.forEach(link => {
+                            // 기존 lock-icon이 있으면 먼저 제거
+                            const existingIcon = link.querySelector('.lock-icon');
+                            if (existingIcon) {
+                                existingIcon.remove();
+                            }
+
+                            // 새로운 lock-icon 추가
+                            const lockIcon = document.createElement('div');
+                            lockIcon.className = 'lock-icon';
+                            lockIcon.innerHTML = '🔒';
+                            lockIcon.title = '로그인이 필요합니다';
+                            link.appendChild(lockIcon);
+                            link.classList.add('restricted');
+                            link.classList.remove('disabled');
+                        });
+                    } else {
+                        try {
+                            const user = JSON.parse(userInfo);
+
+                        if (user.status === 'pending') {
+                            // 승인 대기 중 - 잠금 표시
+                            protectedLinks.forEach(link => {
+                                // 기존 lock-icon이 있으면 먼저 제거
+                                const existingIcon = link.querySelector('.lock-icon');
+                                if (existingIcon) {
+                                    existingIcon.remove();
+                                }
+
+                                // 새로운 lock-icon 추가
+                                const lockIcon = document.createElement('div');
+                                lockIcon.className = 'lock-icon';
+                                lockIcon.innerHTML = '⏳';
+                                lockIcon.title = '승인 대기 중';
+                                link.appendChild(lockIcon);
+                                link.classList.add('restricted');
+                                link.classList.remove('disabled');
+                            });
+                        } else if (user.status === 'approved') {
+                            // 승인된 사용자 - 잠금 제거
+                            protectedLinks.forEach(link => {
+                                const lockIcon = link.querySelector('.lock-icon');
+                                if (lockIcon) {
+                                    lockIcon.remove();
+                                }
+                                link.classList.remove('restricted');
+                                link.classList.remove('disabled');
+                            });
+                        } else if (user.status === 'rejected') {
+                            // 거절된 사용자 - 잠금 표시
+                            protectedLinks.forEach(link => {
+                                // 기존 lock-icon이 있으면 먼저 제거
+                                const existingIcon = link.querySelector('.lock-icon');
+                                if (existingIcon) {
+                                    existingIcon.remove();
+                                }
+
+                                // 새로운 lock-icon 추가
+                                const lockIcon = document.createElement('div');
+                                lockIcon.className = 'lock-icon';
+                                lockIcon.innerHTML = '🚫';
+                                lockIcon.title = '접근 거부됨';
+                                link.appendChild(lockIcon);
+                                link.classList.add('restricted');
+                                link.classList.remove('disabled');
+                            });
+                        }
+                    } catch (e) {
+                        console.error('사용자 정보 파싱 오류:', e);
+                    }
+                }
+                } catch (error) {
+                    console.error('UI 업데이트 중 오류 발생:', error);
+                }
+            }
+
+            // 페이지 로드 시 UI 업데이트
+            updateUIForUserStatus();
+
             // 보호된 링크에 대한 클릭 이벤트 처리
             const protectedLinks = document.querySelectorAll('.protected-link');
             protectedLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault();
+                    // authSystem이 정의되지 않았으면 기본 동작 허용
+                    if (typeof authSystem === 'undefined') {
+                        console.warn('authSystem이 로드되지 않았습니다.');
+                        return; // 기본 동작 허용
+                    }
 
                     // 로그인 상태 확인
                     const token = localStorage.getItem('auth_token');
                     const userInfo = localStorage.getItem('user_info');
 
                     if (!token || !userInfo) {
-                        // 로그인 필요
-                        authSystem.showLoginModal();
-                        authSystem.showToast('로그인이 필요한 서비스입니다', 'info');
+                        // 로그인 필요 - 이벤트 방지
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (authSystem && authSystem.showLoginModal) {
+                            authSystem.showLoginModal();
+                            authSystem.showToast('로그인이 필요한 서비스입니다', 'info');
+                        } else {
+                            alert('로그인이 필요한 서비스입니다.');
+                        }
                         return;
                     }
 
@@ -1855,26 +2104,41 @@
 
                         // 승인 상태 확인
                         if (user.status === 'pending') {
-                            authSystem.showModal('approvalPendingModal');
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            if (authSystem && authSystem.showModal) {
+                                authSystem.showModal('approvalPendingModal');
+                            } else {
+                                alert('관리자 승인을 기다리고 있습니다.');
+                            }
                             return;
                         }
 
                         if (user.status === 'rejected') {
-                            authSystem.showToast('접근이 거부되었습니다. 관리자에게 문의하세요', 'error');
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            if (authSystem && authSystem.showToast) {
+                                authSystem.showToast('접근이 거부되었습니다. 관리자에게 문의하세요', 'error');
+                            } else {
+                                alert('접근이 거부되었습니다. 관리자에게 문의하세요.');
+                            }
                             return;
                         }
 
-                        // 승인된 사용자 - 원래 링크로 이동
-                        const originalHref = this.getAttribute('onclick');
-                        if (originalHref && originalHref.includes('window.location.href')) {
-                            eval(originalHref);
-                        } else if (this.href) {
-                            window.location.href = this.href;
-                        }
+                        // 승인된 사용자 - 이벤트를 방지하지 않고 정상 진행
+                        // onclick 이벤트가 있으면 자동으로 실행됨
 
-                    } catch (e) {
-                        console.error('사용자 정보 확인 오류:', e);
-                        authSystem.showLoginModal();
+                    } catch (err) {
+                        console.error('사용자 정보 확인 오류:', err);
+                        // 에러가 발생해도 기본 동작은 허용 (로그인 버튼 등이 작동하도록)
+                        // 단, 보호된 페이지로의 이동만 차단
+                        if (this.getAttribute('data-protected') === 'true') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            alert('로그인이 필요한 서비스입니다.');
+                        }
                     }
                 });
             });
