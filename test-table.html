@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테이블 정렬 테스트</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 50px;
+        }
+
+        /* 테스트 1: 기본 테이블 */
+        .test1 {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 50px;
+        }
+
+        .test1 th, .test1 td {
+            border: 1px solid #ff6b6b;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        .test1 th {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        /* 테스트 2: 고정 레이아웃 */
+        .test2 {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-bottom: 50px;
+        }
+
+        .test2 th, .test2 td {
+            border: 1px solid #4ecdc4;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        .test2 th {
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        /* 테스트 3: 열 너비 지정 */
+        .test3 {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .test3 th, .test3 td {
+            border: 1px solid #45b7d1;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        .test3 th {
+            background: rgba(69, 183, 209, 0.1);
+        }
+
+        .test3 col:nth-child(1) { width: 15%; }
+        .test3 col:nth-child(2) { width: 15%; }
+        .test3 col:nth-child(3) { width: 25%; }
+        .test3 col:nth-child(4) { width: 20%; }
+        .test3 col:nth-child(5) { width: 25%; }
+
+        h2 {
+            color: #fff;
+            margin: 30px 0 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>테이블 정렬 테스트 페이지</h1>
+
+    <h2>테스트 1: 기본 테이블 (border-collapse: collapse)</h2>
+    <table class="test1">
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>닉네임</th>
+                <th>이메일</th>
+                <th>가입일시</th>
+                <th>액션</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>테스트유저</td>
+                <td>tester</td>
+                <td>test@example.com</td>
+                <td>2025. 09. 15. 오후 01:12</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn">✓ 승인</button>
+                        <button class="action-btn">× 거절</button>
+                        <button class="action-btn">🗑 삭제</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>테스트 2: 고정 레이아웃 (table-layout: fixed)</h2>
+    <table class="test2">
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>닉네임</th>
+                <th>이메일</th>
+                <th>가입일시</th>
+                <th>액션</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>테스트유저</td>
+                <td>tester</td>
+                <td>test@example.com</td>
+                <td>2025. 09. 15. 오후 01:12</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn">✓ 승인</button>
+                        <button class="action-btn">× 거절</button>
+                        <button class="action-btn">🗑 삭제</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>테스트 3: colgroup으로 열 너비 지정</h2>
+    <table class="test3">
+        <colgroup>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>닉네임</th>
+                <th>이메일</th>
+                <th>가입일시</th>
+                <th>액션</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>테스트유저</td>
+                <td>tester</td>
+                <td>test@example.com</td>
+                <td>2025. 09. 15. 오후 01:12</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn">✓ 승인</button>
+                        <button class="action-btn">× 거절</button>
+                        <button class="action-btn">🗑 삭제</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>현재 데이터 확인</h2>
+    <div id="data-check" style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">
+        <p>열 개수 확인:</p>
+        <ul>
+            <li>헤더(th) 개수: <span id="th-count"></span></li>
+            <li>데이터(td) 개수: <span id="td-count"></span></li>
+        </ul>
+    </div>
+
+    <script>
+        // 테이블 구조 검증
+        document.addEventListener('DOMContentLoaded', function() {
+            const tables = document.querySelectorAll('table');
+            tables.forEach((table, index) => {
+                const thCount = table.querySelectorAll('thead th').length;
+                const firstRow = table.querySelector('tbody tr');
+                const tdCount = firstRow ? firstRow.querySelectorAll('td').length : 0;
+
+                console.log(`테이블 ${index + 1}: th=${thCount}, td=${tdCount}`);
+
+                if (thCount !== tdCount) {
+                    console.error(`⚠️ 테이블 ${index + 1}: 열 개수 불일치!`);
+                }
+            });
+
+            // 첫 번째 테이블 상세 확인
+            const firstTable = document.querySelector('.test1');
+            document.getElementById('th-count').textContent = firstTable.querySelectorAll('thead th').length;
+            document.getElementById('td-count').textContent = firstTable.querySelector('tbody tr').querySelectorAll('td').length;
+        });
+    </script>
+</body>
+</html>

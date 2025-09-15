@@ -657,15 +657,13 @@
 
         .users-table {
             width: 100%;
-            border-collapse: collapse; /* collapse로 변경하여 셀 간격 제거 */
-            border-spacing: 0;
+            border-collapse: collapse;
             font-size: 13px;
-            table-layout: fixed; /* 고정 레이아웃으로 열 너비 일정하게 유지 */
         }
 
         .users-table th {
             background: rgba(255, 255, 255, 0.03);
-            padding: 14px 16px; /* td와 동일한 패딩으로 통일 */
+            padding: 15px;
             text-align: left;
             font-size: 12px;
             font-weight: 600;
@@ -673,66 +671,13 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 1px solid var(--border-secondary);
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            backdrop-filter: blur(10px);
-            vertical-align: middle; /* 수직 정렬 추가 */
-        }
-
-        /* 각 열의 너비 명시적 설정 */
-        .users-table th:nth-child(1),
-        .users-table td:nth-child(1) {
-            width: 15%;
-            min-width: 120px; /* 최소 너비 보장 */
-            font-weight: 500; /* 이름 강조 */
-        } /* 이름 */
-
-        .users-table th:nth-child(2),
-        .users-table td:nth-child(2) {
-            width: 15%;
-            min-width: 100px;
-        } /* 닉네임 */
-
-        .users-table th:nth-child(3),
-        .users-table td:nth-child(3) {
-            width: 25%;
-            min-width: 180px;
-        } /* 이메일 */
-
-        .users-table th:nth-child(4),
-        .users-table td:nth-child(4) {
-            width: 20%;
-            min-width: 150px;
-        } /* 가입일시 */
-
-        .users-table th:nth-child(5),
-        .users-table td:nth-child(5) {
-            width: 25%;
-            min-width: 200px;
-        } /* 액션 */
-
-        /* 첫 번째 열(이름) 강조 스타일 */
-        .users-table td:first-child {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        /* 디버그용 테이블 경계선 (정렬 확인용) */
-        .users-table.debug th,
-        .users-table.debug td {
-            border: 1px solid rgba(255, 107, 107, 0.3) !important;
         }
 
         .users-table td {
-            padding: 14px 16px;
+            padding: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             color: var(--text-secondary);
-            transition: color 0.3s;
-            text-align: left; /* 명시적으로 좌측 정렬 */
-            vertical-align: middle; /* 수직 정렬 */
-            word-break: keep-all; /* 한글 단어 분리 방지 */
+            text-align: left;
         }
 
         .users-table tbody tr {
@@ -1594,14 +1539,14 @@
                     const userEmail = user.email || '이메일 없음';
                     const createdDate = this.formatDate(user.created_at);
 
-                    // 각 셀에 명시적 스타일 적용
+                    // 강제 인라인 스타일 적용
                     tableRows += `
                         <tr>
-                            <td style="text-align: left; padding: 14px 16px; font-weight: 500;">${userName}</td>
-                            <td style="text-align: left; padding: 14px 16px;">${userNickname}</td>
-                            <td style="text-align: left; padding: 14px 16px;">${userEmail}</td>
-                            <td style="text-align: left; padding: 14px 16px;">${createdDate}</td>
-                            <td style="text-align: left; padding: 14px 16px;">
+                            <td style="padding: 15px !important; text-align: left !important; width: 15% !important;">${userName}</td>
+                            <td style="padding: 15px !important; text-align: left !important; width: 15% !important;">${userNickname}</td>
+                            <td style="padding: 15px !important; text-align: left !important; width: 25% !important;">${userEmail}</td>
+                            <td style="padding: 15px !important; text-align: left !important; width: 20% !important;">${createdDate}</td>
+                            <td style="padding: 15px !important; text-align: left !important; width: 25% !important;">
                                 <div class="action-buttons">
                                     <button class="action-btn approve-btn" onclick="adminDashboard.approveUser('${userEmail}')">
                                         ✓ 승인
@@ -1618,10 +1563,33 @@
                     `;
                 });
 
-                // 테이블 완전 재구성 - 디버그 모드 포함
+                // 완전 독립적인 인라인 스타일로 강제 적용
                 const fullTable = `
+                    <style>
+                        .force-align-table {
+                            width: 100% !important;
+                            border-collapse: collapse !important;
+                            table-layout: fixed !important;
+                        }
+                        .force-align-table th,
+                        .force-align-table td {
+                            padding: 15px !important;
+                            text-align: left !important;
+                            border: 1px solid rgba(255, 107, 107, 0.2) !important;
+                        }
+                        .force-align-table thead th {
+                            background: rgba(255, 107, 107, 0.1) !important;
+                            font-weight: 600 !important;
+                        }
+                        .force-align-table tbody td {
+                            background: transparent !important;
+                        }
+                        .force-align-table tbody tr:hover {
+                            background: rgba(255, 255, 255, 0.05) !important;
+                        }
+                    </style>
                     <div class="table-wrapper">
-                        <table class="users-table debug">
+                        <table class="force-align-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                             <colgroup>
                                 <col style="width: 15%;">
                                 <col style="width: 15%;">
@@ -1631,11 +1599,11 @@
                             </colgroup>
                             <thead>
                                 <tr>
-                                    <th style="text-align: left;">이름</th>
-                                    <th style="text-align: left;">닉네임</th>
-                                    <th style="text-align: left;">이메일</th>
-                                    <th style="text-align: left;">가입일시</th>
-                                    <th style="text-align: left;">액션</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 15%;">이름</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 15%;">닉네임</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 25%;">이메일</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 20%;">가입일시</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 25%;">액션</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1646,7 +1614,7 @@
                 `;
 
                 container.innerHTML = fullTable;
-                console.log('📊 테이블 재구성 완료 - 디버그 모드 활성화');
+                console.log('📊 테이블 재구성 완료');
             }
 
             applyFilters() {
@@ -1723,10 +1691,33 @@
                     `;
                 });
 
-                // 테이블 완전 재구성 - 디버그 모드 포함
+                // 완전 독립적인 인라인 스타일로 강제 적용
                 const fullTable = `
+                    <style>
+                        .force-align-table {
+                            width: 100% !important;
+                            border-collapse: collapse !important;
+                            table-layout: fixed !important;
+                        }
+                        .force-align-table th,
+                        .force-align-table td {
+                            padding: 15px !important;
+                            text-align: left !important;
+                            border: 1px solid rgba(255, 107, 107, 0.2) !important;
+                        }
+                        .force-align-table thead th {
+                            background: rgba(255, 107, 107, 0.1) !important;
+                            font-weight: 600 !important;
+                        }
+                        .force-align-table tbody td {
+                            background: transparent !important;
+                        }
+                        .force-align-table tbody tr:hover {
+                            background: rgba(255, 255, 255, 0.05) !important;
+                        }
+                    </style>
                     <div class="table-wrapper">
-                        <table class="users-table debug">
+                        <table class="force-align-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                             <colgroup>
                                 <col style="width: 15%;">
                                 <col style="width: 15%;">
@@ -1736,11 +1727,11 @@
                             </colgroup>
                             <thead>
                                 <tr>
-                                    <th style="text-align: left;">이름</th>
-                                    <th style="text-align: left;">닉네임</th>
-                                    <th style="text-align: left;">이메일</th>
-                                    <th style="text-align: left;">가입일시</th>
-                                    <th style="text-align: left;">액션</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 15%;">이름</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 15%;">닉네임</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 25%;">이메일</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 20%;">가입일시</th>
+                                    <th style="padding: 15px !important; text-align: left !important; width: 25%;">액션</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1751,7 +1742,7 @@
                 `;
 
                 container.innerHTML = fullTable;
-                console.log('📊 테이블 재구성 완료 - 디버그 모드 활성화');
+                console.log('📊 테이블 재구성 완료');
                 this.updatePagination();
             }
 

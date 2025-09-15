@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIFI 관리자 대시보드 - 수정 버전</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        /* 심플한 테이블 스타일 */
+        .simple-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .simple-table thead {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .simple-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #ff6b6b;
+            border-bottom: 2px solid rgba(255, 107, 107, 0.2);
+        }
+
+        .simple-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .simple-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .approve-btn {
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+        }
+
+        .reject-btn {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .delete-btn {
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+
+        .refresh-btn {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>승인 대기 중인 사용자</h1>
+
+        <button class="refresh-btn" onclick="loadUsers()">🔄 업데이트</button>
+
+        <table class="simple-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">이름</th>
+                    <th style="width: 15%;">닉네임</th>
+                    <th style="width: 25%;">이메일</th>
+                    <th style="width: 20%;">가입일시</th>
+                    <th style="width: 25%;">액션</th>
+                </tr>
+            </thead>
+            <tbody id="user-table-body">
+                <!-- 데이터가 여기에 삽입됩니다 -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Supabase 초기화
+        const supabaseUrl = 'https://mnnbrsmkmnysdmtewuha.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ubmJyc21rbW55c2RtdGV3dWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4NjcxMTIsImV4cCI6MjA3MzQ0MzExMn0.HZBpA_RLn_1Jew9jou1APUApBVfLIyq-wIM-kujtyuc';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 사용자 로드 함수
+        async function loadUsers() {
+            console.log('사용자 데이터 로드 중...');
+
+            try {
+                const { data: users, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error:', error);
+                    return;
+                }
+
+                displayUsers(users);
+            } catch (err) {
+                console.error('Failed to load users:', err);
+            }
+        }
+
+        // 사용자 표시 함수
+        function displayUsers(users) {
+            const tbody = document.getElementById('user-table-body');
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">승인 대기 중인 사용자가 없습니다</td></tr>';
+                return;
+            }
+
+            let html = '';
+            users.forEach(user => {
+                html += `
+                    <tr>
+                        <td>${user.name || '이름 없음'}</td>
+                        <td>${user.nickname || '닉네임 없음'}</td>
+                        <td>${user.email || '이메일 없음'}</td>
+                        <td>${formatDate(user.created_at)}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn approve-btn" onclick="approveUser('${user.email}')">
+                                    ✓ 승인
+                                </button>
+                                <button class="action-btn reject-btn" onclick="rejectUser('${user.email}')">
+                                    × 거절
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteUser('${user.email}')">
+                                    🗑 삭제
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            console.log('테이블 업데이트 완료');
+        }
+
+        // 날짜 포맷 함수
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 사용자 승인
+        async function approveUser(email) {
+            const { error } = await supabase
+                .from('users')
+                .update({ status: 'approved' })
+                .eq('email', email);
+
+            if (!error) {
+                alert('승인 완료');
+                loadUsers();
+            }
+        }
+
+        // 사용자 거절
+        async function rejectUser(email) {
+            const { error } = await supabase
+                .from('users')
+                .update({ status: 'rejected' })
+                .eq('email', email);
+
+            if (!error) {
+                alert('거절 완료');
+                loadUsers();
+            }
+        }
+
+        // 사용자 삭제
+        async function deleteUser(email) {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                const { error } = await supabase
+                    .from('users')
+                    .delete()
+                    .eq('email', email);
+
+                if (!error) {
+                    alert('삭제 완료');
+                    loadUsers();
+                }
+            }
+        }
+
+        // 페이지 로드 시 사용자 목록 불러오기
+        loadUsers();
+    </script>
+</body>
+</html>
