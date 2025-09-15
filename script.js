@@ -3271,3 +3271,216 @@ function closeMobileMenu() {
 // 전역 함수로 내보내기
 window.toggleMobileMenu = toggleMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
+
+// ===============================================
+// 프로젝트 대시보드 관련 함수들
+// ===============================================
+
+// 프로젝트 저장 후 대시보드로 이동
+function saveProjectAndRedirect() {
+    // 로그인 확인
+    const userInfo = localStorage.getItem('user_info');
+    const token = localStorage.getItem('auth_token');
+
+    if (!token || !userInfo) {
+        alert('로그인이 필요합니다.');
+        if (typeof authSystem !== 'undefined' && authSystem.showLoginModal) {
+            authSystem.showLoginModal();
+        }
+        return;
+    }
+
+    try {
+        // 프로젝트 데이터 통합
+        const projectData = consolidateProjectData();
+
+        // 프로젝트명 자동 생성 (현재 날짜 기반)
+        const today = new Date().toISOString().split('T')[0];
+        const projectName = `AIFI_프로젝트_${today}`;
+
+        // 저장된 프로젝트 목록에 추가
+        const savedProjects = JSON.parse(localStorage.getItem('savedProjects') || '[]');
+
+        // 현재 프로젝트 정보 생성
+        const currentProject = {
+            id: Date.now(),
+            name: projectName,
+            type: 'combined', // 스토리보드와 컨셉아트 통합
+            projectType: 'movie',
+            description: '자동 저장된 프로젝트',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            data: projectData
+        };
+
+        // 프로젝트 목록에 추가
+        savedProjects.push(currentProject);
+        localStorage.setItem('savedProjects', JSON.stringify(savedProjects));
+
+        // 현재 프로젝트 데이터도 별도 키로 저장
+        localStorage.setItem(`project_${currentProject.id}`, JSON.stringify(projectData));
+
+        // 저장 완료 메시지
+        alert(`프로젝트가 성공적으로 저장되었습니다!\n프로젝트명: ${projectName}`);
+
+        // 대시보드 페이지로 이동
+        window.location.href = 'dashboard.html';
+
+    } catch (error) {
+        console.error('프로젝트 저장 오류:', error);
+        alert('프로젝트 저장 중 오류가 발생했습니다.');
+    }
+}
+
+// 프로젝트 대시보드 열기 (직접 이동용)
+function openProjectDashboard() {
+    // 로그인 확인
+    const userInfo = localStorage.getItem('user_info');
+    const token = localStorage.getItem('auth_token');
+
+    if (!token || !userInfo) {
+        alert('로그인이 필요합니다.');
+        if (typeof authSystem !== 'undefined' && authSystem.showLoginModal) {
+            authSystem.showLoginModal();
+        }
+        return;
+    }
+
+    // 대시보드 페이지로 이동
+    window.location.href = 'dashboard.html';
+}
+
+// 프로젝트 데이터 통합 함수
+function consolidateProjectData() {
+    const projectData = {
+        metadata: {
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            version: '1.0.0',
+            type: 'AIFI_PROJECT'
+        },
+        storyboard: null,
+        conceptArt: null,
+        stages: {}
+    };
+
+    // 스토리보드 데이터 수집
+    const storyboardKeys = Object.keys(localStorage).filter(key =>
+        key.startsWith('breakdownData_') ||
+        key.startsWith('projectSettings_') ||
+        key.startsWith('shotData_')
+    );
+
+    if (storyboardKeys.length > 0) {
+        projectData.storyboard = {};
+        storyboardKeys.forEach(key => {
+            projectData.storyboard[key] = localStorage.getItem(key);
+        });
+    }
+
+    // 컨셉아트 데이터 수집
+    const conceptArtKeys = Object.keys(localStorage).filter(key =>
+        key.startsWith('conceptArt_') ||
+        key.startsWith('characters_') ||
+        key.startsWith('locations_') ||
+        key.startsWith('props_')
+    );
+
+    if (conceptArtKeys.length > 0) {
+        projectData.conceptArt = {};
+        conceptArtKeys.forEach(key => {
+            projectData.conceptArt[key] = localStorage.getItem(key);
+        });
+    }
+
+    // 스테이지별 임시 데이터 수집
+    for (let i = 1; i <= 8; i++) {
+        const stageKey = `stage${i}TempJson`;
+        const stageData = localStorage.getItem(stageKey);
+        if (stageData) {
+            projectData.stages[stageKey] = stageData;
+        }
+    }
+
+    return projectData;
+}
+
+// 프로젝트 백업 다운로드
+function downloadProjectBackup() {
+    const projectData = consolidateProjectData();
+    const projectName = prompt('프로젝트 이름을 입력하세요:', 'my_project');
+
+    if (!projectName) return;
+
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AIFI_${projectName}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert('프로젝트 백업이 다운로드되었습니다.');
+}
+
+// 프로젝트 백업 복원
+function restoreProjectBackup(file) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const projectData = JSON.parse(e.target.result);
+
+            // 유효성 검사
+            if (!projectData.metadata || projectData.metadata.type !== 'AIFI_PROJECT') {
+                alert('유효하지 않은 프로젝트 파일입니다.');
+                return;
+            }
+
+            if (!confirm('현재 프로젝트 데이터를 덮어쓰시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+
+            // 스토리보드 데이터 복원
+            if (projectData.storyboard) {
+                Object.keys(projectData.storyboard).forEach(key => {
+                    localStorage.setItem(key, projectData.storyboard[key]);
+                });
+            }
+
+            // 컨셉아트 데이터 복원
+            if (projectData.conceptArt) {
+                Object.keys(projectData.conceptArt).forEach(key => {
+                    localStorage.setItem(key, projectData.conceptArt[key]);
+                });
+            }
+
+            // 스테이지 데이터 복원
+            if (projectData.stages) {
+                Object.keys(projectData.stages).forEach(key => {
+                    localStorage.setItem(key, projectData.stages[key]);
+                });
+            }
+
+            alert('프로젝트가 성공적으로 복원되었습니다.');
+
+            // 페이지 새로고침
+            window.location.reload();
+
+        } catch (error) {
+            console.error('프로젝트 복원 오류:', error);
+            alert('프로젝트 파일을 읽는 중 오류가 발생했습니다.');
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+// 전역 함수로 내보내기
+window.saveProjectAndRedirect = saveProjectAndRedirect;
+window.openProjectDashboard = openProjectDashboard;
+window.consolidateProjectData = consolidateProjectData;
+window.downloadProjectBackup = downloadProjectBackup;
+window.restoreProjectBackup = restoreProjectBackup;

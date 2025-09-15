@@ -1109,9 +1109,14 @@
                 <div class="features-right-section">
                     <h3 class="section-title">프로젝트 워크플로우</h3>
                     <p class="section-subtitle">8단계의 체계적인 워크플로우</p>
-                    <button class="stage-upload-main-btn" onclick="startSequentialUpload()">
-                        단계별 업로드 시작
-                    </button>
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px; width: 100%;">
+                        <button class="stage-upload-main-btn" onclick="startSequentialUpload()">
+                            <i class="ti ti-upload"></i> 단계별 업로드 시작
+                        </button>
+                        <button class="stage-upload-main-btn my-projects-btn" onclick="saveProjectAndRedirect()">
+                            <i class="ti ti-device-floppy"></i> 프로젝트 저장
+                        </button>
+                    </div>
                     
                     <div class="stage-cards-grid">
                 <div class="stage-upload-card protected-link" data-protected="true" data-stage-action="stage2" title="시나리오">

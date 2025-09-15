@@ -1896,25 +1896,42 @@ body {
 }
 
 .stage-upload-main-btn {
-  padding: 10px 20px;
+  padding: 14px 20px;
   background: var(--apple-blue);
   color: white;
   border: none;
-  border-radius: 980px;
-  font-size: 13px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: 16px;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
-  max-width: 250px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .stage-upload-main-btn:hover {
   background: var(--apple-blue-hover);
   transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 102, 204, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.4);
+}
+
+/* 내 프로젝트 버튼 특별 스타일 */
+.stage-upload-main-btn.my-projects-btn {
+  background: #4ecdc4;
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.stage-upload-main-btn.my-projects-btn:hover {
+  background: #3dbdb4;
+  box-shadow: 0 8px 20px rgba(78, 205, 196, 0.5);
 }
 
 .stage-cards-grid {

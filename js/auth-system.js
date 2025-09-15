@@ -859,6 +859,21 @@ class AuthSystem {
                             </div>
                         </div>
 
+                        <a href="dashboard.html" class="dropdown-item" style="
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            padding: 10px 12px;
+                            color: rgba(255, 255, 255, 0.8);
+                            text-decoration: none;
+                            border-radius: 8px;
+                            transition: background 0.2s;
+                        " onmouseover="this.style.background='rgba(255, 107, 107, 0.1)'"
+                           onmouseout="this.style.background='transparent'">
+                            <span>📁</span>
+                            <span>내 프로젝트 관리</span>
+                        </a>
+
                         ${user.role === 'admin' ? `
                         <a href="admin.html" class="dropdown-item" style="
                             display: flex;
