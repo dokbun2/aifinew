@@ -1795,7 +1795,8 @@
             }
 
             applyFilters() {
-                let filtered = this.users.filter(u => u.status === 'approved' && u.role !== 'admin');
+                // 관리자도 승인완료 목록에 표시 (role 필터 제거)
+                let filtered = this.users.filter(u => u.status === 'approved');
 
                 if (this.searchQuery) {
                     filtered = filtered.filter(user =>
