@@ -229,8 +229,8 @@
         .container {
             max-width: 100%;
             height: calc(100vh - 60px);
-            margin-top: 60px;
-            padding: 32px;
+            margin-top: 5px;
+            padding: 10px;
             overflow-y: auto;
             overflow-x: hidden;
             position: relative;
@@ -243,7 +243,7 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-secondary);
             border-radius: 16px;
-            padding: 32px;
+            padding: 20px;
             margin-bottom: 24px;
             position: relative;
             overflow: hidden;
@@ -1355,6 +1355,17 @@
                     }
 
                     console.log(`✅ ${users.length}명의 사용자 로드 완료`);
+                    // 첫 번째 사용자 데이터 구조 확인
+                    if (users.length > 0) {
+                        console.log('📊 사용자 데이터 구조:', users[0]);
+                        console.log('📊 필드 확인:', {
+                            name: users[0].name,
+                            nickname: users[0].nickname,
+                            full_name: users[0].full_name,
+                            display_name: users[0].display_name,
+                            username: users[0].username
+                        });
+                    }
                     this.users = users;
                     this.applyFilters();
                     this.displayCurrentTab();
@@ -1414,60 +1425,63 @@
                     return;
                 }
 
-                const table = `
-                    <table class="users-table">
-                        <thead>
-                            <tr>
-                                <th>이름</th>
-                                <th>닉네임</th>
-                                <th>이메일</th>
-                                <th>가입일시</th>
-                                <th>승인여부</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${pendingUsers.map(user => `
+                // 테이블 HTML 생성
+                let tableRows = '';
+                pendingUsers.forEach(user => {
+                    // 디버깅을 위한 로그
+                    console.log('사용자 데이터:', user);
+
+                    // SQL 스키마 확인 결과: name과 nickname이 별도 필드
+                    // name = 실제 이름 (예: "테스트유저", "아이파이")
+                    // nickname = 사용자명/핸들 (예: "tester", "@아이파이")
+                    const userName = user.name || '이름 없음';
+                    const userNickname = user.nickname || '닉네임 없음';
+                    const userEmail = user.email || '이메일 없음';
+                    const createdDate = this.formatDate(user.created_at);
+
+                    tableRows += `
+                        <tr>
+                            <td>${userName}</td>
+                            <td>${userNickname}</td>
+                            <td>${userEmail}</td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn approve-btn" onclick="adminDashboard.approveUser('${userEmail}')">
+                                        ✓ 승인
+                                    </button>
+                                    <button class="action-btn reject-btn" onclick="adminDashboard.rejectUser('${userEmail}')">
+                                        × 거절
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="adminDashboard.deleteUser('${userEmail}')">
+                                        🗑 삭제
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                const fullTable = `
+                    <div class="table-wrapper">
+                        <table class="users-table">
+                            <thead>
                                 <tr>
-                                    <td>${user.name || '-'}</td>
-                                    <td>${user.nickname || '-'}</td>
-                                    <td>${user.email}</td>
-                                    <td>${this.formatDate(user.created_at)}</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn approve-btn"
-                                                onclick="adminDashboard.approveUser('${user.email}')">
-                                                <svg class="lucide lucide-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                                승인
-                                            </button>
-                                            <button class="action-btn reject-btn"
-                                                onclick="adminDashboard.rejectUser('${user.email}')">
-                                                <svg class="lucide lucide-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
-                                                거절
-                                            </button>
-                                            <button class="action-btn delete-btn"
-                                                onclick="adminDashboard.deleteUser('${user.email}')">
-                                                <svg class="lucide lucide-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="m19 6-1 14c0 1-1 2-2 2H8c-1 0-2-1-2-2L5 6"></path>
-                                                    <path d="M10 11v6"></path>
-                                                    <path d="M14 11v6"></path>
-                                                </svg>
-                                                삭제
-                                            </button>
-                                        </div>
-                                    </td>
+                                    <th>이름</th>
+                                    <th>닉네임</th>
+                                    <th>이메일</th>
+                                    <th>가입일시</th>
+                                    <th>액션</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
 
-                container.innerHTML = table;
+                container.innerHTML = fullTable;
             }
 
             applyFilters() {
@@ -1514,68 +1528,55 @@
                     return;
                 }
 
-                const table = `
-                    <table class="users-table">
-                        <thead>
-                            <tr>
-                                <th>이름</th>
-                                <th>닉네임</th>
-                                <th>이메일</th>
-                                <th>상태</th>
-                                <th>가입일시</th>
-                                <th>마지막 로그인</th>
-                                <th>승인여부</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${pageUsers.map(user => `
+                // 테이블 HTML 생성
+                let tableRows = '';
+                pageUsers.forEach(user => {
+                    // SQL 스키마: name과 nickname이 별도 필드
+                    const userName = user.name || '이름 없음';
+                    const userNickname = user.nickname || '닉네임 없음';
+                    const userEmail = user.email || '이메일 없음';
+                    const createdDate = this.formatDate(user.created_at);
+
+                    tableRows += `
+                        <tr>
+                            <td>${userName}</td>
+                            <td>${userNickname}</td>
+                            <td>${userEmail}</td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn revoke-btn" onclick="adminDashboard.revokeUser('${userEmail}')">
+                                        ↩ 승인 취소
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="adminDashboard.deleteUser('${userEmail}')">
+                                        🗑 삭제
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                const fullTable = `
+                    <div class="table-wrapper">
+                        <table class="users-table">
+                            <thead>
                                 <tr>
-                                    <td>${user.name || '-'}</td>
-                                    <td>${user.nickname || '-'}</td>
-                                    <td>${user.email}</td>
-                                    <td>
-                                        <span class="status-badge status-${user.status}">
-                                            승인됨
-                                        </span>
-                                    </td>
-                                    <td>${this.formatDate(user.created_at)}</td>
-                                    <td>${user.last_login ? this.formatDate(user.last_login) : '-'}</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="action-btn approve-btn"
-                                                onclick="adminDashboard.approveUser('${user.email}')">
-                                                <svg class="lucide lucide-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                                승인
-                                            </button>
-                                            <button class="action-btn reject-btn"
-                                                onclick="adminDashboard.rejectUser('${user.email}')">
-                                                <svg class="lucide lucide-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
-                                                거절
-                                            </button>
-                                            <button class="action-btn delete-btn"
-                                                onclick="adminDashboard.deleteUser('${user.email}')">
-                                                <svg class="lucide lucide-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="m19 6-1 14c0 1-1 2-2 2H8c-1 0-2-1-2-2L5 6"></path>
-                                                    <path d="M10 11v6"></path>
-                                                    <path d="M14 11v6"></path>
-                                                </svg>
-                                                삭제
-                                            </button>
-                                        </div>
-                                    </td>
+                                    <th>이름</th>
+                                    <th>닉네임</th>
+                                    <th>이메일</th>
+                                    <th>가입일시</th>
+                                    <th>액션</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
 
-                container.innerHTML = table;
+                container.innerHTML = fullTable;
                 this.updatePagination();
             }
 

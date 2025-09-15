@@ -838,7 +838,7 @@
                 }, 15000);
             }
 
-            checkAdminAuth() {
+            async checkAdminAuth() {
                 const userInfo = localStorage.getItem('user_info');
 
                 if (!userInfo) {
@@ -849,6 +849,24 @@
 
                 try {
                     const user = JSON.parse(userInfo);
+
+                    // Supabase에서 최신 사용자 정보 가져오기
+                    if (this.supabase) {
+                        const { data: latestUser, error } = await this.supabase
+                            .from('users')
+                            .select('*')
+                            .eq('email', user.email)
+                            .single();
+
+                        if (latestUser) {
+                            // localStorage 업데이트
+                            user.role = latestUser.role;
+                            user.status = latestUser.status;
+                            localStorage.setItem('user_info', JSON.stringify(user));
+                        }
+                    }
+
+                    // 관리자 권한 확인
                     if (user.role !== 'admin') {
                         alert('관리자 권한이 필요합니다');
                         window.location.href = 'index.html';
@@ -1040,6 +1058,7 @@
                                 <th>닉네임</th>
                                 <th>이메일</th>
                                 <th>상태</th>
+                                <th>역할</th>
                                 <th>가입일시</th>
                                 <th>마지막 로그인</th>
                                 <th>액션</th>
@@ -1056,18 +1075,36 @@
                                             승인됨
                                         </span>
                                     </td>
+                                    <td>
+                                        <span class="role-badge role-${user.role}">
+                                            ${user.role === 'admin' ? '관리자' : '일반'}
+                                        </span>
+                                    </td>
                                     <td>${this.formatDate(user.created_at)}</td>
                                     <td>${user.last_login ? this.formatDate(user.last_login) : '-'}</td>
                                     <td>
                                         <div class="action-buttons">
+                                            ${user.role === 'user' ? `
+                                                <button class="action-btn approve-btn"
+                                                    onclick="adminDashboard.makeAdmin('${user.email}')">
+                                                    관리자 지정
+                                                </button>
+                                            ` : user.email !== 'ggamsire@gmail.com' ? `
+                                                <button class="action-btn reject-btn"
+                                                    onclick="adminDashboard.removeAdmin('${user.email}')">
+                                                    관리자 해제
+                                                </button>
+                                            ` : ''}
                                             <button class="action-btn revoke-btn"
                                                 onclick="adminDashboard.revokeUser('${user.email}')">
                                                 승인취소
                                             </button>
-                                            <button class="action-btn delete-btn"
-                                                onclick="adminDashboard.deleteUser('${user.email}')">
-                                                삭제
-                                            </button>
+                                            ${user.email !== 'ggamsire@gmail.com' ? `
+                                                <button class="action-btn delete-btn"
+                                                    onclick="adminDashboard.deleteUser('${user.email}')">
+                                                    삭제
+                                                </button>
+                                            ` : ''}
                                         </div>
                                     </td>
                                 </tr>
@@ -1256,6 +1293,76 @@
                 } catch (error) {
                     console.error('❌ 승인 취소 오류:', error);
                     this.showToast(`승인 취소 실패: ${error.message}`, 'error');
+                } finally {
+                    buttons.forEach(btn => btn.disabled = false);
+                }
+            }
+
+            async makeAdmin(email) {
+                if (!confirm(`${email} 사용자를 관리자로 지정하시겠습니까?`)) return;
+
+                if (!this.supabase) {
+                    this.showToast('데이터베이스 연결 실패', 'error');
+                    return;
+                }
+
+                const buttons = document.querySelectorAll('.action-btn');
+                buttons.forEach(btn => btn.disabled = true);
+
+                try {
+                    const { data, error } = await this.supabase
+                        .from('users')
+                        .update({
+                            role: 'admin',
+                            updated_at: new Date().toISOString(),
+                            updated_by: this.currentAdmin?.email
+                        })
+                        .eq('email', email)
+                        .select();
+
+                    if (error) throw error;
+
+                    this.showToast(`✅ ${email} 사용자가 관리자로 지정되었습니다`, 'success');
+                    await this.loadUsers();
+
+                } catch (error) {
+                    console.error('❌ 관리자 지정 오류:', error);
+                    this.showToast(`관리자 지정 실패: ${error.message}`, 'error');
+                } finally {
+                    buttons.forEach(btn => btn.disabled = false);
+                }
+            }
+
+            async removeAdmin(email) {
+                if (!confirm(`${email} 사용자의 관리자 권한을 해제하시겠습니까?`)) return;
+
+                if (!this.supabase) {
+                    this.showToast('데이터베이스 연결 실패', 'error');
+                    return;
+                }
+
+                const buttons = document.querySelectorAll('.action-btn');
+                buttons.forEach(btn => btn.disabled = true);
+
+                try {
+                    const { data, error } = await this.supabase
+                        .from('users')
+                        .update({
+                            role: 'user',
+                            updated_at: new Date().toISOString(),
+                            updated_by: this.currentAdmin?.email
+                        })
+                        .eq('email', email)
+                        .select();
+
+                    if (error) throw error;
+
+                    this.showToast(`${email} 사용자의 관리자 권한이 해제되었습니다`, 'success');
+                    await this.loadUsers();
+
+                } catch (error) {
+                    console.error('❌ 관리자 해제 오류:', error);
+                    this.showToast(`관리자 해제 실패: ${error.message}`, 'error');
                 } finally {
                     buttons.forEach(btn => btn.disabled = false);
                 }

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인증 데이터 정리</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff6b6b;
+        }
+        .section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #ff5252;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        .danger:hover {
+            background: #c82333;
+        }
+        .success {
+            background: #28a745;
+        }
+        .success:hover {
+            background: #218838;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log {
+            margin-top: 10px;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧹 인증 데이터 정리 도구</h1>
+
+    <div class="section">
+        <h2>현재 저장된 인증 데이터</h2>
+        <button onclick="checkCurrentAuth()">현재 상태 확인</button>
+        <pre id="current-auth"></pre>
+    </div>
+
+    <div class="section">
+        <h2>Google 로그인 잔재 제거</h2>
+        <button onclick="clearGoogleAuth()">Google 인증 데이터 삭제</button>
+        <button onclick="clearAllGoogleData()" class="danger">모든 Google 관련 데이터 삭제</button>
+        <div id="google-log" class="log"></div>
+    </div>
+
+    <div class="section">
+        <h2>자체 인증 시스템</h2>
+        <button onclick="clearAuthToken()">인증 토큰만 삭제</button>
+        <button onclick="clearUserInfo()">사용자 정보만 삭제</button>
+        <button onclick="clearAllAuth()" class="danger">모든 인증 데이터 삭제</button>
+        <div id="auth-log" class="log"></div>
+    </div>
+
+    <div class="section">
+        <h2>전체 초기화</h2>
+        <button onclick="clearAllLocalStorage()" class="danger">⚠️ localStorage 전체 초기화</button>
+        <button onclick="goToHome()" class="success">홈으로 돌아가기</button>
+        <div id="total-log" class="log"></div>
+    </div>
+
+    <script>
+        // 현재 인증 상태 확인
+        function checkCurrentAuth() {
+            const authData = {
+                localStorage: {},
+                sessionStorage: {},
+                cookies: document.cookie
+            };
+
+            // localStorage 모든 키 확인
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    authData.localStorage[key] = localStorage.getItem(key);
+                    // JSON 파싱 가능한 경우 파싱
+                    try {
+                        authData.localStorage[key] = JSON.parse(authData.localStorage[key]);
+                    } catch (e) {
+                        // 파싱 실패시 원본 유지
+                    }
+                } catch (e) {
+                    authData.localStorage[key] = 'Error reading value';
+                }
+            }
+
+            // sessionStorage 확인
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                authData.sessionStorage[key] = sessionStorage.getItem(key);
+            }
+
+            document.getElementById('current-auth').textContent = JSON.stringify(authData, null, 2);
+            console.log('현재 인증 데이터:', authData);
+        }
+
+        // Google 인증 관련 데이터 삭제
+        function clearGoogleAuth() {
+            const googleKeys = [];
+            let cleared = [];
+
+            // Google 관련 키 찾기
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && (
+                    key.includes('google') ||
+                    key.includes('Google') ||
+                    key.includes('gsi') ||
+                    key.includes('g_state') ||
+                    key.includes('oauth')
+                )) {
+                    googleKeys.push(key);
+                }
+            }
+
+            // 찾은 키들 삭제
+            googleKeys.forEach(key => {
+                localStorage.removeItem(key);
+                cleared.push(key);
+            });
+
+            // Google 쿠키 삭제 시도
+            document.cookie.split(";").forEach(function(c) {
+                if (c.includes('g_') || c.includes('google')) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                }
+            });
+
+            document.getElementById('google-log').innerHTML =
+                `✅ Google 관련 데이터 ${cleared.length}개 삭제됨:<br>` +
+                cleared.join('<br>');
+        }
+
+        // 모든 Google 관련 데이터 삭제
+        function clearAllGoogleData() {
+            clearGoogleAuth();
+
+            // user_info에서 Google 관련 정보 제거
+            const userInfo = localStorage.getItem('user_info');
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    if (user.picture && user.picture.includes('google')) {
+                        delete user.picture;
+                        localStorage.setItem('user_info', JSON.stringify(user));
+                    }
+                } catch (e) {
+                    console.error('user_info 파싱 오류:', e);
+                }
+            }
+
+            document.getElementById('google-log').innerHTML +=
+                '<br>✅ 모든 Google 관련 데이터가 삭제되었습니다.';
+        }
+
+        // 인증 토큰 삭제
+        function clearAuthToken() {
+            localStorage.removeItem('auth_token');
+            sessionStorage.removeItem('auth_token');
+            document.getElementById('auth-log').innerHTML = '✅ 인증 토큰이 삭제되었습니다.';
+        }
+
+        // 사용자 정보 삭제
+        function clearUserInfo() {
+            localStorage.removeItem('user_info');
+            sessionStorage.removeItem('user_info');
+            document.getElementById('auth-log').innerHTML = '✅ 사용자 정보가 삭제되었습니다.';
+        }
+
+        // 모든 인증 데이터 삭제
+        function clearAllAuth() {
+            clearAuthToken();
+            clearUserInfo();
+            clearGoogleAuth();
+            document.getElementById('auth-log').innerHTML = '✅ 모든 인증 데이터가 삭제되었습니다.';
+        }
+
+        // localStorage 전체 초기화
+        function clearAllLocalStorage() {
+            if (confirm('⚠️ 경고: 모든 localStorage 데이터가 삭제됩니다.\n\n계속하시겠습니까?')) {
+                const keys = Object.keys(localStorage);
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // 쿠키도 모두 삭제
+                document.cookie.split(";").forEach(function(c) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+
+                document.getElementById('total-log').innerHTML =
+                    `✅ 전체 초기화 완료:<br>` +
+                    `- localStorage: ${keys.length}개 항목 삭제<br>` +
+                    `- sessionStorage: 모두 삭제<br>` +
+                    `- Cookies: 모두 삭제`;
+
+                setTimeout(() => {
+                    alert('모든 데이터가 초기화되었습니다. 홈으로 이동합니다.');
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        }
+
+        // 홈으로 이동
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        // 페이지 로드시 현재 상태 자동 표시
+        window.addEventListener('load', () => {
+            checkCurrentAuth();
+        });
+    </script>
+</body>
+</html>

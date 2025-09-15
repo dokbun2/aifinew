@@ -171,10 +171,7 @@
             line-height: 1.5;
         }
         
-        #google-signin-button {
-            display: inline-block;
-            margin: 20px auto;
-        }
+        /* Google 로그인 버튼 스타일 제거됨 - 자체 인증 시스템 사용 */
         
         /* nav-content 레이아웃 조정 */
         .nav-content {
@@ -1973,10 +1970,8 @@
     <script>
         // 접근 제어 시스템
         document.addEventListener('DOMContentLoaded', function() {
-            // 관리자 이메일 목록
-            const ADMIN_EMAILS = [
-                'ggamsire@gmail.com'  // 관리자 이메일
-            ];
+            // 초기 관리자 이메일 (더 이상 사용하지 않음 - DB에서 role로 확인)
+            const INITIAL_ADMIN_EMAIL = 'ggamsire@gmail.com';
 
             // 사용자 상태에 따라 UI 업데이트
             function updateUIForUserStatus() {
@@ -2148,7 +2143,7 @@
             if (userInfo) {
                 try {
                     const user = JSON.parse(userInfo);
-                    if (ADMIN_EMAILS.includes(user.email) || user.role === 'admin') {
+                    if (user.role === 'admin') {
                         // 관리자 링크 표시 (필요시)
                         const adminLink = document.getElementById('admin-link');
                         if (adminLink) {

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 연결 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        .error {
+            background: #ef4444;
+            color: white;
+        }
+        .pending {
+            background: #f59e0b;
+            color: white;
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #ff5252;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background: #333;
+            font-weight: bold;
+        }
+        .user-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .status-pending {
+            background: #f59e0b;
+        }
+        .status-approved {
+            background: #10b981;
+        }
+        .status-rejected {
+            background: #ef4444;
+        }
+        input {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 Supabase 연결 테스트</h1>
+
+    <div class="section">
+        <h2>1. 연결 상태 <span id="connection-status" class="status pending">확인중...</span></h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <pre id="connection-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>2. Users 테이블 조회 <span id="users-status" class="status pending">대기중</span></h2>
+        <button onclick="fetchUsers()">사용자 목록 조회</button>
+        <button onclick="fetchPendingUsers()">승인 대기 사용자만</button>
+        <div id="users-result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. 테스트 회원가입</h2>
+        <input type="email" id="test-email" placeholder="이메일" value="test@example.com">
+        <input type="text" id="test-name" placeholder="이름" value="테스트유저">
+        <input type="text" id="test-nickname" placeholder="닉네임" value="tester">
+        <input type="password" id="test-password" placeholder="비밀번호" value="password123">
+        <br>
+        <button onclick="testSignup()">회원가입 테스트</button>
+        <pre id="signup-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>4. 사용자 상태 변경</h2>
+        <input type="email" id="update-email" placeholder="이메일">
+        <select id="update-status" style="background: #333; color: white; padding: 8px; border-radius: 4px;">
+            <option value="pending">승인대기</option>
+            <option value="approved">승인됨</option>
+            <option value="rejected">거절됨</option>
+        </select>
+        <button onclick="updateUserStatus()">상태 변경</button>
+        <button onclick="updateUserStatusDirect()" style="background: #10b981;">직접 API 호출 (RLS 우회)</button>
+        <button onclick="checkRLS()" style="background: #f59e0b;">RLS 상태 확인</button>
+        <pre id="update-result"></pre>
+    </div>
+
+    <script>
+        // Supabase 클라이언트 초기화
+        const supabaseUrl = 'https://mnnbrsmkmnysdmtewuha.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ubmJyc21rbW55c2RtdGV3dWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4NjcxMTIsImV4cCI6MjA3MzQ0MzExMn0.HZBpA_RLn_1Jew9jou1APUApBVfLIyq-wIM-kujtyuc';
+
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 연결 테스트
+        async function testConnection() {
+            const statusEl = document.getElementById('connection-status');
+            const resultEl = document.getElementById('connection-result');
+
+            try {
+                statusEl.className = 'status pending';
+                statusEl.textContent = '연결중...';
+
+                // 테이블 조회로 연결 테스트
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('count')
+                    .limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                statusEl.className = 'status success';
+                statusEl.textContent = '연결 성공';
+                resultEl.textContent = '✅ Supabase 연결 성공!\n' +
+                    `URL: ${supabaseUrl}\n` +
+                    `테이블: users 확인됨`;
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '연결 실패';
+                resultEl.textContent = '❌ 오류: ' + error.message;
+            }
+        }
+
+        // 사용자 목록 조회
+        async function fetchUsers() {
+            const statusEl = document.getElementById('users-status');
+            const resultEl = document.getElementById('users-result');
+
+            try {
+                statusEl.className = 'status pending';
+                statusEl.textContent = '조회중...';
+
+                const { data: users, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                statusEl.className = 'status success';
+                statusEl.textContent = `${users.length}명 조회됨`;
+
+                if (users.length === 0) {
+                    resultEl.innerHTML = '<p>등록된 사용자가 없습니다.</p>';
+                } else {
+                    let html = '<table>';
+                    html += '<tr><th>이메일</th><th>이름</th><th>닉네임</th><th>상태</th><th>역할</th><th>가입일</th></tr>';
+
+                    users.forEach(user => {
+                        html += `<tr>
+                            <td>${user.email}</td>
+                            <td>${user.name || '-'}</td>
+                            <td>${user.nickname || '-'}</td>
+                            <td><span class="user-status status-${user.status}">${user.status}</span></td>
+                            <td>${user.role}</td>
+                            <td>${new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
+                        </tr>`;
+                    });
+
+                    html += '</table>';
+                    resultEl.innerHTML = html;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '조회 실패';
+                resultEl.innerHTML = '<p>❌ 오류: ' + error.message + '</p>';
+            }
+        }
+
+        // 승인 대기 사용자만 조회
+        async function fetchPendingUsers() {
+            const statusEl = document.getElementById('users-status');
+            const resultEl = document.getElementById('users-result');
+
+            try {
+                statusEl.className = 'status pending';
+                statusEl.textContent = '조회중...';
+
+                const { data: users, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                statusEl.className = 'status success';
+                statusEl.textContent = `승인대기 ${users.length}명`;
+
+                if (users.length === 0) {
+                    resultEl.innerHTML = '<p>승인 대기중인 사용자가 없습니다.</p>';
+                } else {
+                    let html = '<h3>승인 대기 중인 사용자</h3>';
+                    html += '<table>';
+                    html += '<tr><th>이메일</th><th>이름</th><th>닉네임</th><th>가입일</th></tr>';
+
+                    users.forEach(user => {
+                        html += `<tr>
+                            <td>${user.email}</td>
+                            <td>${user.name || '-'}</td>
+                            <td>${user.nickname || '-'}</td>
+                            <td>${new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
+                        </tr>`;
+                    });
+
+                    html += '</table>';
+                    resultEl.innerHTML = html;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '조회 실패';
+                resultEl.innerHTML = '<p>❌ 오류: ' + error.message + '</p>';
+            }
+        }
+
+        // 테스트 회원가입
+        async function testSignup() {
+            const resultEl = document.getElementById('signup-result');
+            const email = document.getElementById('test-email').value;
+            const name = document.getElementById('test-name').value;
+            const nickname = document.getElementById('test-nickname').value;
+            const password = document.getElementById('test-password').value;
+
+            try {
+                resultEl.textContent = '회원가입 처리중...';
+
+                // 이메일 중복 확인
+                const { data: existing } = await supabase
+                    .from('users')
+                    .select('email')
+                    .eq('email', email)
+                    .single();
+
+                if (existing) {
+                    throw new Error('이미 등록된 이메일입니다');
+                }
+
+                // 사용자 등록
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([{
+                        email: email,
+                        password_hash: simpleHash(password),
+                        name: name,
+                        nickname: nickname,
+                        status: 'pending',
+                        role: 'user',
+                        created_at: new Date().toISOString()
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                resultEl.textContent = '✅ 회원가입 성공!\n' +
+                    JSON.stringify(data[0], null, 2);
+
+                // 목록 새로고침
+                fetchUsers();
+            } catch (error) {
+                resultEl.textContent = '❌ 회원가입 실패: ' + error.message;
+            }
+        }
+
+        // 사용자 상태 변경
+        async function updateUserStatus() {
+            const resultEl = document.getElementById('update-result');
+            const email = document.getElementById('update-email').value;
+            const status = document.getElementById('update-status').value;
+
+            if (!email) {
+                resultEl.textContent = '이메일을 입력하세요';
+                return;
+            }
+
+            try {
+                resultEl.textContent = '상태 변경중...';
+
+                console.log('변경할 이메일:', email);
+                console.log('변경할 상태:', status);
+
+                const updateData = {
+                    status: status
+                };
+
+                if (status === 'approved') {
+                    updateData.approved_at = new Date().toISOString();
+                    updateData.approved_by = 'admin@test.com';
+                } else if (status === 'rejected') {
+                    updateData.rejected_at = new Date().toISOString();
+                    updateData.rejected_by = 'admin@test.com';
+                }
+
+                console.log('업데이트 데이터:', updateData);
+
+                const { data, error } = await supabase
+                    .from('users')
+                    .update(updateData)
+                    .eq('email', email)
+                    .select();
+
+                console.log('응답 데이터:', data);
+                console.log('응답 에러:', error);
+
+                if (error) {
+                    console.error('Supabase 에러 상세:', error);
+                    throw error;
+                }
+
+                if (data && data.length > 0) {
+                    resultEl.textContent = '✅ 상태 변경 성공!\n' +
+                        JSON.stringify(data[0], null, 2);
+                    fetchUsers();
+                } else {
+                    resultEl.textContent = '⚠️ 해당 이메일의 사용자를 찾을 수 없습니다';
+                }
+            } catch (error) {
+                console.error('전체 에러:', error);
+                resultEl.textContent = '❌ 상태 변경 실패: ' + error.message +
+                    '\n\n상세 오류: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        // 간단한 해시 함수
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString();
+        }
+
+        // 직접 API 호출로 상태 변경 (RLS 우회 테스트)
+        async function updateUserStatusDirect() {
+            const resultEl = document.getElementById('update-result');
+            const email = document.getElementById('update-email').value;
+            const status = document.getElementById('update-status').value;
+
+            if (!email) {
+                resultEl.textContent = '이메일을 입력하세요';
+                return;
+            }
+
+            try {
+                resultEl.textContent = '직접 API 호출로 상태 변경중...';
+
+                // REST API 직접 호출
+                const response = await fetch(`${supabaseUrl}/rest/v1/users?email=eq.${email}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        status: status,
+                        approved_at: status === 'approved' ? new Date().toISOString() : null,
+                        approved_by: status === 'approved' ? 'admin@test.com' : null
+                    })
+                });
+
+                const responseText = await response.text();
+                console.log('Response status:', response.status);
+                console.log('Response text:', responseText);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${responseText}`);
+                }
+
+                const data = responseText ? JSON.parse(responseText) : [];
+
+                if (data && data.length > 0) {
+                    resultEl.textContent = '✅ 직접 API 호출로 상태 변경 성공!\n' +
+                        JSON.stringify(data[0], null, 2);
+                    fetchUsers();
+                } else {
+                    resultEl.textContent = '⚠️ 업데이트는 되었지만 데이터가 반환되지 않았습니다.\n' +
+                        '이는 RLS 정책 때문일 수 있습니다.';
+                }
+            } catch (error) {
+                console.error('직접 API 호출 에러:', error);
+                resultEl.textContent = '❌ 직접 API 호출 실패: ' + error.message;
+            }
+        }
+
+        // RLS 상태 확인
+        async function checkRLS() {
+            const resultEl = document.getElementById('update-result');
+
+            try {
+                resultEl.textContent = 'RLS 상태 확인중...';
+
+                // 1. SELECT 테스트
+                const { data: selectData, error: selectError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .limit(1);
+
+                // 2. INSERT 테스트 (실제로 하지 않고 시뮬레이션)
+                const testEmail = `test_rls_${Date.now()}@test.com`;
+
+                const { data: insertData, error: insertError } = await supabase
+                    .from('users')
+                    .insert([{
+                        email: testEmail,
+                        password_hash: '12345',
+                        name: 'RLS Test',
+                        nickname: 'rls_test',
+                        status: 'pending',
+                        role: 'user',
+                        created_at: new Date().toISOString()
+                    }])
+                    .select();
+
+                // 3. UPDATE 테스트
+                let updateResult = '확인 불가';
+                if (insertData && insertData.length > 0) {
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('users')
+                        .update({ nickname: 'rls_test_updated' })
+                        .eq('email', testEmail)
+                        .select();
+
+                    updateResult = updateError ? `❌ 실패: ${updateError.message}` : '✅ 성공';
+
+                    // 테스트 데이터 삭제
+                    await supabase
+                        .from('users')
+                        .delete()
+                        .eq('email', testEmail);
+                }
+
+                resultEl.textContent = `RLS 정책 테스트 결과:\n\n` +
+                    `1. SELECT (읽기): ${selectError ? '❌ 실패 - ' + selectError.message : '✅ 성공'}\n` +
+                    `2. INSERT (추가): ${insertError ? '❌ 실패 - ' + insertError.message : '✅ 성공'}\n` +
+                    `3. UPDATE (수정): ${updateResult}\n\n` +
+                    `권장 사항:\n` +
+                    `- UPDATE가 실패하면 Supabase Dashboard > Authentication > Policies에서\n` +
+                    `  users 테이블의 RLS 정책을 확인하고 UPDATE 정책을 추가하세요.\n` +
+                    `- 또는 개발 중에는 RLS를 임시로 비활성화할 수 있습니다.`;
+
+            } catch (error) {
+                console.error('RLS 확인 에러:', error);
+                resultEl.textContent = '❌ RLS 확인 실패: ' + error.message;
+            }
+        }
+
+        // 페이지 로드시 자동 연결 테스트
+        window.addEventListener('load', () => {
+            testConnection();
+        });
+    </script>
+</body>
+</html>
