@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>미디어 갤러리 - AIFI</title>
-
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
     <!-- 파비콘 -->
     <link rel="icon" type="image/x-icon" href="../favicon_io/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="../favicon_io/favicon-32x32.png">
@@ -2170,30 +2167,6 @@
                 iconEmptyVideo.style.opacity = '0.5';
             }
         });
-
-        // 페이지 보호 스크립트 추가
-        // 인증 시스템 스크립트 동적 로드 후 접근 확인
-        const authScript = document.createElement('script');
-        authScript.src = '../js/auth-system.js';
-        authScript.onload = function() {
-            // 페이지 로드시 접근 권한 확인
-            window.addEventListener('load', function() {
-                if (typeof authSystem !== 'undefined') {
-                    if (!authSystem.checkAccess()) {
-                        // 접근 권한 없음 - 메인 페이지로 리다이렉트
-                        setTimeout(() => {
-                            window.location.href = '../index.html';
-                        }, 2000);
-                    }
-                } else {
-                    console.warn('Auth system not loaded - redirecting to main page');
-                    setTimeout(() => {
-                        window.location.href = '../index.html';
-                    }, 1000);
-                }
-            });
-        };
-        document.head.appendChild(authScript);
     </script>
 </body>
 </html>

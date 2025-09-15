@@ -46,12 +46,15 @@
 
 ### 신규 생성:
 - `/storyboard/js/modules/app-state.js` - 상태 관리 모듈
+- `/storyboard/js/modules/data/stage-converter.js` - Stage 변환 모듈
+- `/storyboard/js/modules/data/test-data.js` - 테스트 데이터 모듈
+- `/storyboard/js/modules/ui/prompt-editor.js` - 프롬프트 편집 모듈
 
 ### 수정됨:
-- `/storyboard/js/app.js` - 전역 변수 및 중복 함수 제거
+- `/storyboard/js/app.js` - 전역 변수 및 중복 함수 제거, 대형 함수 모듈 참조로 변경
 - `/storyboard/js/modules/data/import-export.js` - AppState 호환성
 - `/storyboard/js/modules/events/event-handlers.js` - 자동 초기화 비활성화
-- `/storyboard/index.html` - 모듈 로드 순서 정리
+- `/storyboard/index.html` - 모듈 로드 순서 정리, 새 모듈 추가
 
 ## 🚀 개선 효과
 
@@ -79,7 +82,44 @@
 
 ## 🔄 향후 작업 계획
 
-### Phase 3 (권장):
+### ✅ Phase 3: 대형 함수 분리 (2024-12-14)
+**상태**: ✅ 완료
+
+#### 작업 내용:
+1. **Stage Converter 모듈 생성** (`/storyboard/js/modules/data/stage-converter.js`)
+   - convertStage5V5Format 함수 모듈화
+   - Stage 형식 자동 감지 및 변환 기능
+   - Stage 7 비디오 프롬프트 처리
+
+2. **Test Data 모듈 생성** (`/storyboard/js/modules/data/test-data.js`)
+   - createTestData 함수 모듈화 (3,723줄의 거대 함수)
+   - 테스트 데이터 관리 중앙화
+
+**개선 효과**:
+- 코드 분리: 약 4,000줄 모듈화
+- 유지보수성 향상: 테스트 데이터와 변환 로직 분리
+- 모듈 재사용성 증가
+
+### ✅ Phase 4: 프롬프트 편집 기능 모듈화 (2024-12-14)
+**상태**: ✅ 완료
+
+#### 작업 내용:
+1. **Prompt Editor 모듈 생성** (`/storyboard/js/modules/ui/prompt-editor.js`)
+   - 7개 프롬프트 편집 함수 모듈화
+   - editImagePrompt, saveEditedPrompt, closePromptEditModal 등
+   - 모달 UI 및 스타일 관리 통합
+
+2. **안전한 마이그레이션**
+   - 모든 함수를 fallback 방식으로 처리
+   - 기존 전역 함수와의 호환성 유지
+   - 점진적 마이그레이션 가능
+
+**개선 효과**:
+- 코드 분리: 약 350줄 모듈화
+- UI 로직 중앙화
+- 재사용성 향상
+
+### Phase 5 (권장):
 1. getProjectFileName 리팩토링
    - currentData 파라미터 전달 방식으로 변경 필요
    - 모든 호출 부분 수정 필요
@@ -88,9 +128,9 @@
    - 가장 마지막에 진행 권장
    - 충분한 테스트 환경 구축 후 진행
 
-### Phase 4 (장기):
-- 남은 55% 모듈화 완료
-- 대형 함수 분해 (100줄 이상)
+### Phase 5 (장기):
+- 남은 50% 모듈화 완료
+- 프롬프트 편집 함수들 분리
 - 에러 처리 패턴 통일
 
 ## 📝 테스트 체크리스트

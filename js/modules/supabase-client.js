@@ -17,8 +17,8 @@ export async function initSupabase() {
         return supabase;
     }
 
-    // Dynamically import Supabase
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    // Import Supabase from node_modules
+    const { createClient } = await import('../../node_modules/@supabase/supabase-js/dist/module/index.js');
 
     supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
         auth: {

@@ -32,12 +32,34 @@
                 console.log('💾 Universal/Nanobana 데이터 저장 중:', universalData);
             }
             
+            // Google 로그인 사용자 정보 추가
+            const userInfo = localStorage.getItem('user_info');
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    currentData.user_email = user.email;
+                    currentData.user_name = user.name;
+                } catch (e) {
+                    console.error('사용자 정보 파싱 오류:', e);
+                }
+            }
+
             const dataString = JSON.stringify(currentData);
-            
+
             // localStorage 용량 체크 및 처리
             try {
                 localStorage.setItem(`breakdownData_${jsonFileName}`, dataString);
                 localStorage.setItem(`lastSaved_${jsonFileName}`, new Date().toISOString());
+
+                // 사용자별 대시보드로 이동 (메인 페이지에서 저장한 경우)
+                if (window.location.pathname === '/' || window.location.pathname.endsWith('index.html')) {
+                    if (currentData.user_email) {
+                        // 사용자 이메일을 URL 파라미터로 전달
+                        const userParam = encodeURIComponent(currentData.user_email);
+                        window.location.href = `/dashboard.html?user=${userParam}`;
+                    }
+                }
+
                 return true;
             } catch (quotaError) {
                 if (quotaError.name === 'QuotaExceededError') {

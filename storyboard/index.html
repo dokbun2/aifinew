@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영상 프레임워크 스토리보드</title>
-
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
     <!-- Content Security Policy for Google Drive iframe -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:; frame-src 'self' https://drive.google.com https://*.googleusercontent.com https://docs.google.com; img-src 'self' data: blob: https: http:; media-src 'self' data: blob: https: http:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; font-src 'self' data: https://cdnjs.cloudflare.com;">
     
@@ -956,42 +953,22 @@
     </div>
     
     <!-- Scripts -->
-    <!-- 인증 시스템 -->
-    <script src="../js/auth-system.js"></script>
     <!-- 리팩토링된 모듈들 -->
     <script src="js/modules/app-config.js?v=1.4"></script>
     <script src="js/modules/app-state.js?v=1.5"></script>
     <script src="js/modules/app-utils.js?v=1.4"></script>
     <script src="js/modules/data/storage.js?v=1.4"></script>
+    <script src="js/modules/data/stage-converter.js?v=1.5"></script>
+    <script src="js/modules/data/test-data.js?v=1.5"></script>
     <script src="js/modules/data/import-export.js?v=1.4"></script>
     <script src="js/modules/ui/navigation.js?v=1.4"></script>
     <script src="js/modules/ui/content-display.js?v=1.4"></script>
-    <script src="js/modules/stage/stage-converter.js?v=1.4"></script>
+    <script src="js/modules/ui/prompt-editor.js?v=1.5"></script>
     <script src="js/modules/events/event-handlers.js?v=1.4"></script>
     
     <!-- 기존 스크립트들 -->
     <script src="js/storyboard-functions.js?v=1.1"></script>
     <script src="js/app.js?v=1.4"></script>
     <script src="js/shot-ui-improvements.js?v=1.1"></script>
-
-    <!-- 페이지 보호 -->
-    <script>
-        // 페이지 로드시 접근 권한 확인
-        window.addEventListener('load', function() {
-            if (typeof authSystem !== 'undefined') {
-                if (!authSystem.checkAccess()) {
-                    // 접근 권한 없음 - 메인 페이지로 리다이렉트
-                    setTimeout(() => {
-                        window.location.href = '../index.html';
-                    }, 2000);
-                }
-            } else {
-                console.warn('Auth system not loaded - redirecting to main page');
-                setTimeout(() => {
-                    window.location.href = '../index.html';
-                }, 1000);
-            }
-        });
-    </script>
 </body>
 </html>

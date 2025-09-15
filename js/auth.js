@@ -14,9 +14,16 @@ class GoogleAuth {
         console.log('🔄 Initializing Google Auth...');
         console.log('Current domain:', window.location.hostname);
         console.log('Current protocol:', window.location.protocol);
-        
-        // Google Identity Services 초기화
+
+        // Google Identity Services 초기화 - 중복 초기화 방지
         const initGoogleAuth = () => {
+            // 이미 초기화되었는지 확인
+            if (window.googleAuthInitialized) {
+                console.log('⚠️ Google Auth already initialized, skipping...');
+                this.renderButton('google-signin-button');
+                return;
+            }
+
             if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
                 try {
                     google.accounts.id.initialize({
@@ -24,24 +31,30 @@ class GoogleAuth {
                         callback: this.handleCredentialResponse.bind(this),
                         auto_select: false,
                         cancel_on_tap_outside: true,
+                        context: 'signin',
+                        ux_mode: 'popup'
                     });
-                    
+
+                    // 초기화 플래그 설정
+                    window.googleAuthInitialized = true;
                     console.log('✅ Google Auth initialized successfully');
                     console.log('Client ID:', this.CLIENT_ID);
-                    
+
                     // 초기화 성공 후 바로 버튼 렌더링 시도
                     setTimeout(() => {
                         this.renderButton('google-signin-button');
                     }, 100);
                 } catch (error) {
                     console.error('❌ Error initializing Google Auth:', error);
+                    // 오류 발생 시 플래그 리셋
+                    window.googleAuthInitialized = false;
                 }
             } else {
                 console.warn('⏳ Google Identity Services not loaded yet, retrying...');
                 setTimeout(() => initGoogleAuth(), 1000);
             }
         };
-        
+
         // DOMContentLoaded와 load 이벤트 모두 처리
         if (document.readyState === 'loading') {
             window.addEventListener('load', initGoogleAuth);
@@ -137,23 +150,243 @@ class GoogleAuth {
     }
 
     async checkApprovalStatus(email) {
-        // 로컬 스토리지에서 승인된 사용자 목록 확인
+        console.log('🔍 승인 상태 확인 중:', email);
+
+        // Supabase에 사용자 정보 저장/업데이트
+        const saveResult = await this.saveUserToSupabase(this.user);
+
+        // Supabase에서 직접 승인 상태 확인
+        if (saveResult) {
+            try {
+                let supabaseClient = null;
+
+                if (window.ProjectBackup && window.ProjectBackup.supabase) {
+                    supabaseClient = window.ProjectBackup.supabase;
+                } else if (window.supabase) {
+                    const module = await import('./modules/supabase-config.js');
+                    if (module.SUPABASE_CONFIG) {
+                        supabaseClient = window.supabase.createClient(
+                            module.SUPABASE_CONFIG.url,
+                            module.SUPABASE_CONFIG.anonKey
+                        );
+                    }
+                }
+
+                if (supabaseClient) {
+                    const { data: userData, error } = await supabaseClient
+                        .from('users')
+                        .select('status, created_at, login_count')
+                        .eq('email', email)
+                        .maybeSingle();
+
+                    if (!error && userData) {
+                        this.isApproved = userData.status === 'approved';
+                        console.log('📊 Supabase 사용자 상태:', {
+                            email: email,
+                            status: userData.status,
+                            isApproved: this.isApproved,
+                            loginCount: userData.login_count
+                        });
+
+                        // 이미 가입한 사용자가 다시 가입 시도하는 경우 체크
+                        if (userData.login_count > 1 && userData.status === 'pending') {
+                            console.log('⚠️ 이미 가입 신청한 사용자입니다. 승인 대기중...');
+                            this.showNotification('이미 가입 신청이 완료되었습니다. 관리자 승인을 기다려주세요.', 'info');
+                        }
+
+                        return this.isApproved;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Supabase 상태 확인 실패:', error);
+            }
+        }
+
+        // 로컬 스토리지 백업 확인 (Supabase 실패 시)
         const approvedUsers = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
         const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
-        
-        this.isApproved = approvedUsers.includes(email);
-        
+
+        // 승인된 사용자 확인
+        this.isApproved = approvedUsers.some(u =>
+            typeof u === 'string' ? u === email : u.email === email
+        );
+
         // 신규 사용자인 경우 대기 목록에 추가
-        if (!this.isApproved && !pendingUsers.find(u => u.email === email)) {
-            pendingUsers.push({
-                email: email,
-                name: this.user.name,
-                requestedAt: new Date().toISOString()
-            });
-            localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+        if (!this.isApproved) {
+            const existingPending = pendingUsers.find(u => u.email === email);
+
+            if (!existingPending) {
+                // 신규 사용자 추가
+                const newUser = {
+                    email: email,
+                    name: this.user.name || 'Unknown',
+                    picture: this.user.picture || '',
+                    requestedAt: new Date().toISOString(),
+                    status: 'pending'
+                };
+                pendingUsers.push(newUser);
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                console.log('🆕 새 사용자가 대기 목록에 추가됨:', newUser);
+            } else {
+                // 기존 대기 사용자 - 중복 가입 시도
+                console.log('⚠️ 이미 대기 목록에 있는 사용자:', existingPending);
+                existingPending.name = this.user.name || existingPending.name;
+                existingPending.picture = this.user.picture || existingPending.picture;
+                existingPending.lastLoginAt = new Date().toISOString();
+                existingPending.loginAttempts = (existingPending.loginAttempts || 1) + 1;
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                // 중복 가입 시도 알림
+                if (existingPending.loginAttempts > 2) {
+                    this.showNotification('이미 가입 신청이 완료되었습니다. 관리자의 승인을 기다려주세요.', 'warning');
+                }
+            }
+        } else {
+            // 승인된 사용자 정보 업데이트
+            const approvedUser = approvedUsers.find(u =>
+                typeof u === 'object' && u.email === email
+            );
+
+            if (approvedUser) {
+                approvedUser.lastLoginAt = new Date().toISOString();
+                approvedUser.name = this.user.name || approvedUser.name;
+                approvedUser.picture = this.user.picture || approvedUser.picture;
+                localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
+            }
         }
-        
+
         return this.isApproved;
+    }
+
+    // Supabase에 사용자 정보 저장
+    async saveUserToSupabase(user) {
+        try {
+            console.log('🔄 Supabase에 사용자 정보 저장 시작:', user.email);
+
+            // Supabase 클라이언트 가져오기
+            let supabaseClient = null;
+
+            // 방법 1: 전역 supabaseClient 사용
+            if (window.supabaseClient) {
+                console.log('✅ 전역 Supabase 클라이언트 사용');
+                supabaseClient = window.supabaseClient;
+            }
+            // 방법 2: ProjectBackup 인스턴스가 있으면 사용
+            else if (window.ProjectBackup && window.ProjectBackup.supabase) {
+                console.log('✅ ProjectBackup Supabase 클라이언트 사용');
+                supabaseClient = window.ProjectBackup.supabase;
+            } else {
+                // 방법 3: 직접 Supabase 클라이언트 생성
+                console.log('🔄 새 Supabase 클라이언트 생성 시도');
+
+                // Supabase 라이브러리 로드 대기
+                let retries = 0;
+                while (!window.supabase && retries < 10) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retries++;
+                }
+
+                if (!window.supabase) {
+                    console.error('❌ Supabase 라이브러리를 로드할 수 없습니다.');
+                    return false;
+                }
+
+                // Supabase config 로드
+                try {
+                    const module = await import('./modules/supabase-config.js');
+                    if (module.SUPABASE_CONFIG) {
+                        supabaseClient = window.supabase.createClient(
+                            module.SUPABASE_CONFIG.url,
+                            module.SUPABASE_CONFIG.anonKey
+                        );
+                        // 전역 변수로 저장
+                        window.supabaseClient = supabaseClient;
+                        console.log('✅ 새 Supabase 클라이언트 생성 및 전역 저장');
+                    }
+                } catch (error) {
+                    console.error('❌ Supabase 설정 로드 실패:', error);
+                    return false;
+                }
+            }
+
+            if (!supabaseClient) {
+                console.error('❌ Supabase 클라이언트를 사용할 수 없습니다.');
+                return false;
+            }
+
+            // 먼저 기존 사용자 확인
+            const { data: existingUser, error: fetchError } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('email', user.email)
+                .maybeSingle(); // single() 대신 maybeSingle() 사용하여 null 허용
+
+            if (fetchError) {
+                console.error('❌ 사용자 조회 실패:', fetchError);
+                // 오류가 있어도 계속 진행 (새 사용자일 수 있음)
+            }
+
+            let userData = {
+                email: user.email,
+                name: user.name || user.email.split('@')[0],
+                picture: user.picture || '',
+                google_id: user.id || '',
+                last_login: new Date().toISOString(),
+                metadata: {
+                    browser: navigator.userAgent,
+                    language: navigator.language,
+                    login_time: new Date().toISOString()
+                }
+            };
+
+            // 신규 사용자인 경우
+            if (!existingUser) {
+                userData.created_at = new Date().toISOString();
+                userData.status = 'pending'; // 기본값: 승인 대기
+                userData.login_count = 1;
+
+                console.log('🆕 신규 사용자 등록:', userData.email);
+            } else {
+                // 기존 사용자 업데이트
+                userData.login_count = (existingUser.login_count || 0) + 1;
+                userData.status = existingUser.status; // 기존 상태 유지
+
+                console.log('📝 기존 사용자 업데이트:', userData.email);
+            }
+
+            // users 테이블에 저장/업데이트
+            const { data, error } = await supabaseClient
+                .from('users')
+                .upsert(userData, {
+                    onConflict: 'email'
+                })
+                .select()
+                .maybeSingle(); // single() 대신 maybeSingle() 사용
+
+            if (error) {
+                console.error('❌ Supabase 사용자 저장 실패:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                });
+                return false;
+            } else {
+                console.log('✅ Supabase에 사용자 정보 저장 성공:', data);
+
+                // 승인 상태 확인 및 업데이트
+                if (data) {
+                    this.isApproved = data.status === 'approved';
+                    console.log('👤 사용자 상태:', data.status);
+                }
+                return true;
+            }
+        } catch (error) {
+            console.error('❌ 사용자 정보 저장 중 예외 발생:', error);
+            return false;
+        }
     }
 
     parseJwt(token) {
@@ -214,6 +447,13 @@ class GoogleAuth {
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
+                        ${this.isApproved ? `
+                        <button onclick="googleAuth.openDashboard()" class="dropdown-menu-btn">
+                            <span>📁</span>
+                            <span>나의 프로젝트</span>
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        ` : ''}
                         <button onclick="googleAuth.logout()" class="dropdown-logout-btn">
                             <span>🚪</span>
                             <span>로그아웃</span>
@@ -224,59 +464,147 @@ class GoogleAuth {
         }
     }
 
+    async resendApplication() {
+        console.log('🔄 가입 신청 재전송 시작...');
+
+        try {
+            // 로딩 표시
+            this.showNotification('가입 신청을 다시 전송하는 중...', 'info');
+
+            // Supabase에 다시 저장 시도
+            const result = await this.saveUserToSupabase(this.user);
+
+            if (result) {
+                // 로컬 스토리지 업데이트
+                const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+                const existingUser = pendingUsers.find(u => u.email === this.user.email);
+
+                if (!existingUser) {
+                    // 새로 추가
+                    pendingUsers.push({
+                        email: this.user.email,
+                        name: this.user.name,
+                        picture: this.user.picture,
+                        requestedAt: new Date().toISOString(),
+                        status: 'pending',
+                        resent: true
+                    });
+                } else {
+                    // 기존 데이터 업데이트
+                    existingUser.lastResent = new Date().toISOString();
+                    existingUser.resentCount = (existingUser.resentCount || 0) + 1;
+                }
+
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                this.showNotification('✅ 가입 신청이 성공적으로 재전송되었습니다!', 'success');
+                console.log('✅ 가입 신청 재전송 완료');
+
+                // 관리자에게 알림 (선택사항)
+                console.log(`📧 관리자 알림: ${this.user.email}님이 가입 신청을 재전송했습니다.`);
+            } else {
+                // Supabase 저장 실패 시 로컬에만 저장
+                console.log('⚠️ Supabase 저장 실패, 로컬 저장 시도...');
+
+                const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
+                const existingIndex = pendingUsers.findIndex(u => u.email === this.user.email);
+
+                const userData = {
+                    email: this.user.email,
+                    name: this.user.name,
+                    picture: this.user.picture,
+                    requestedAt: new Date().toISOString(),
+                    status: 'pending',
+                    resent: true,
+                    lastResent: new Date().toISOString()
+                };
+
+                if (existingIndex >= 0) {
+                    pendingUsers[existingIndex] = userData;
+                } else {
+                    pendingUsers.push(userData);
+                }
+
+                localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+
+                this.showNotification('⚠️ 서버 연결 문제로 로컬에만 저장되었습니다. 나중에 다시 시도해주세요.', 'warning');
+            }
+        } catch (error) {
+            console.error('❌ 가입 신청 재전송 실패:', error);
+            this.showNotification('❌ 가입 신청 재전송에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
+        }
+    }
+
     showPendingApproval() {
         // 기존 모달이 있으면 제거
         const existingModal = document.querySelector('.approval-pending-modal');
         if (existingModal) {
             existingModal.remove();
         }
-        
+
         const modal = document.createElement('div');
         modal.className = 'approval-pending-modal';
-        
+
         const content = document.createElement('div');
         content.className = 'approval-pending-content';
-        
+
+        // X 버튼 생성
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-close-x';
+        closeBtn.textContent = '×';
+        closeBtn.onclick = () => modal.remove();
+
+        // 컨텐츠 HTML
         content.innerHTML = `
-            <button class="modal-close-x">×</button>
             <div class="pending-icon">⏳</div>
             <h3>승인 대기중</h3>
             <p>관리자의 승인을 기다리고 있습니다.</p>
             <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
             <p class="user-email">${this.user.email}</p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 10px;">
+                    가입 신청이 확인되지 않으신다면 아래 버튼을 클릭하세요
+                </p>
+            </div>
         `;
-        
-        // X 버튼에 이벤트 리스너 추가
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'modal-close-x';
-        closeBtn.textContent = '×';
-        closeBtn.onclick = () => modal.remove();
-        
+
+        // 재신청 버튼 생성
+        const resendBtn = document.createElement('button');
+        resendBtn.className = 'btn-resend';
+        resendBtn.style.cssText = `
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        `;
+        resendBtn.textContent = '재신청';
+        resendBtn.onclick = async () => {
+            if (confirm('가입 신청을 다시 하시겠습니까?\n\n관리자 페이지에서 확인할 수 있도록 데이터를 재전송합니다.')) {
+                await this.resendApplication();
+            }
+        };
+
         // 확인 버튼 생성
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'close-btn';
         confirmBtn.textContent = '확인';
         confirmBtn.onclick = () => modal.remove();
-        
-        // 먼저 content를 만들고
-        content.innerHTML = `
-            <div class="pending-icon">⏳</div>
-            <h3>승인 대기중</h3>
-            <p>관리자의 승인을 기다리고 있습니다.</p>
-            <p>승인이 완료되면 모든 기능을 사용하실 수 있습니다.</p>
-            <p class="user-email">${this.user.email}</p>
-        `;
-        
+
         // 버튼들을 appendChild로 추가
         content.insertBefore(closeBtn, content.firstChild);
+        content.appendChild(resendBtn);
         content.appendChild(confirmBtn);
-        
+
         modal.appendChild(content);
         document.body.appendChild(modal);
-        
+
         // Tool 페이지도 잠금 처리
         this.disableAllFeatures();
-        
+
         setTimeout(() => {
             modal.classList.add('show');
         }, 100);
@@ -393,6 +721,11 @@ class GoogleAuth {
         
         // 메인 페이지의 기능도 비활성화
         this.disableMainFeatures();
+    }
+
+    openDashboard() {
+        // 대시보드 페이지로 이동
+        window.location.href = '/dashboard.html';
     }
 
     async logout() {
@@ -701,15 +1034,24 @@ class GoogleAuth {
     }
 }
 
-// 전역 인스턴스 생성
-const googleAuth = new GoogleAuth();
+// 전역 인스턴스 생성 - 싱글톤 패턴
+let googleAuth;
+if (!window.googleAuth) {
+    googleAuth = new GoogleAuth();
+    window.googleAuth = googleAuth;
+} else {
+    googleAuth = window.googleAuth;
+}
 
-// DOM 로드 완료 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing Google Auth...');
-    
-    // 로그인 상태 확인
-    googleAuth.checkAuthStatus();
+// DOM 로드 완료 시 초기화 - 중복 방지
+if (!window.googleAuthDOMInitialized) {
+    window.googleAuthDOMInitialized = true;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing Google Auth...');
+
+        // 로그인 상태 확인
+        googleAuth.checkAuthStatus();
     
     // 보호된 링크 클릭 이벤트 처리
     document.addEventListener('click', function(e) {
@@ -733,6 +1075,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+}
 
-// 전역 접근을 위한 export
-window.googleAuth = googleAuth;
+// 전역 접근을 위한 export (이미 설정되어 있지 않은 경우에만)
+if (!window.googleAuth) {
+    window.googleAuth = googleAuth;
+}

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIFI - Supabase Integration</title>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status-box {
+            background: #f7f8fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background: #10b981;
+        }
+
+        .status-disconnected {
+            background: #ef4444;
+        }
+
+        .config-form {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .test-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .test-result {
+            background: #f9fafb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .success {
+            color: #10b981;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+
+        .info {
+            color: #3b82f6;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #667eea;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AIFI Supabase Integration</h1>
+
+        <div class="status-box">
+            <h3>연결 상태</h3>
+            <p>
+                <span id="status-indicator" class="status-indicator status-disconnected"></span>
+                <span id="status-text">연결되지 않음</span>
+                <span id="loading" class="loading" style="display: none;"></span>
+            </p>
+        </div>
+
+        <div class="config-form">
+            <h3>Supabase 설정</h3>
+            <div class="form-group">
+                <label for="supabase-url">Supabase URL:</label>
+                <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+            </div>
+            <div class="form-group">
+                <label for="supabase-key">Anon Key:</label>
+                <input type="password" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+            </div>
+            <button class="btn btn-primary" onclick="connectSupabase()">연결하기</button>
+        </div>
+
+        <div class="test-section" id="test-section" style="display: none;">
+            <h3>테스트 기능</h3>
+
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-success" onclick="testConnection()">연결 테스트</button>
+                <button class="btn btn-success" onclick="createTestProject()">프로젝트 생성</button>
+                <button class="btn btn-success" onclick="listProjects()">프로젝트 목록</button>
+                <button class="btn btn-danger" onclick="clearLocalStorage()">로컬 설정 초기화</button>
+            </div>
+
+            <div class="test-result" id="test-result"></div>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        let supabase = null;
+        let supabaseService = null;
+
+        // 페이지 로드 시 저장된 설정 확인
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('supabase_url');
+            const savedKey = localStorage.getItem('supabase_anon_key');
+
+            if (savedUrl && savedKey) {
+                document.getElementById('supabase-url').value = savedUrl;
+                document.getElementById('supabase-key').value = savedKey;
+                connectSupabase(false);
+            }
+        };
+
+        async function connectSupabase(showMessage = true) {
+            const url = document.getElementById('supabase-url').value;
+            const anonKey = document.getElementById('supabase-key').value;
+
+            if (!url || !anonKey) {
+                if (showMessage) {
+                    alert('Supabase URL과 Anon Key를 입력해주세요.');
+                }
+                return;
+            }
+
+            showLoading(true);
+            updateStatus('연결 중...', false);
+
+            try {
+                // Supabase 클라이언트 생성
+                supabase = supabase || window.supabase;
+                const { createClient } = supabase;
+
+                const client = createClient(url, anonKey, {
+                    auth: {
+                        autoRefreshToken: true,
+                        persistSession: true
+                    }
+                });
+
+                // 서비스 인스턴스 생성
+                supabaseService = new SupabaseService(client);
+
+                // 연결 테스트
+                const { data, error } = await client.from('projects').select('count').limit(1);
+
+                if (!error || error.code === 'PGRST116') { // PGRST116은 빈 테이블 에러
+                    // 설정 저장
+                    localStorage.setItem('supabase_url', url);
+                    localStorage.setItem('supabase_anon_key', anonKey);
+
+                    updateStatus('연결됨', true);
+                    document.getElementById('test-section').style.display = 'block';
+
+                    if (showMessage) {
+                        showResult('✅ Supabase 연결 성공!', 'success');
+                    }
+                } else {
+                    throw error;
+                }
+            } catch (error) {
+                updateStatus('연결 실패', false);
+                showResult(`❌ 연결 실패: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function testConnection() {
+            if (!supabaseService) {
+                showResult('먼저 Supabase에 연결해주세요.', 'error');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const { data, error } = await supabaseService.client
+                    .from('projects')
+                    .select('count')
+                    .limit(1);
+
+                if (!error || error.code === 'PGRST116') {
+                    showResult('✅ 데이터베이스 연결 테스트 성공!', 'success');
+                } else {
+                    throw error;
+                }
+            } catch (error) {
+                showResult(`❌ 테스트 실패: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function createTestProject() {
+            if (!supabaseService) {
+                showResult('먼저 Supabase에 연결해주세요.', 'error');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const testProject = {
+                    user_email: 'test@example.com',
+                    project_name: `Test Project ${Date.now()}`,
+                    film_id: `FILM_${Date.now()}`,
+                    breakdown_data: {
+                        sequences: [],
+                        scenes: [],
+                        shots: []
+                    }
+                };
+
+                const data = await supabaseService.createProject(testProject);
+                showResult(`✅ 프로젝트 생성 성공!\n${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(`❌ 프로젝트 생성 실패: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function listProjects() {
+            if (!supabaseService) {
+                showResult('먼저 Supabase에 연결해주세요.', 'error');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const data = await supabaseService.listUserProjects('test@example.com');
+                if (data && data.length > 0) {
+                    showResult(`✅ 프로젝트 목록 (${data.length}개):\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult('📭 프로젝트가 없습니다.', 'info');
+                }
+            } catch (error) {
+                showResult(`❌ 목록 조회 실패: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function clearLocalStorage() {
+            if (confirm('정말로 저장된 Supabase 설정을 초기화하시겠습니까?')) {
+                localStorage.removeItem('supabase_url');
+                localStorage.removeItem('supabase_anon_key');
+                location.reload();
+            }
+        }
+
+        function updateStatus(text, connected) {
+            document.getElementById('status-text').textContent = text;
+            const indicator = document.getElementById('status-indicator');
+            if (connected) {
+                indicator.classList.remove('status-disconnected');
+                indicator.classList.add('status-connected');
+            } else {
+                indicator.classList.remove('status-connected');
+                indicator.classList.add('status-disconnected');
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'inline-block' : 'none';
+        }
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('test-result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.innerHTML = `<div class="${type}">[${timestamp}] ${message}</div>` + resultDiv.innerHTML;
+        }
+    </script>
+</body>
+</html>

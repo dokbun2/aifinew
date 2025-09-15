@@ -1,64 +1,6 @@
 /* Apple Developer Style - True to Original */
 
 /* ==========================================
-   Paperlogy 폰트 정의
-   ========================================== */
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-1Thin.woff') format('woff');
-    font-weight: 100;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-2ExtraLight.woff') format('woff');
-    font-weight: 200;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-3Light.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-4Regular.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-5Medium.woff') format('woff');
-    font-weight: 500;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-6SemiBold.woff') format('woff');
-    font-weight: 600;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-7Bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-8ExtraBold.woff') format('woff');
-    font-weight: 800;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Paperlogy';
-    src: url('assets/fonts/Paperlogy-9Black.woff') format('woff');
-    font-weight: 900;
-    font-style: normal;
-}
-
-/* ==========================================
    1. CSS Variables - Apple Developer Colors
    ========================================== */
 :root {
@@ -83,8 +25,8 @@
   --overlay-heavy: rgba(255, 255, 255, 0.12);
   
   /* Typography */
-  --font-headline: 'Paperlogy', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  --font-body: 'Paperlogy', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --font-headline: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
   
   /* Sizes */
   --nav-height: 48px;
@@ -1895,27 +1837,7 @@ body {
   text-align: center;
 }
 
-.stage-upload-main-btn {
-  padding: 10px 20px;
-  background: var(--apple-blue);
-  color: white;
-  border: none;
-  border-radius: 980px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 16px;
-  display: inline-block;
-  width: 100%;
-  max-width: 250px;
-}
-
-.stage-upload-main-btn:hover {
-  background: var(--apple-blue-hover);
-  transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 102, 204, 0.3);
-}
+/* Old style removed - using unified button styles above */
 
 .stage-cards-grid {
   display: grid;
@@ -2119,19 +2041,26 @@ body {
 }
 
 @media (max-width: 768px) {
+  /* nav-content 모바일 레이아웃 */
+  .nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    position: relative;
+  }
+
   /* 햄버거 메뉴 버튼 표시 */
   .menu-toggle {
     display: block;
-    position: absolute;
-    right: 22px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: relative;
+    margin-left: auto;
   }
-  
+
   /* 네비게이션 메뉴 모바일 스타일 */
   .nav-menu {
     position: fixed;
-    top: var(--nav-height);
+    top: calc(var(--nav-height) - 1px); /* 헤더와 붙이기 위해 1px 조정 */
     left: 0;
     right: 0;
     background: rgba(29, 29, 31, 0.98);
@@ -2180,12 +2109,13 @@ body {
     box-shadow: none !important;
   }
   
-  /* 모바일에서 nav-brand 중앙 정렬 */
+  /* 모바일에서 nav-brand 좌측 정렬 */
   .nav-brand {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    position: static;
+    left: auto;
+    transform: none;
     font-size: 18px;
+    margin-right: auto;
   }
   
   /* 모바일에서 user-info 위치 */
@@ -2357,6 +2287,158 @@ body {
   .tool-category {
     padding: 20px;
   }
+}
+
+/* Workflow Buttons Container */
+.workflow-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+/* Unified Button Styles for Workflow */
+.stage-upload-main-btn,
+.stage-save-btn {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Upload Button - Primary Blue */
+.stage-upload-main-btn {
+  background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.25);
+}
+
+.stage-upload-main-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 122, 255, 0.35);
+  background: linear-gradient(135deg, #0066d6 0%, #4a47c1 100%);
+}
+
+.stage-upload-main-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(0, 122, 255, 0.2);
+}
+
+/* Save Button - Success Green */
+.stage-save-btn {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(52, 199, 89, 0.25);
+}
+
+.stage-save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(52, 199, 89, 0.35);
+  background: linear-gradient(135deg, #30d158 0%, #34c759 100%);
+}
+
+.stage-save-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(52, 199, 89, 0.2);
+}
+
+.stage-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Button Icons */
+.stage-upload-main-btn i,
+.stage-save-btn i {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.stage-upload-main-btn:hover i {
+  transform: translateX(2px);
+}
+
+.stage-save-btn:hover:not(:disabled) i {
+  transform: translateY(-2px);
+}
+
+/* Loading animation */
+.stage-save-btn .ti-loader-2,
+.stage-upload-main-btn .ti-loader-2 {
+  animation: spin 1s linear infinite;
+}
+
+/* Glossy effect on hover */
+.stage-upload-main-btn::before,
+.stage-save-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.stage-upload-main-btn:hover::before,
+.stage-save-btn:hover::before {
+  left: 100%;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .workflow-buttons {
+    flex-direction: column;
+  }
+
+  .stage-upload-main-btn,
+  .stage-save-btn {
+    width: 100%;
+  }
+}
+
+/* Dropdown Menu Button Styles */
+.dropdown-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  text-align: left;
+}
+
+.dropdown-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-menu-btn span:first-child {
+  font-size: 18px;
 }
 
 /* ==========================================

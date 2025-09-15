@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase RLS 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .sql-fix {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .sql-fix pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .test-card.success {
+            border-color: #4CAF50;
+        }
+
+        .test-card.error {
+            border-color: #f44336;
+        }
+
+        .test-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        #results {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase RLS 정책 테스트</h1>
+
+    <div class="test-section">
+        <h2>1. 연결 테스트</h2>
+        <button onclick="testConnection()">연결 테스트 실행</button>
+        <button onclick="clearResults()">결과 초기화</button>
+        <div id="connectionResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. RLS 권한 테스트</h2>
+        <button onclick="testRLSPermissions()">RLS 권한 테스트</button>
+        <div id="rlsResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 실제 데이터 저장 테스트</h2>
+        <input type="email" id="testEmail" placeholder="test@example.com" style="padding: 8px; margin-right: 10px;">
+        <button onclick="testActualSave()">저장 테스트</button>
+        <button onclick="testGoogleLoginSave()" style="background: #4285f4;">구글 로그인 시뮬레이션</button>
+        <div id="saveResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. RLS 정책 수정 SQL</h2>
+        <div class="sql-fix">
+            <pre id="sqlFix">-- Supabase SQL Editor에서 실행하세요:
+
+-- Option 1: RLS 완전 비활성화 (테스트용)
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+
+-- Option 2: 관대한 RLS 정책 설정 (권장)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- 기존 정책 모두 제거
+DROP POLICY IF EXISTS "Enable read access for all users" ON users;
+DROP POLICY IF EXISTS "Enable insert for all users" ON users;
+DROP POLICY IF EXISTS "Enable update for all users" ON users;
+DROP POLICY IF EXISTS "Allow all reads" ON users;
+DROP POLICY IF EXISTS "Allow all inserts" ON users;
+DROP POLICY IF EXISTS "Allow all updates" ON users;
+
+-- 새 정책 생성 (anon 사용자도 포함)
+CREATE POLICY "Allow all reads" ON users
+FOR SELECT USING (true);
+
+CREATE POLICY "Allow all inserts" ON users
+FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow all updates" ON users
+FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 권한 부여
+GRANT ALL ON users TO anon;
+GRANT ALL ON users TO authenticated;
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT USAGE ON SCHEMA public TO authenticated;</pre>
+        </div>
+        <button onclick="copySQLToClipboard()">SQL 복사</button>
+    </div>
+
+    <div class="test-section">
+        <h2>5. 테스트 결과</h2>
+        <div id="results"></div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script type="module">
+        // Supabase 설정 로드
+        import { SUPABASE_CONFIG } from './js/modules/supabase-config.js';
+        window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+    </script>
+
+    <script>
+        let supabaseClient = null;
+
+        // 초기화
+        async function initSupabase() {
+            if (!window.SUPABASE_CONFIG) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            if (window.supabase && window.SUPABASE_CONFIG) {
+                supabaseClient = window.supabase.createClient(
+                    window.SUPABASE_CONFIG.url,
+                    window.SUPABASE_CONFIG.anonKey
+                );
+                addResult('Supabase 클라이언트 초기화 완료', 'success');
+                return true;
+            }
+            addResult('Supabase 초기화 실패', 'error');
+            return false;
+        }
+
+        // 연결 테스트
+        async function testConnection() {
+            clearResults();
+            addResult('연결 테스트 시작...', 'info');
+
+            if (!supabaseClient) {
+                await initSupabase();
+            }
+
+            if (!supabaseClient) {
+                addResult('Supabase 클라이언트가 없습니다', 'error');
+                return;
+            }
+
+            // 1. Health Check
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('count')
+                    .limit(1);
+
+                if (error) {
+                    addResult(`❌ Health Check 실패: ${error.message}`, 'error');
+                    addResult(`Error Code: ${error.code}`, 'error');
+                    if (error.hint) addResult(`Hint: ${error.hint}`, 'warning');
+                } else {
+                    addResult('✅ Health Check 성공', 'success');
+                }
+            } catch (e) {
+                addResult(`❌ 연결 예외: ${e.message}`, 'error');
+            }
+
+            // 2. URL 확인
+            addResult(`Supabase URL: ${window.SUPABASE_CONFIG.url}`, 'info');
+        }
+
+        // RLS 권한 테스트
+        async function testRLSPermissions() {
+            const rlsResults = document.getElementById('rlsResults');
+            rlsResults.innerHTML = '<div class="loading"></div> 테스트 중...';
+
+            if (!supabaseClient) {
+                await initSupabase();
+            }
+
+            const results = [];
+
+            // SELECT 테스트
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .limit(1);
+
+                if (error) {
+                    results.push({
+                        operation: 'SELECT',
+                        status: 'error',
+                        message: error.message,
+                        code: error.code
+                    });
+                } else {
+                    results.push({
+                        operation: 'SELECT',
+                        status: 'success',
+                        message: '읽기 권한 있음'
+                    });
+                }
+            } catch (e) {
+                results.push({
+                    operation: 'SELECT',
+                    status: 'error',
+                    message: e.message
+                });
+            }
+
+            // INSERT 테스트
+            try {
+                const testEmail = `test_${Date.now()}@test.com`;
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .insert({
+                        email: testEmail,
+                        name: 'RLS Test User',
+                        status: 'test',
+                        created_at: new Date().toISOString()
+                    })
+                    .select();
+
+                if (error) {
+                    results.push({
+                        operation: 'INSERT',
+                        status: 'error',
+                        message: error.message,
+                        code: error.code
+                    });
+
+                    if (error.code === '42501') {
+                        results.push({
+                            operation: 'RLS',
+                            status: 'error',
+                            message: 'RLS 정책이 INSERT를 차단하고 있습니다!'
+                        });
+                    }
+                } else {
+                    results.push({
+                        operation: 'INSERT',
+                        status: 'success',
+                        message: '쓰기 권한 있음'
+                    });
+
+                    // 테스트 데이터 삭제
+                    await supabaseClient
+                        .from('users')
+                        .delete()
+                        .eq('email', testEmail);
+                }
+            } catch (e) {
+                results.push({
+                    operation: 'INSERT',
+                    status: 'error',
+                    message: e.message
+                });
+            }
+
+            // 결과 표시
+            rlsResults.innerHTML = '';
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `test-result ${result.status}`;
+                div.innerHTML = `
+                    <strong>${result.operation}:</strong> ${result.message}
+                    ${result.code ? `<br>Code: ${result.code}` : ''}
+                `;
+                rlsResults.appendChild(div);
+            });
+        }
+
+        // 실제 저장 테스트
+        async function testActualSave() {
+            const email = document.getElementById('testEmail').value || `test_${Date.now()}@test.com`;
+            const saveResults = document.getElementById('saveResults');
+
+            saveResults.innerHTML = '<div class="loading"></div> 저장 중...';
+
+            if (!supabaseClient) {
+                await initSupabase();
+            }
+
+            try {
+                const userData = {
+                    email: email,
+                    name: 'Test User',
+                    picture: '',
+                    google_id: `test_${Date.now()}`,
+                    status: 'pending',
+                    created_at: new Date().toISOString(),
+                    last_login: new Date().toISOString(),
+                    login_count: 1,
+                    metadata: {
+                        test: true,
+                        timestamp: new Date().toISOString()
+                    }
+                };
+
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .upsert(userData, {
+                        onConflict: 'email',
+                        ignoreDuplicates: false
+                    })
+                    .select();
+
+                saveResults.innerHTML = '';
+
+                if (error) {
+                    saveResults.innerHTML = `
+                        <div class="test-result error">
+                            ❌ 저장 실패<br>
+                            Message: ${error.message}<br>
+                            Code: ${error.code}<br>
+                            ${error.hint ? `Hint: ${error.hint}` : ''}
+                        </div>
+                    `;
+
+                    if (error.code === '42501' || error.message.includes('row-level security')) {
+                        saveResults.innerHTML += `
+                            <div class="test-result warning">
+                                ⚠️ RLS 정책 문제입니다!<br>
+                                위의 SQL을 Supabase SQL Editor에서 실행해주세요.
+                            </div>
+                        `;
+                    }
+                } else {
+                    saveResults.innerHTML = `
+                        <div class="test-result success">
+                            ✅ 저장 성공!<br>
+                            Email: ${data[0].email}<br>
+                            ID: ${data[0].id}<br>
+                            Status: ${data[0].status}
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                saveResults.innerHTML = `
+                    <div class="test-result error">
+                        ❌ 예외 발생: ${e.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 결과 추가
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        // 결과 초기화
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('connectionResults').innerHTML = '';
+        }
+
+        // SQL 복사
+        function copySQLToClipboard() {
+            const sqlText = document.getElementById('sqlFix').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                alert('SQL이 클립보드에 복사되었습니다!');
+            });
+        }
+
+        // 구글 로그인 시뮬레이션 테스트
+        async function testGoogleLoginSave() {
+            const saveResults = document.getElementById('saveResults');
+            saveResults.innerHTML = '<div class="loading"></div> 구글 로그인 시뮬레이션 중...';
+
+            if (!supabaseClient) {
+                await initSupabase();
+            }
+
+            try {
+                // 구글 로그인 데이터 시뮬레이션
+                const mockGoogleUser = {
+                    email: `google_${Date.now()}@gmail.com`,
+                    name: 'Test Google User',
+                    picture: 'https://lh3.googleusercontent.com/a/default-user',
+                    google_id: `google_${Date.now()}`,
+                    status: 'pending',
+                    created_at: new Date().toISOString(),
+                    last_login: new Date().toISOString(),
+                    login_count: 1,
+                    metadata: {
+                        browser: navigator.userAgent,
+                        language: navigator.language,
+                        login_time: new Date().toISOString()
+                    }
+                };
+
+                // 구글 로그인과 동일한 방식으로 저장
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .upsert(mockGoogleUser, {
+                        onConflict: 'email'
+                    })
+                    .select()
+                    .maybeSingle();
+
+                saveResults.innerHTML = '';
+
+                if (error) {
+                    saveResults.innerHTML = `
+                        <div class="test-result error">
+                            ❌ 구글 로그인 시뮬레이션 실패<br>
+                            Message: ${error.message}<br>
+                            Code: ${error.code}<br>
+                            ${error.hint ? `Hint: ${error.hint}` : ''}
+                        </div>
+                    `;
+
+                    // RLS 문제 감지
+                    if (error.code === '42501' || error.message.includes('row-level security')) {
+                        saveResults.innerHTML += `
+                            <div class="test-result warning">
+                                ⚠️ RLS 정책이 구글 로그인을 차단하고 있습니다!<br>
+                                위의 SQL을 Supabase SQL Editor에서 실행해주세요.
+                            </div>
+                        `;
+                    }
+                } else {
+                    saveResults.innerHTML = `
+                        <div class="test-result success">
+                            ✅ 구글 로그인 시뮬레이션 성공!<br>
+                            Email: ${data ? data.email : mockGoogleUser.email}<br>
+                            Status: ${data ? data.status : 'pending'}<br>
+                            <br>
+                            이제 admin.html에서 이 사용자를 확인할 수 있습니다.
+                        </div>
+                    `;
+
+                    // 관리자 페이지에서 확인 가능한지 테스트
+                    const { data: checkData, error: checkError } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('email', mockGoogleUser.email)
+                        .maybeSingle();
+
+                    if (checkData) {
+                        saveResults.innerHTML += `
+                            <div class="test-result success">
+                                ✅ 데이터베이스에서 확인됨!<br>
+                                ID: ${checkData.id}<br>
+                                Created: ${checkData.created_at}
+                            </div>
+                        `;
+                    }
+                }
+            } catch (e) {
+                saveResults.innerHTML = `
+                    <div class="test-result error">
+                        ❌ 예외 발생: ${e.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', async () => {
+            await initSupabase();
+        });
+    </script>
+</body>
+</html>
