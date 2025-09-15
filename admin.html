@@ -1361,9 +1361,9 @@
                         console.log('📊 필드 확인:', {
                             name: users[0].name,
                             nickname: users[0].nickname,
-                            full_name: users[0].full_name,
-                            display_name: users[0].display_name,
-                            username: users[0].username
+                            email: users[0].email,
+                            status: users[0].status,
+                            role: users[0].role
                         });
                     }
                     this.users = users;
@@ -1425,11 +1425,19 @@
                     return;
                 }
 
+                // created_at 기준으로 정렬 (최신 먼저)
+                pendingUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
                 // 테이블 HTML 생성
                 let tableRows = '';
-                pendingUsers.forEach(user => {
+                pendingUsers.forEach((user, index) => {
                     // 디버깅을 위한 로그
-                    console.log('사용자 데이터:', user);
+                    console.log(`사용자 ${index + 1}:`, {
+                        email: user.email,
+                        name: user.name,
+                        nickname: user.nickname,
+                        created_at: user.created_at
+                    });
 
                     // SQL 스키마 확인 결과: name과 nickname이 별도 필드
                     // name = 실제 이름 (예: "테스트유저", "아이파이")
